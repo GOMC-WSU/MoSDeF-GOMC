@@ -1,10 +1,12 @@
 from __future__ import division
 
 from copy import deepcopy
+
 import numpy as np
 
 from mbuild.coordinate_transform import equivalence_transform
-from mbuild.tools.validation import assert_port_exists
+from mbuild.utils.validation import assert_port_exists
+
 
 __all__ = ['apply_mask', 'random_mask_2d', 'random_mask_3d', 'sphere_mask',
            'grid_mask_2d', 'grid_mask_3d', 'disk_mask']

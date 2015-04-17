@@ -6,6 +6,7 @@ from subprocess import Popen, PIPE
 import tempfile
 
 from mbuild.compound import Compound
+from mbuild.box import Box
 
 __all__ = ['fill_box', 'solvate']
 
@@ -48,6 +49,9 @@ def fill_box(compound, n_compounds, box, overlap=0.2):
     """
     if not PACKMOL:
         raise IOError("Packmol not found")
+
+    if isinstance(box, (list, tuple)):
+        box = Box(lengths=box)
 
     compound_pdb = tempfile.mkstemp(suffix='.pdb')[1]
     compound.save(compound_pdb)
@@ -100,8 +104,7 @@ def solvate(solute, solvent, n_solvent, box, overlap=0.2):
     # In angstroms for packmol.
     box_lengths = box.lengths * 10
     overlap *= 10
-    center_solute = (-solute.center + 0.5 * (box.lengths + [0, box.lengths[1], 0])) * 10
-    #center_solute = (-solute.center) * 10
+    center_solute = (-solute.center) * 10
 
     # Build the input file and call packmol.
     input_text = (PACKMOL_HEADER.format(overlap, solvated_pdb) +

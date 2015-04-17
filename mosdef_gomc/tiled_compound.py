@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 
+from mbuild.bond import Bond
 from mbuild.compound import Compound
 from mbuild.port import Port
 from mbuild.coordinate_transform import translate
@@ -15,17 +16,18 @@ class TiledCompound(Compound):
 
     Correctly updates connectivity while respecting periodic boundary
     conditions.
+
+    Parameters
+    -----------
+    tile : mb.Compound
+        The Compound to be replicated.
+    n_tiles : array-like, shape=(3,), dtype=int, optional, default=(1, 1, 1)
+        Number of times to replicate tile in the x, y and z-directions.
+    kind : str, optional, default=tile.kind
+        Descriptive string for the compound.
+
     """
     def __init__(self, tile, n_tiles=None, kind=None):
-        """
-        Args:
-            tile (Compound): The Compound to be replicated.
-            n_x (int): Number of times to replicate tile in the x-direction.
-            n_y (int): Number of times to replicate tile in the y-direction.
-            n_z (int): Number of times to replicate tile in the z-direction.
-            kind (str, optional):
-            label (str, optional):
-        """
         super(TiledCompound, self).__init__()
 
         if not n_tiles:
@@ -49,12 +51,12 @@ class TiledCompound(Compound):
             kind = tile.kind
         self.kind = kind
 
-
         self.replicate_tiles()
         self.stitch_bonds()
         self.periodicity = np.array([tile.periodicity[0] * n_x,
                                      tile.periodicity[1] * n_y,
                                      tile.periodicity[2] * n_z])
+        # TODO: Look into returning a new compound instead of adding the current one.
 
     def replicate_tiles(self):
         """Replicate and place periodic tiles. """
