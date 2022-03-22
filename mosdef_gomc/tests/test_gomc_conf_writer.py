@@ -1,13 +1,13 @@
 import os
 
-import pytest
-
 import mbuild as mb
+import pytest
+from mbuild.lattice import load_cif
+from mbuild.utils.io import get_fn, has_foyer
+
 import mosdef_gomc.formats.gomc_conf_writer as gomc_control
 from mosdef_gomc.formats.charmm_writer import Charmm
-from mbuild.lattice import load_cif
 from mosdef_gomc.tests.base_test import BaseTest
-from mbuild.utils.io import get_fn, has_foyer
 
 
 @pytest.mark.skipif(not has_foyer, reason="Foyer package not installed")
