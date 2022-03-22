@@ -3,10 +3,10 @@ import os
 import pytest
 
 import mbuild as mb
-import mbuild.formats.gomc_conf_writer as gomc_control
-from mbuild.formats.charmm_writer import Charmm
+import mosdef_gomc.formats.gomc_conf_writer as gomc_control
+from mosdef_gomc.formats.charmm_writer import Charmm
 from mbuild.lattice import load_cif
-from mbuild.tests.base_test import BaseTest
+from mosdef_gomc.tests.base_test import BaseTest
 from mbuild.utils.io import get_fn, has_foyer
 
 

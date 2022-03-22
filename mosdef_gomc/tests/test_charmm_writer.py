@@ -7,17 +7,17 @@ from foyer.forcefields import forcefields
 import mbuild as mb
 from mbuild import Box, Compound
 from mbuild.formats import charmm_writer
-from mbuild.formats.charmm_writer import Charmm
+from mosdef_gomc.formats.charmm_writer import Charmm
 from mbuild.lattice import load_cif
-from mbuild.tests.base_test import BaseTest
-from mbuild.utils.conversion import (
+from mosdef_gomc.tests.base_test import BaseTest
+from mosdef_gomc.utils.conversion import (
     base10_to_base16_alph_num,
     base10_to_base26_alph,
     base10_to_base52_alph,
     base10_to_base62_alph_num,
 )
 from mbuild.utils.io import get_fn, has_foyer
-from mbuild.utils.specific_ff_to_residue import specific_ff_to_residue
+from mosdef_gomc.utils.specific_ff_to_residue import specific_ff_to_residue
 
 
 @pytest.mark.skipif(not has_foyer, reason="Foyer package not installed")
