@@ -1,1 +1,1 @@
-"""Format library for mBuild."""
+"""Format library for mBuild, for the GOMC Engine"""

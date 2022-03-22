@@ -2,7 +2,7 @@ import datetime
 import os
 from warnings import warn
 
-import mbuild.formats.charmm_writer as mf_charmm
+import mosdef_gomc.formats.charmm_writer as mf_charmm
 
 
 def dict_keys_to_list(dict):
