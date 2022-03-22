@@ -8,5 +8,7 @@ dependencies:
   - parmed
   - pre-commit
   - parmed
+  - pytest
+  - pip
   - pip:
       - bump2version
