@@ -4,20 +4,19 @@ from collections import OrderedDict
 from warnings import warn
 
 import numpy as np
+from mbuild.box import Box
+from mbuild.compound import Compound
+from mbuild.utils.conversion import RB_to_CHARMM
+from mbuild.utils.sorting import natural_sort
 from parmed.periodic_table import Element
 from parmed.utils.io import genopen
 
-from mbuild.box import Box
-from mbuild.compound import Compound
 from mosdef_gomc.utils.conversion import (
     base10_to_base16_alph_num,
     base10_to_base26_alph,
     base10_to_base52_alph,
     base10_to_base62_alph_num,
 )
-
-from mbuild.utils.conversion import RB_to_CHARMM
-from mbuild.utils.sorting import natural_sort
 from mosdef_gomc.utils.specific_ff_to_residue import specific_ff_to_residue
 
 
