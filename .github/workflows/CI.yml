@@ -1,0 +1,49 @@
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    - cron: "0 0 * * *"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Mambaforge-pytest:
+    name: Unit-Test (${{ matrix.os }}, Mambaforge)
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.8", "3.9"]
+        os: ["ubuntu", "macos"]
+        include:
+          - os: ubuntu
+            environment-file: environment-dev.yml
+            miniforge-variant: Mambaforge
+            miniforge-version: 4.9.2-4
+          - os: macos
+            environment-file: environment-dev.yml
+            miniforge-variant: Mambaforge-pypy3
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          environment-file: ${{ matrix.environment-file }}
+          miniforge-variant: ${{ matrix.miniforge-variant }}
+          miniforge-version: ${{ matrix.miniforge-version }}
+          python-version: ${{ matrix.python-version }}
+          use-mamba: true
+      - shell: bash -l {0}
+        run: |
+          pip install .
+      - shell: bash -l {0}
+        run: |
+          python -m pytest -v --color=yes
+          echo "tests finished"
