@@ -1,5 +1,5 @@
-##  MoSDeF-GOMC: 
-### A User-Friendly Python Interface for Creating All of the files required to run a GPU Optimized Monte Carlo (GOMC) simulation engine via the Molecular Simulation Design Framework  [Molecular Simulation Design Framework (MoSDeF)](https://mosdef.org) ([MoSDeF Github](https://github.com/mosdef-hub)) software.  
+##  MoSDeF-GOMC:
+### A User-Friendly Python Interface for Creating All of the files required to run a GPU Optimized Monte Carlo (GOMC) simulation engine via the Molecular Simulation Design Framework  [Molecular Simulation Design Framework (MoSDeF)](https://mosdef.org) ([MoSDeF Github](https://github.com/mosdef-hub)) software.
 --------
 
 ### Overview
@@ -7,7 +7,7 @@
 This Python code allows the auto-generation of the [GPU Optimized Monte Carlo (GOMC)](http://gomc.eng.wayne.edu) files for a simulation, which includes the coordinate (PDB), topology (PSF), force field (FF), and the GOMC control file.  This software supports various systems, force field types, and can also create the PDB, PSF, and FF files for the  [NAMD](https://www.ks.uiuc.edu/Research/namd/) simulation engine.  Since MoSDeF-GOMC was built from the  [Molecular Simulation Design Framework (MoSDeF)](https://mosdef.org) ([MoSDeF Github](https://github.com/mosdef-hub)) platform, it provides complete integration with the MoSDeF software.
 
 ### Warning
-MoSDeF-GOMC is a new product continually adding functionality to provide an optimal user experience. Therefore, there could be some user-noticeable changes to this software when upgrading newer MoSDeF-GOMC versions.  
+MoSDeF-GOMC is a new product continually adding functionality to provide an optimal user experience. Therefore, there could be some user-noticeable changes to this software when upgrading newer MoSDeF-GOMC versions.
 
 ### Resources
  - [GOMC Github repository](https://github.com/GOMC-WSU)
