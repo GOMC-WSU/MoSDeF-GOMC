@@ -23,11 +23,11 @@ jobs:
         os: ["ubuntu", "macos"]
         include:
           - os: ubuntu
-            environment-file: environment.yml
+            environment-file: environment-dev.yml
             miniforge-variant: Mambaforge
             miniforge-version: 4.9.2-4
           - os: macos
-            environment-file: environment.yml
+            environment-file: environment-dev.yml
             miniforge-variant: Mambaforge-pypy3
     steps:
       - uses: actions/checkout@v2
