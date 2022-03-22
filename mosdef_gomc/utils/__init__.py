@@ -1,1 +1,1 @@
-"""mBuild utilities."""
+"""mosdef_gomc utilities."""
