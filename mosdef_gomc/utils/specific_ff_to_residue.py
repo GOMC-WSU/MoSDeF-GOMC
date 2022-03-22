@@ -2,9 +2,8 @@ import os
 from warnings import warn
 from xml.dom import minidom
 
-import parmed as pmd
-
 import mbuild as mb
+import parmed as pmd
 from mbuild.compound import Compound
 from mbuild.utils.io import has_foyer
 

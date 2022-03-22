@@ -6,4 +6,6 @@ dependencies:
   - mbuild
   - foyer
   - parmed
-  - bump2version
+  - pre-commit
+  - pip:
+      - bump2version

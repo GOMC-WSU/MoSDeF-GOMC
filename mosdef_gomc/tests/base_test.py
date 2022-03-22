@@ -1,6 +1,5 @@
-import pytest
-
 import mbuild as mb
+import pytest
 
 
 class BaseTest:
