@@ -387,6 +387,7 @@ def specific_ff_to_residue(
                 ff_iteration = Forcefield(ff_data[residues[i]])
                 residues_applied_list.append(residues[i])
             elif not user_entered_ff_with_path_dict[residues[i]]:
+                print(residues[i], ff_data)
                 ff_iteration = Forcefield(name=ff_data[residues[i]])
                 residues_applied_list.append(residues[i])
 
