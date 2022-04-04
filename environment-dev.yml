@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python<=3.9
-  - mbuild
+  - mbuild>=0.14.0
   - foyer
   - parmed
   - pre-commit
