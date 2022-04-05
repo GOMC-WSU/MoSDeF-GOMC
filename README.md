@@ -1,6 +1,5 @@
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/umesh-timalsina/MoSDeF-GOMC/master.svg)](https://results.pre-commit.ci/latest/github/umesh-timalsina/MoSDeF-GOMC/master)
-[![CI](https://github.com/umesh-timalsina/MoSDeF-GOMC/actions/workflows/CI.yml/badge.svg)](https://github.com/umesh-timalsina/MoSDeF-GOMC/actions/workflows/CI.yml)
-
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/GOMC-WSU/MoSDeF-GOMC/master.svg)](https://results.pre-commit.ci/latest/github/GOMC-WSU/MoSDeF-GOMC/master)
+[![CI](https://github.com/GOMC-WSU/MoSDeF-GOMC/actions/workflows/CI.yml/badge.svg)](https://github.com/GOMC-WSU/MoSDeF-GOMC/actions/workflows/CI.yml)
 ##  MoSDeF-GOMC:
 
 ### A User-Friendly Python Interface for Creating All of the files required to run a GPU Optimized Monte Carlo (GOMC) simulation engine via the Molecular Simulation Design Framework  [Molecular Simulation Design Framework (MoSDeF)](https://mosdef.org) ([MoSDeF Github](https://github.com/mosdef-hub)) software.
