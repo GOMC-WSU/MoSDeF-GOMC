@@ -21,8 +21,8 @@ if __name__ == "__main__":
         long_description=__doc__,
         author="Brad Crawford",
         author_email="",
-        url="https://github.com/umesh-timalsina/MosDeF-GOMC",
-        download_url="https://github.com/umesh-timalsina/MosDeF-GOMC/tarball/{}".format(
+        url="https://github.com/GOMC-WSU/MosDeF-GOMC",
+        download_url="https://github.com/GOMC-WSU/MosDeF-GOMC/tarball/{}".format(
             __version__
         ),
         packages=find_packages(),
