@@ -1,4 +1,4 @@
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/umesh-timalsina/MoSDeF-GOMC/master.svg)](https://results.pre-commit.ci/latest/github/umesh-timalsina/MoSDeF-GOMC/master)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/GOMC-WSU/MoSDeF-GOMC/master.svg)](https://results.pre-commit.ci/latest/github/GOMC-WSU/MoSDeF-GOMC/master)
 [![CI](https://github.com/GOMC-WSU/MoSDeF-GOMC/actions/workflows/CI.yml/badge.svg)](https://github.com/GOMC-WSU/MoSDeF-GOMC/actions/workflows/CI.yml)
 ##  MoSDeF-GOMC:
 
