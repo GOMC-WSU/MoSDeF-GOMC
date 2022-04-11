@@ -30,4 +30,4 @@ Please cite MoSDeF-GOMC, GOMC, and MoSDeF tools, which are provided [here](XXX).
 
 The MoSDeF-GOMC package is available via conda:
 
-conda create --name mosdef_gomc -c conda-forge mosdef-gomc
+conda install -c conda-forge mosdef-gomc
