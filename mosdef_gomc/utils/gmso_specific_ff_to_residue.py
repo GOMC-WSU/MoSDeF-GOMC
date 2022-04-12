@@ -1,19 +1,17 @@
 # GMSO and foyer use specific residues to apply force fields and mapping molecule number to atom numbers
+import datetime
 import os
 from warnings import warn
 from xml.dom import minidom
 
-import parmed as pmd
-
+import gmso
 import mbuild as mb
+import parmed as pmd
+from foyer import Forcefield as oldFF
+from foyer.general_forcefield import Forcefield as gmsoFF
+from gmso.external import from_parmed
 from mbuild.compound import Compound
 from mbuild.utils.io import has_foyer
-from gmso.external import from_parmed
-import gmso
-from foyer.general_forcefield import Forcefield as gmsoFF
-from foyer import Forcefield as oldFF
-
-import datetime
 
 
 def specific_ff_to_residue(
@@ -254,7 +252,6 @@ def specific_ff_to_residue(
 
     combining_rule_dict = {}
 
-
     for j in range(0, len(forcefield_keys_list)):
         residue_iteration = forcefield_keys_list[j]
         if user_entered_ff_with_path_dict[residue_iteration]:
@@ -407,8 +404,8 @@ def specific_ff_to_residue(
             "INFO: the output file are being reordered in via the residues list's sequence."
         )
 
-    atom_number = 0 # 0 sets the 1st atom_number at 1
-    molecule_number = 0 # 0 sets the 1st molecule_number at 1
+    atom_number = 0  # 0 sets the 1st atom_number at 1
+    molecule_number = 0  # 0 sets the 1st molecule_number at 1
     molecules_atom_number_dict = {}
     for i in range(0, len(residues)):
         children_in_iteration = False
@@ -425,55 +422,65 @@ def specific_ff_to_residue(
 
         if children_in_iteration:
             if user_entered_ff_with_path_dict[residues[i]]:
-                ff_iteration = gmsoFF(forcefield_files=ff_data[residues[i]],
-                                      strict=False)
+                ff_iteration = gmsoFF(
+                    forcefield_files=ff_data[residues[i]], strict=False
+                )
                 residues_applied_list.append(residues[i])
             elif not user_entered_ff_with_path_dict[residues[i]]:
-                ff_iteration = gmsoFF(name=ff_data[residues[i]],
-                                      strict=False)
+                ff_iteration = gmsoFF(name=ff_data[residues[i]], strict=False)
                 residues_applied_list.append(residues[i])
 
             new_compound_iteration.box = None
-
-
 
             ff_apply_start_time_s = datetime.datetime.today()
             new_topology_iteration = ff_iteration.apply(
                 new_compound_iteration,
                 residues=[residues[i]],
                 assert_improper_params=False,
-                name = residues[i],
-                box=compound_box_infor.box
+                name=residues[i],
+                box=compound_box_infor.box,
             )
 
-
             ff_apply_end_time_s = datetime.datetime.today()
-            ff_apply_total_time_s = (ff_apply_end_time_s - ff_apply_start_time_s).total_seconds()
-            write_log_data = f"*************************************************\n" \
-                             f"residue name = {residues[i]} \n" \
-                             f"ff_apply_total_time_s (s) = {ff_apply_total_time_s} \n"
+            ff_apply_total_time_s = (
+                ff_apply_end_time_s - ff_apply_start_time_s
+            ).total_seconds()
+            write_log_data = (
+                f"*************************************************\n"
+                f"residue name = {residues[i]} \n"
+                f"ff_apply_total_time_s (s) = {ff_apply_total_time_s} \n"
+            )
             print(write_log_data)
 
-
-            print('xxxxxxxxxxxxxxxxxxx')
-            print('xxxxxxxxxxxxxxxxxxx')
-            print('xxxxxxxxxxxxxxxxxxx')
+            print("xxxxxxxxxxxxxxxxxxx")
+            print("xxxxxxxxxxxxxxxxxxx")
+            print("xxxxxxxxxxxxxxxxxxx")
 
             # add atom numbers (renumber) to the combined gmso topology
             for site in new_topology_iteration.sites:
-                site.__dict__['label_'] = atom_number
+                site.__dict__["label_"] = atom_number
                 atom_number += 1
 
             bonded_atom_number_set = set()
             all_bonded_atoms_list = set()
             for bond in new_topology_iteration.bonds:
-                bonded_atom_0_iter = bond.__dict__['connection_members_'][0].__dict__['label_']
-                bonded_atom_1_iter = bond.__dict__['connection_members_'][1].__dict__['label_']
+                bonded_atom_0_iter = bond.__dict__["connection_members_"][
+                    0
+                ].__dict__["label_"]
+                bonded_atom_1_iter = bond.__dict__["connection_members_"][
+                    1
+                ].__dict__["label_"]
 
                 if bonded_atom_0_iter < bonded_atom_1_iter:
-                    bonded_atom_tuple_iter = (bonded_atom_0_iter, bonded_atom_1_iter)
+                    bonded_atom_tuple_iter = (
+                        bonded_atom_0_iter,
+                        bonded_atom_1_iter,
+                    )
                 else:
-                    bonded_atom_tuple_iter = (bonded_atom_1_iter, bonded_atom_0_iter)
+                    bonded_atom_tuple_iter = (
+                        bonded_atom_1_iter,
+                        bonded_atom_0_iter,
+                    )
 
                 bonded_atom_number_set.add(bonded_atom_tuple_iter)
                 all_bonded_atoms_list.add(bonded_atom_0_iter)
@@ -482,7 +489,7 @@ def specific_ff_to_residue(
             # map all bonded atoms as molecules
             molecules_atom_number_list = []
             for site in new_topology_iteration.sites:
-                atom_iter_k = site.__dict__['label_']
+                atom_iter_k = site.__dict__["label_"]
 
                 if atom_iter_k in all_bonded_atoms_list:
                     for bonded_atoms_n in bonded_atom_number_set:
@@ -490,25 +497,38 @@ def specific_ff_to_residue(
                             bonded_atoms_n_list_iter = list(bonded_atoms_n)
                             atom_found_iter = False
                             if len(molecules_atom_number_list) != 0:
-                                for molecule_j in range(0, len(molecules_atom_number_list)):
-                                    if atom_iter_k in molecules_atom_number_list[molecule_j]:
-                                        molecules_atom_number_list[molecule_j].add(bonded_atoms_n_list_iter[0])
-                                        molecules_atom_number_list[molecule_j].add(bonded_atoms_n_list_iter[1])
+                                for molecule_j in range(
+                                    0, len(molecules_atom_number_list)
+                                ):
+                                    if (
+                                        atom_iter_k
+                                        in molecules_atom_number_list[
+                                            molecule_j
+                                        ]
+                                    ):
+                                        molecules_atom_number_list[
+                                            molecule_j
+                                        ].add(bonded_atoms_n_list_iter[0])
+                                        molecules_atom_number_list[
+                                            molecule_j
+                                        ].add(bonded_atoms_n_list_iter[1])
                                         atom_found_iter = True
 
-                                    if (molecule_j == len(molecules_atom_number_list) - 1) \
-                                            and atom_found_iter is False:
+                                    if (
+                                        molecule_j
+                                        == len(molecules_atom_number_list) - 1
+                                    ) and atom_found_iter is False:
                                         molecules_atom_number_list.append(
                                             {
                                                 bonded_atoms_n_list_iter[0],
-                                                bonded_atoms_n_list_iter[1]
+                                                bonded_atoms_n_list_iter[1],
                                             }
                                         )
                             else:
                                 molecules_atom_number_list.append(
                                     {
                                         bonded_atoms_n_list_iter[0],
-                                        bonded_atoms_n_list_iter[1]
+                                        bonded_atoms_n_list_iter[1],
                                     }
                                 )
                 else:
@@ -523,7 +543,7 @@ def specific_ff_to_residue(
                 molecule_number += 1
 
             for site in new_topology_iteration.sites:
-                site_atom_number_iter = site.__dict__['label_']
+                site_atom_number_iter = site.__dict__["label_"]
 
                 # get molecule number
                 for mol_n, atom_set_n in molecules_atom_number_dict.items():
@@ -532,88 +552,143 @@ def specific_ff_to_residue(
 
                 # change 'residue_label_' to "residue_name_"
                 # change 'residue_index_' to "residue_number_"
-                site.__dict__['residue_label_'] = residues[i]
-                site.__dict__['residue_index_'] = molecule_p_number + 1
+                site.__dict__["residue_label_"] = residues[i]
+                site.__dict__["residue_index_"] = molecule_p_number + 1
 
             # get the non-bonded, bond, angle, dihedral and improper equations and impropers and other info
             atom_type_expression_set = set()
             for atom_type_k in new_topology_iteration.atom_types:
                 atom_type_expression_set.add(atom_type_k.expression)
             if len(atom_type_expression_set) == 1:
-                atom_types_dict.update({residues[i]: {'expression': list(atom_type_expression_set)[0],
-                                                      'atom_types': new_topology_iteration.atom_types
-                                                      }
-                                        }
-                                       )
+                atom_types_dict.update(
+                    {
+                        residues[i]: {
+                            "expression": list(atom_type_expression_set)[0],
+                            "atom_types": new_topology_iteration.atom_types,
+                        }
+                    }
+                )
             elif len(atom_type_expression_set) == 0:
                 atom_types_dict.update({residues[i]: None})
             else:
-                raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                                 ''.format('non-bonded'))
+                raise ValueError(
+                    "ERROR: There is more than 1 {} equation types per residue or molecules "
+                    "".format("non-bonded")
+                )
 
             bond_type_expression_set = set()
             for bond_type_k in new_topology_iteration.bond_types:
                 bond_type_expression_set.add(bond_type_k.expression)
             if len(bond_type_expression_set) == 1:
-                bond_types_dict.update({residues[i]: {'expression': list(bond_type_expression_set)[0],
-                                                      'bond_types': new_topology_iteration.bond_types}})
+                bond_types_dict.update(
+                    {
+                        residues[i]: {
+                            "expression": list(bond_type_expression_set)[0],
+                            "bond_types": new_topology_iteration.bond_types,
+                        }
+                    }
+                )
             elif len(bond_type_expression_set) == 0:
                 bond_types_dict.update({residues[i]: None})
             else:
-                raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                                 ''.format('bond'))
+                raise ValueError(
+                    "ERROR: There is more than 1 {} equation types per residue or molecules "
+                    "".format("bond")
+                )
 
             angle_type_expression_set = set()
             for angle_type_k in new_topology_iteration.angle_types:
                 angle_type_expression_set.add(angle_type_k.expression)
             if len(angle_type_expression_set) == 1:
-                angle_types_dict.update({residues[i]: {'expression': list(angle_type_expression_set)[0],
-                                         'angle_types': new_topology_iteration.angle_types}})
+                angle_types_dict.update(
+                    {
+                        residues[i]: {
+                            "expression": list(angle_type_expression_set)[0],
+                            "angle_types": new_topology_iteration.angle_types,
+                        }
+                    }
+                )
             elif len(angle_type_expression_set) == 0:
                 angle_types_dict.update({residues[i]: None})
             else:
-                raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                                 ''.format('angle'))
+                raise ValueError(
+                    "ERROR: There is more than 1 {} equation types per residue or molecules "
+                    "".format("angle")
+                )
 
             dihedral_type_expression_set = set()
             for dihedral_type_k in new_topology_iteration.dihedral_types:
                 dihedral_type_expression_set.add(dihedral_type_k.expression)
             if len(dihedral_type_expression_set) == 1:
-                dihedral_types_dict.update({residues[i]: {'expression': list(dihedral_type_expression_set)[0],
-                                                          'dihedral_types': new_topology_iteration.dihedral_types}})
+                dihedral_types_dict.update(
+                    {
+                        residues[i]: {
+                            "expression": list(dihedral_type_expression_set)[0],
+                            "dihedral_types": new_topology_iteration.dihedral_types,
+                        }
+                    }
+                )
             elif len(dihedral_type_expression_set) == 0:
                 dihedral_types_dict.update({residues[i]: None})
             else:
-                raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                                 ''.format('dihedral'))
+                raise ValueError(
+                    "ERROR: There is more than 1 {} equation types per residue or molecules "
+                    "".format("dihedral")
+                )
 
             improper_type_expression_set = set()
             for improper_type_k in new_topology_iteration.improper_types:
                 improper_type_expression_set.add(improper_type_k.expression)
             if len(improper_type_expression_set) == 1:
-                improper_types_dict.update({residues[i]: {'expression': list(improper_type_expression_set)[0],
-                                                          'improper_types': new_topology_iteration.improper_types}})
+                improper_types_dict.update(
+                    {
+                        residues[i]: {
+                            "expression": list(improper_type_expression_set)[0],
+                            "improper_types": new_topology_iteration.improper_types,
+                        }
+                    }
+                )
             elif len(improper_type_expression_set) == 0:
                 improper_types_dict.update({residues[i]: None})
             else:
-                raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                                 ''.format('improper'))
+                raise ValueError(
+                    "ERROR: There is more than 1 {} equation types per residue or molecules "
+                    "".format("improper")
+                )
 
             nonBonded_1_4_scaling_factor_set = set()
             electro_1_4_scaling_factor_set = set()
-            nonBonded_1_4_scaling_factor_set.add(new_topology_iteration.scaling_factors["nonBonded14Scale"])
-            electro_1_4_scaling_factor_set.add(new_topology_iteration.scaling_factors["electrostatics14Scale"])
-            if len(nonBonded_1_4_scaling_factor_set) == 1 and len(electro_1_4_scaling_factor_set) == 1:
-                nonBonded14Scale_dict.update({residues[i]: list(nonBonded_1_4_scaling_factor_set)[0]})
-                electrostatics14Scale_dict.update({residues[i]: list(electro_1_4_scaling_factor_set)[0]})
-            elif len(nonBonded_1_4_scaling_factor_set) == 0 and len(electro_1_4_scaling_factor_set) == 0:
+            nonBonded_1_4_scaling_factor_set.add(
+                new_topology_iteration.scaling_factors["nonBonded14Scale"]
+            )
+            electro_1_4_scaling_factor_set.add(
+                new_topology_iteration.scaling_factors["electrostatics14Scale"]
+            )
+            if (
+                len(nonBonded_1_4_scaling_factor_set) == 1
+                and len(electro_1_4_scaling_factor_set) == 1
+            ):
+                nonBonded14Scale_dict.update(
+                    {residues[i]: list(nonBonded_1_4_scaling_factor_set)[0]}
+                )
+                electrostatics14Scale_dict.update(
+                    {residues[i]: list(electro_1_4_scaling_factor_set)[0]}
+                )
+            elif (
+                len(nonBonded_1_4_scaling_factor_set) == 0
+                and len(electro_1_4_scaling_factor_set) == 0
+            ):
                 nonBonded14Scale_dict.update({residues[i]: None})
                 electrostatics14Scale_dict.update({residues[i]: None})
             else:
-                raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                                 ''.format('1-4 scaling facter'))
+                raise ValueError(
+                    "ERROR: There is more than 1 {} equation types per residue or molecules "
+                    "".format("1-4 scaling facter")
+                )
 
-            combining_rule_dict.update({residues[i]: new_topology_iteration._combining_rule})
+            combining_rule_dict.update(
+                {residues[i]: new_topology_iteration._combining_rule}
+            )
 
             topology_per_residue_list.append(new_topology_iteration)
 

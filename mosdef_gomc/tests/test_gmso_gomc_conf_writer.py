@@ -1,21 +1,14 @@
 import os
 
-import pytest
-
-import unyt as u
-from unyt.dimensions import (
-    length,
-    energy,
-    pressure,
-    temperature,
-)
-
 import mbuild as mb
 import mbuild.formats.gmso_gomc_conf_writer as gomc_control
+import pytest
+import unyt as u
 from mbuild.formats.gmso_charmm_writer import Charmm
 from mbuild.lattice import load_cif
 from mbuild.tests.base_test import BaseTest
 from mbuild.utils.io import get_fn, has_foyer
+from unyt.dimensions import energy, length, pressure, temperature
 
 
 @pytest.mark.skipif(not has_foyer, reason="Foyer package not installed")
@@ -4827,7 +4820,6 @@ class TestGOMCControlFileWriter(BaseTest):
                 input_variables_dict={"XXXXXX": []},
             )
 
-
     def test_save_NVT_bad_variables_part_5(self, ethane_gomc, ethanol_gomc):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -6185,8 +6177,8 @@ class TestGOMCControlFileWriter(BaseTest):
         with pytest.warns(
             UserWarning,
             match="WARNING: The free energy calculations are being used when RcutLow is not zero \(0\), "
-                  "which can produce free energy results that are slightly off or wrong. "
-                  "Please set RcutLow to zero \(RcutLow=0\) when using the free energy calculations.",
+            "which can produce free energy results that are slightly off or wrong. "
+            "Please set RcutLow to zero \(RcutLow=0\) when using the free energy calculations.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -10296,17 +10288,28 @@ class TestGOMCControlFileWriter(BaseTest):
                         "SubVolumeResidueKind": ["all"],
                         "SubVolumeRigidSwap": True,
                         "SubVolumePBC": "XY",
-                        "SubVolumeChemPot": {"ETH": -222 * u.K, "ETO": -22 * u.K},
+                        "SubVolumeChemPot": {
+                            "ETH": -222 * u.K,
+                            "ETO": -22 * u.K,
+                        },
                     },
                     1: {
                         "SubVolumeType": "static",
                         "SubVolumeBox": 0,
                         "SubVolumeCenter": [2, 3, 4] * u.angstrom,
-                        "SubVolumeDim": [4.0 * 10**(-10), 3.0 * 10**(-10), 2.0 * 10**(-10)] * u.m,
+                        "SubVolumeDim": [
+                            4.0 * 10 ** (-10),
+                            3.0 * 10 ** (-10),
+                            2.0 * 10 ** (-10),
+                        ]
+                        * u.m,
                         "SubVolumeResidueKind": "All",
                         "SubVolumeRigidSwap": False,
                         "SubVolumePBC": "XYZ",
-                        "SubVolumeChemPot": {"ETH": -333 * u.K, "ETO": -33 * u.K},
+                        "SubVolumeChemPot": {
+                            "ETH": -333 * u.K,
+                            "ETO": -33 * u.K,
+                        },
                     },
                 },
             },
@@ -10514,13 +10517,21 @@ class TestGOMCControlFileWriter(BaseTest):
                         "SubVolumeResidueKind": ["ETH", "ETO"],
                         "SubVolumeRigidSwap": False,
                         "SubVolumePBC": "XY",
-                        "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                        "SubVolumeFugacity": {
+                            "ETH": 2.22 * u.bar,
+                            "ETO": 0.22 * u.bar,
+                        },
                     },
                     1: {
                         "SubVolumeType": "static",
                         "SubVolumeBox": 0,
                         "SubVolumeCenter": [2, 3, 4] * u.angstrom,
-                        "SubVolumeDim": [4.0 * 10**(-10), 3.0 * 10**(-10), 2.0 * 10**(-10)] * u.m,
+                        "SubVolumeDim": [
+                            4.0 * 10 ** (-10),
+                            3.0 * 10 ** (-10),
+                            2.0 * 10 ** (-10),
+                        ]
+                        * u.m,
                         "SubVolumeResidueKind": "ETH",
                         "SubVolumeFugacity": {"ETH": 3.33 * u.bar},
                     },
@@ -10729,7 +10740,7 @@ class TestGOMCControlFileWriter(BaseTest):
                     1: {
                         "SubVolumeType": "static",
                         "SubVolumeBox": 1,
-                        "SubVolumeCenter": [2, 3, 4]* u.angstrom,
+                        "SubVolumeCenter": [2, 3, 4] * u.angstrom,
                         "SubVolumeDim": [4, 3, 2] * u.angstrom,
                         "SubVolumeResidueKind": "ETH",
                         "SubVolumeRigidSwap": False,
@@ -10934,7 +10945,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             },
         )
-        
+
         with open("test_save_basic_NVT_use_targetedswap.conf", "r") as fp:
             variables_read_dict = {
                 "IntraTargetedSwapFreq": False,
@@ -11166,7 +11177,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.atm, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.atm,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11205,7 +11219,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.atm, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.atm,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11244,7 +11261,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11283,7 +11303,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11322,7 +11345,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11361,7 +11387,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11400,7 +11429,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11439,7 +11471,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11478,7 +11513,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11517,7 +11555,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": -2.22 * u.K, "ETO": 0.22 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": -2.22 * u.K,
+                                "ETO": 0.22 * u.K,
+                            },
                         },
                     },
                 },
@@ -11556,7 +11597,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11595,7 +11639,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11634,7 +11681,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11673,7 +11723,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": [0, "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11712,7 +11765,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": "x",
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11751,7 +11807,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": 0,
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11790,7 +11849,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["x"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11829,7 +11891,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": 0,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11868,7 +11933,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": "s",
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11907,7 +11975,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": [True],
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11946,7 +12017,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "s",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11985,7 +12059,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": 0,
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12024,7 +12101,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": [0],
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12063,7 +12143,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"X": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "X": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12102,7 +12185,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ET": -2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ET": -2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12258,7 +12344,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 2.22 * u.K, "ETO": 0.22 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 2.22 * u.K,
+                                "ETO": 0.22 * u.K,
+                            },
                         },
                     },
                 },
@@ -12297,7 +12386,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12335,13 +12427,18 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
             )
-
 
         with pytest.raises(
             ValueError,
@@ -12376,7 +12473,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12415,7 +12515,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12454,7 +12557,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12532,7 +12638,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": "All",
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12569,7 +12678,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": "all",
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12643,7 +12755,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeresidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidswap": True,
                             "Subvolume": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12682,7 +12797,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeresidueKind": ["ETO"],
                             "SubVolumeRigidswap": True,
                             "SubvolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12721,7 +12839,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeresidueKind": "ETH",
                             "SubVolumeRigidswap": True,
                             "SubvolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 4.44 * u.bar, "ETO": 5.55 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 4.44 * u.bar,
+                                "ETO": 5.55 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12760,7 +12881,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeresidueKind": "all",
                             "SubVolumeRigidswap": True,
                             "SubvolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 4.44 * u.bar, "ETO": 5.55 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 4.44 * u.bar,
+                                "ETO": 5.55 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12799,7 +12923,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeDim": [1, 1, 1] * u.angstrom,
                             "SubVolumeresidueKind": "all",
                             "SubVolumeRigidswap": True,
-                            "SubVolumeFugacity": {"ETH": 4.44 * u.bar, "ETO": 5.55 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 4.44 * u.bar,
+                                "ETO": 5.55 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12994,7 +13121,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -13075,7 +13205,7 @@ class TestGOMCControlFileWriter(BaseTest):
                     },
                 },
             )
-    
+
     def test_failures_targetedswap_NVT(self, ethane_gomc, ethanol_gomc):
         test_box_ethane_gomc_ethanol_gomc = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -13189,7 +13319,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 4.44 * u.bar, "ETO": 5.55 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 4.44 * u.bar,
+                                "ETO": 5.55 * u.bar,
+                            },
                         },
                     },
                 },
@@ -13585,12 +13718,12 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
 
-        r_cut_coul_str = 'RcutCoulomb_box_0'
+        r_cut_coul_str = "RcutCoulomb_box_0"
         r_cut_coul_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_coul_str} input is {type(r_cut_coul_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_coul_str} input is {type(r_cut_coul_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13605,12 +13738,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_coul_str = 'RcutCoulomb_box_1'
+        r_cut_coul_str = "RcutCoulomb_box_1"
         r_cut_coul_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_coul_str} input is {type(r_cut_coul_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_coul_str} input is {type(r_cut_coul_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13625,12 +13758,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_coul_str = 'RcutCoulomb_box_0'
+        r_cut_coul_str = "RcutCoulomb_box_0"
         r_cut_coul_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_coul_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_coul_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13645,12 +13778,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_coul_str = 'RcutCoulomb_box_1'
+        r_cut_coul_str = "RcutCoulomb_box_1"
         r_cut_coul_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_coul_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_coul_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13680,12 +13813,12 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
 
-        pressure_str = 'Pressure'
+        pressure_str = "Pressure"
         pressure_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {pressure_str} input is {type(pressure_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in pressure units.",
+            TypeError,
+            match=f"ERROR: The {pressure_str} input is {type(pressure_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13700,12 +13833,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        pressure_str = 'Pressure'
+        pressure_str = "Pressure"
         pressure_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {pressure_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in pressure units.",
+            TypeError,
+            match=f"ERROR: The {pressure_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13735,12 +13868,12 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
 
-        r_cut_str = 'Rcut'
+        r_cut_str = "Rcut"
         r_cut_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_str} input is {type(r_cut_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_str} input is {type(r_cut_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13755,12 +13888,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_str = 'Rcut'
+        r_cut_str = "Rcut"
         r_cut_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13775,12 +13908,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_low_str = 'RcutLow'
+        r_cut_low_str = "RcutLow"
         r_cut_low_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_low_str} input is {type(r_cut_low_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_low_str} input is {type(r_cut_low_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13795,12 +13928,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_low_str = 'RcutLow'
+        r_cut_low_str = "RcutLow"
         r_cut_low_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_low_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_low_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13815,12 +13948,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_switch_str = 'Rswitch'
+        r_switch_str = "Rswitch"
         r_switch_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_switch_str} input is {type(r_switch_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_switch_str} input is {type(r_switch_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13835,12 +13968,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_switch_str = 'Rswitch'
+        r_switch_str = "Rswitch"
         r_switch_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_switch_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_switch_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13870,12 +14003,12 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
 
-        min_sigma_str = 'MinSigma'
+        min_sigma_str = "MinSigma"
         min_sigma_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {min_sigma_str} input is {type(min_sigma_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {min_sigma_str} input is {type(min_sigma_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13895,12 +14028,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        min_sigma_str = 'MinSigma'
+        min_sigma_str = "MinSigma"
         min_sigma_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {min_sigma_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {min_sigma_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13934,13 +14067,13 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
 
-        chempot_str = 'ChemPot'
+        chempot_str = "ChemPot"
         chempot_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {chempot_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in energy units, "
-                      f"such as kcal/mol, kJ/mol, or K."
+            TypeError,
+            match=f"ERROR: The {chempot_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in energy units, "
+            f"such as kcal/mol, kJ/mol, or K.",
         ):
 
             gomc_control.write_gomc_control_file(
@@ -13955,13 +14088,13 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        chempot_str = 'ChemPot'
+        chempot_str = "ChemPot"
         chempot_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {chempot_str} input is {type(chempot_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in energy units, "
-                      f"such as kcal/mol, kJ/mol, or K."
+            TypeError,
+            match=f"ERROR: The {chempot_str} input is {type(chempot_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in energy units, "
+            f"such as kcal/mol, kJ/mol, or K.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13975,13 +14108,13 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        subvolume_chempot_str = 'SubVolumeChempot'
+        subvolume_chempot_str = "SubVolumeChempot"
         subvolume_chempot_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_chempot_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in energy units, "
-                      f"such as kcal/mol, kJ/mol, or K."
+            TypeError,
+            match=f"ERROR: The {subvolume_chempot_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in energy units, "
+            f"such as kcal/mol, kJ/mol, or K.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14010,19 +14143,21 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["all"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            subvolume_chempot_str: {"ETH": subvolume_chempot_value},
+                            subvolume_chempot_str: {
+                                "ETH": subvolume_chempot_value
+                            },
                         },
                     },
                 },
             )
 
-        subvolume_chempot_str = 'SubVolumeChempot'
+        subvolume_chempot_str = "SubVolumeChempot"
         subvolume_chempot_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_chempot_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in energy units, "
-                      f"such as kcal/mol, kJ/mol, or K."
+            TypeError,
+            match=f"ERROR: The {subvolume_chempot_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in energy units, "
+            f"such as kcal/mol, kJ/mol, or K.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14051,18 +14186,20 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["all"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            subvolume_chempot_str: {"ETH": subvolume_chempot_value},
+                            subvolume_chempot_str: {
+                                "ETH": subvolume_chempot_value
+                            },
                         },
                     },
                 },
             )
 
-        fugacity_str = 'Fugacity'
+        fugacity_str = "Fugacity"
         fugacity_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {fugacity_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in pressure units."
+            TypeError,
+            match=f"ERROR: The {fugacity_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14076,12 +14213,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        fugacity_str = 'Fugacity'
+        fugacity_str = "Fugacity"
         fugacity_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {fugacity_str} input is {type(fugacity_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in pressure units."
+            TypeError,
+            match=f"ERROR: The {fugacity_str} input is {type(fugacity_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14095,12 +14232,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        subvolume_fugacity_str = 'SubVolumeFugacity'
+        subvolume_fugacity_str = "SubVolumeFugacity"
         subvolume_fugacity_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_fugacity_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in pressure units."
+            TypeError,
+            match=f"ERROR: The {subvolume_fugacity_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14129,18 +14266,20 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["all"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            subvolume_fugacity_str: {"ETH": subvolume_fugacity_value},
+                            subvolume_fugacity_str: {
+                                "ETH": subvolume_fugacity_value
+                            },
                         },
                     },
                 },
             )
 
-        subvolume_fugacity_str = 'SubVolumeFugacity'
+        subvolume_fugacity_str = "SubVolumeFugacity"
         subvolume_fugacity_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_fugacity_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in pressure units."
+            TypeError,
+            match=f"ERROR: The {subvolume_fugacity_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14169,18 +14308,20 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["all"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            subvolume_fugacity_str: {"ETH": subvolume_fugacity_value},
+                            subvolume_fugacity_str: {
+                                "ETH": subvolume_fugacity_value
+                            },
                         },
                     },
                 },
             )
 
-        subvolume_dim_str = 'SubVolumeDim'
+        subvolume_dim_str = "SubVolumeDim"
         subvolume_dim_value = 11
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_dim_str.lower()} input is {type(subvolume_dim_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {subvolume_dim_str.lower()} input is {type(subvolume_dim_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14204,22 +14345,29 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeType": "dynamic",
                             "SubVolumeBox": 0,
                             "SubVolumeCenterList": ["1-6", 7, 8],
-                            subvolume_dim_str: [subvolume_dim_value, 2 * u.angstrom, 1 * u.angstrom],
+                            subvolume_dim_str: [
+                                subvolume_dim_value,
+                                2 * u.angstrom,
+                                1 * u.angstrom,
+                            ],
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
             )
 
-        subvolume_dim_str = 'SubVolumeDim'
+        subvolume_dim_str = "SubVolumeDim"
         subvolume_dim_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_dim_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {subvolume_dim_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14243,22 +14391,29 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeType": "dynamic",
                             "SubVolumeBox": 0,
                             "SubVolumeCenterList": ["1-6", 7, 8],
-                            subvolume_dim_str: [2 * u.angstrom, subvolume_dim_value, 1 * u.angstrom],
+                            subvolume_dim_str: [
+                                2 * u.angstrom,
+                                subvolume_dim_value,
+                                1 * u.angstrom,
+                            ],
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
             )
 
-        subvolume_center_str = 'SubVolumeCenter'
+        subvolume_center_str = "SubVolumeCenter"
         subvolume_center_value = 11
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_center_str.lower()} input is {type(subvolume_center_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {subvolume_center_str.lower()} input is {type(subvolume_center_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14280,7 +14435,11 @@ class TestGOMCControlFileWriter(BaseTest):
                         0: {
                             "SubVolumeType": "static",
                             "SubVolumeBox": 0,
-                            subvolume_center_str: [2 * u.angstrom, 3 * u.angstrom, subvolume_center_value],
+                            subvolume_center_str: [
+                                2 * u.angstrom,
+                                3 * u.angstrom,
+                                subvolume_center_value,
+                            ],
                             "SubVolumeDim": [4, 3, 2] * u.angstrom,
                             "SubVolumeResidueKind": "ETH",
                             "SubVolumeRigidSwap": False,
@@ -14290,12 +14449,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        subvolume_center_str = 'SubVolumeCenter'
+        subvolume_center_str = "SubVolumeCenter"
         subvolume_center_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_center_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {subvolume_center_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14317,7 +14476,11 @@ class TestGOMCControlFileWriter(BaseTest):
                         0: {
                             "SubVolumeType": "static",
                             "SubVolumeBox": 0,
-                            subvolume_center_str: [2 * u.angstrom, subvolume_center_value, 3 * u.angstrom],
+                            subvolume_center_str: [
+                                2 * u.angstrom,
+                                subvolume_center_value,
+                                3 * u.angstrom,
+                            ],
                             "SubVolumeDim": [4, 3, 2] * u.angstrom,
                             "SubVolumeResidueKind": "ETH",
                             "SubVolumeRigidSwap": False,
@@ -14326,4 +14489,3 @@ class TestGOMCControlFileWriter(BaseTest):
                     },
                 },
             )
-

@@ -1,19 +1,10 @@
+import mbuild as mb
 import numpy as np
 import pytest
-from foyer.forcefields import forcefields
-
 import unyt as u
-from unyt.dimensions import (
-    length,
-    pressure,
-    temperature,
-    angle,
-)
-
-import mbuild as mb
+from foyer.forcefields import forcefields
 from mbuild import Box, Compound
 from mbuild.formats.gmso_charmm_writer import Charmm
-
 from mbuild.lattice import load_cif
 from mbuild.tests.base_test import BaseTest
 from mbuild.utils.conversion import (
@@ -22,9 +13,9 @@ from mbuild.utils.conversion import (
     base10_to_base52_alph,
     base10_to_base62_alph_num,
 )
-from mbuild.utils.io import get_fn, has_foyer
 from mbuild.utils.gmso_specific_ff_to_residue import specific_ff_to_residue
-
+from mbuild.utils.io import get_fn, has_foyer
+from unyt.dimensions import angle, length, pressure, temperature
 
 
 @pytest.mark.skipif(not has_foyer, reason="Foyer package not installed")
@@ -37,8 +28,10 @@ class TestCharmmWriterData(BaseTest):
             residues=[ethane_gomc.name],
             forcefield_selection="oplsaa",
         )
-    '''
-    '''
+
+    """
+    """
+
     def test_save_charmm_gomc_ff(self, ethane_gomc):
         charmm = Charmm(
             ethane_gomc,
@@ -90,7 +83,7 @@ class TestCharmmWriterData(BaseTest):
                     bonds_read = True
                     bond_types = [
                         ["A", "A", "268.0", "1.529"],
-                        ["A", "B", "340.0", "1.09"]
+                        ["A", "B", "340.0", "1.09"],
                     ]
                     assert len(out_gomc[i + 1].split("!")[0].split()) == 4
                     assert len(out_gomc[i + 2].split("!")[0].split()) == 4
@@ -486,8 +479,11 @@ class TestCharmmWriterData(BaseTest):
                     for k in range(0, len(bond_types)):
                         if bond_types[k] in total_bonds_evaluated:
                             total_bonds_evaluated_reorg.append(bond_types[k])
-                    print('total_bonds_evaluated_reorg = ' +str(total_bonds_evaluated_reorg))
-                    print('bond_types = ' + str(bond_types))
+                    print(
+                        "total_bonds_evaluated_reorg = "
+                        + str(total_bonds_evaluated_reorg)
+                    )
+                    print("bond_types = " + str(bond_types))
                     assert total_bonds_evaluated_reorg == bond_types
 
                 elif (
@@ -756,24 +752,20 @@ class TestCharmmWriterData(BaseTest):
 
     def test_save_charmm_mie_ua_gomc_ff(self, water, two_propanol_ua):
         box_0 = mb.fill_box(
-            compound=[water, two_propanol_ua],
-            n_compounds=[1, 1],
-            box=[5, 4, 3]
+            compound=[water, two_propanol_ua], n_compounds=[1, 1], box=[5, 4, 3]
         )
 
         charmm = Charmm(
             box_0,
             "charmm_data_Mie_UA",
             ff_filename="charmm_data_Mie_UA",
-            residues=[water.name,
-                      two_propanol_ua.name
-                      ],
+            residues=[water.name, two_propanol_ua.name],
             forcefield_selection={
-                                  water.name: get_fn("gmso_spce_water.xml"),
-                                  two_propanol_ua.name: get_fn("gmso_two_propanol_Mie_ua.xml"),
-                                  },
-            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C" , "_HC": "C"},
-            gomc_fix_bonds_angles=[water.name]
+                water.name: get_fn("gmso_spce_water.xml"),
+                two_propanol_ua.name: get_fn("gmso_two_propanol_Mie_ua.xml"),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            gomc_fix_bonds_angles=[water.name],
         )
         charmm.write_inp()
 
@@ -854,8 +846,11 @@ class TestCharmmWriterData(BaseTest):
                     for k in range(0, len(bond_types)):
                         if bond_types[k] in total_bonds_evaluated:
                             total_bonds_evaluated_reorg.append(bond_types[k])
-                    print('total_bonds_evaluated_reorg = ' +str(total_bonds_evaluated_reorg))
-                    print('bond_types = ' + str(bond_types))
+                    print(
+                        "total_bonds_evaluated_reorg = "
+                        + str(total_bonds_evaluated_reorg)
+                    )
+                    print("bond_types = " + str(bond_types))
                     assert total_bonds_evaluated_reorg == bond_types
 
                 elif (
@@ -1016,24 +1011,20 @@ class TestCharmmWriterData(BaseTest):
 
     def test_save_charmm_mie_ua_psf(self, water, two_propanol_ua):
         box_0 = mb.fill_box(
-            compound=[water, two_propanol_ua],
-            n_compounds=[1, 1],
-            box=[5, 4, 3]
+            compound=[water, two_propanol_ua], n_compounds=[1, 1], box=[5, 4, 3]
         )
 
         charmm = Charmm(
             box_0,
             "charmm_data_Mie_UA",
             ff_filename="charmm_data_Mie_UA",
-            residues=[water.name,
-                      two_propanol_ua.name
-                      ],
+            residues=[water.name, two_propanol_ua.name],
             forcefield_selection={
                 water.name: get_fn("gmso_spce_water.xml"),
                 two_propanol_ua.name: get_fn("gmso_two_propanol_Mie_ua.xml"),
             },
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
-            gomc_fix_bonds_angles=[water.name]
+            gomc_fix_bonds_angles=[water.name],
         )
         charmm.write_psf()
 
@@ -1139,24 +1130,20 @@ class TestCharmmWriterData(BaseTest):
 
     def test_save_charmm_mie_ua_pdb(self, water, two_propanol_ua):
         box_0 = mb.fill_box(
-            compound=[water, two_propanol_ua],
-            n_compounds=[1, 1],
-            box=[5, 4, 3]
+            compound=[water, two_propanol_ua], n_compounds=[1, 1], box=[5, 4, 3]
         )
 
         charmm = Charmm(
             box_0,
             "charmm_data_Mie_UA",
             ff_filename="charmm_data_Mie_UA",
-            residues=[water.name,
-                      two_propanol_ua.name
-                      ],
+            residues=[water.name, two_propanol_ua.name],
             forcefield_selection={
                 water.name: get_fn("gmso_spce_water.xml"),
                 two_propanol_ua.name: get_fn("gmso_two_propanol_Mie_ua.xml"),
             },
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
-            gomc_fix_bonds_angles=[water.name]
+            gomc_fix_bonds_angles=[water.name],
         )
         charmm.write_pdb()
 
@@ -1164,10 +1151,12 @@ class TestCharmmWriterData(BaseTest):
             read_pdb = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
-                if "CRYST1" in line\
-                        and "50.000" in line \
-                        and "40.000" in line \
-                        and "30.000" in line:
+                if (
+                    "CRYST1" in line
+                    and "50.000" in line
+                    and "40.000" in line
+                    and "30.000" in line
+                ):
                     read_pdb = True
                     atom_type_res_part_1_list = [
                         ["ATOM", "1", "O1", "WAT", "A", "1"],
@@ -1205,27 +1194,26 @@ class TestCharmmWriterData(BaseTest):
 
         assert read_pdb
 
-    def test_save_charmm_mie_ua_K_energy_units_CHARMM_ff(self, water, two_propanol_ua):
+    def test_save_charmm_mie_ua_K_energy_units_CHARMM_ff(
+        self, water, two_propanol_ua
+    ):
         box_0 = mb.fill_box(
-            compound=[water, two_propanol_ua],
-            n_compounds=[1, 1],
-            box=[5, 4, 3]
+            compound=[water, two_propanol_ua], n_compounds=[1, 1], box=[5, 4, 3]
         )
 
         charmm = Charmm(
             box_0,
             "charmm_mie_ua_K_energy_units_CHARMM",
             ff_filename="charmm_mie_ua_K_energy_units_CHARMM",
-            residues=[water.name,
-                      two_propanol_ua.name
-                      ],
+            residues=[water.name, two_propanol_ua.name],
             forcefield_selection={
-                                  water.name: get_fn("gmso_spce_water.xml"),
-                                  two_propanol_ua.name: get_fn(
-                                      "gmso_two_propanol_Mie_CHARMM_dihedral_ua_K_energy_units.xml"),
-                                  },
-            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C" , "_HC": "C"},
-            gomc_fix_bonds_angles=[water.name]
+                water.name: get_fn("gmso_spce_water.xml"),
+                two_propanol_ua.name: get_fn(
+                    "gmso_two_propanol_Mie_CHARMM_dihedral_ua_K_energy_units.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            gomc_fix_bonds_angles=[water.name],
         )
         charmm.write_inp()
 
@@ -1306,8 +1294,11 @@ class TestCharmmWriterData(BaseTest):
                     for k in range(0, len(bond_types)):
                         if bond_types[k] in total_bonds_evaluated:
                             total_bonds_evaluated_reorg.append(bond_types[k])
-                    print('total_bonds_evaluated_reorg = ' +str(total_bonds_evaluated_reorg))
-                    print('bond_types = ' + str(bond_types))
+                    print(
+                        "total_bonds_evaluated_reorg = "
+                        + str(total_bonds_evaluated_reorg)
+                    )
+                    print("bond_types = " + str(bond_types))
                     assert total_bonds_evaluated_reorg == bond_types
 
                 elif (
@@ -1466,27 +1457,26 @@ class TestCharmmWriterData(BaseTest):
         assert dihedrals_read
         assert nonbondeds_read
 
-    def test_save_charmm_mie_ua_K_energy_units_OPLS_ff(self, water, two_propanol_ua):
+    def test_save_charmm_mie_ua_K_energy_units_OPLS_ff(
+        self, water, two_propanol_ua
+    ):
         box_0 = mb.fill_box(
-            compound=[water, two_propanol_ua],
-            n_compounds=[1, 1],
-            box=[5, 4, 3]
+            compound=[water, two_propanol_ua], n_compounds=[1, 1], box=[5, 4, 3]
         )
 
         charmm = Charmm(
             box_0,
             "charmm_mie_ua_K_energy_units_OPLS",
             ff_filename="charmm_mie_ua_K_energy_units_OPLS",
-            residues=[water.name,
-                      two_propanol_ua.name
-                      ],
+            residues=[water.name, two_propanol_ua.name],
             forcefield_selection={
-                                  water.name: get_fn("gmso_spce_water.xml"),
-                                  two_propanol_ua.name: get_fn(
-                                      "gmso_two_propanol_Mie_OPLS_dihedral_ua_K_energy_units.xml"),
-                                  },
-            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C" , "_HC": "C"},
-            gomc_fix_bonds_angles=[water.name]
+                water.name: get_fn("gmso_spce_water.xml"),
+                two_propanol_ua.name: get_fn(
+                    "gmso_two_propanol_Mie_OPLS_dihedral_ua_K_energy_units.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            gomc_fix_bonds_angles=[water.name],
         )
         charmm.write_inp()
 
@@ -1529,27 +1519,26 @@ class TestCharmmWriterData(BaseTest):
 
         assert dihedrals_read
 
-    def test_save_charmm_mie_ua_K_energy_units_RB_ff(self, water, two_propanol_ua):
+    def test_save_charmm_mie_ua_K_energy_units_RB_ff(
+        self, water, two_propanol_ua
+    ):
         box_0 = mb.fill_box(
-            compound=[water, two_propanol_ua],
-            n_compounds=[1, 1],
-            box=[5, 4, 3]
+            compound=[water, two_propanol_ua], n_compounds=[1, 1], box=[5, 4, 3]
         )
 
         charmm = Charmm(
             box_0,
             "charmm_mie_ua_K_energy_units_RB",
             ff_filename="charmm_mie_ua_K_energy_units_RB",
-            residues=[water.name,
-                      two_propanol_ua.name
-                      ],
+            residues=[water.name, two_propanol_ua.name],
             forcefield_selection={
-                                  water.name: get_fn("gmso_spce_water.xml"),
-                                  two_propanol_ua.name: get_fn(
-                                      "gmso_two_propanol_Mie_RB_dihedral_ua_K_energy_units.xml"),
-                                  },
-            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C" , "_HC": "C"},
-            gomc_fix_bonds_angles=[water.name]
+                water.name: get_fn("gmso_spce_water.xml"),
+                two_propanol_ua.name: get_fn(
+                    "gmso_two_propanol_Mie_RB_dihedral_ua_K_energy_units.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            gomc_fix_bonds_angles=[water.name],
         )
         charmm.write_inp()
 
@@ -2019,7 +2008,7 @@ class TestCharmmWriterData(BaseTest):
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
                 if (
-                     "! type_1" in line
+                    "! type_1" in line
                     and "type_2" in line
                     and "Kb" in line
                     and "b0" in line
@@ -2355,8 +2344,8 @@ class TestCharmmWriterData(BaseTest):
             [200, "c8"],
             [1000, "3e8"],
             [5000, "1388"],
-            [int(16 ** 3 - 1), "fff"],
-            [int(16 ** 3), "1000"],
+            [int(16**3 - 1), "fff"],
+            [int(16**3), "1000"],
         ]
 
         for test_base_16_iter in range(0, len(list_base_10_and_16)):
@@ -2367,7 +2356,7 @@ class TestCharmmWriterData(BaseTest):
             )
 
         unique_entries_base_16_list = []
-        for test_unique_base_16 in range(0, 16 ** 2):
+        for test_unique_base_16 in range(0, 16**2):
             unique_entries_base_16_list.append(
                 base10_to_base16_alph_num(test_unique_base_16)
             )
@@ -2399,8 +2388,8 @@ class TestCharmmWriterData(BaseTest):
             [200, "HS"],
             [1000, "BMM"],
             [5000, "HKI"],
-            [int(26 ** 3 - 1), "ZZZ"],
-            [int(26 ** 3), "BAAA"],
+            [int(26**3 - 1), "ZZZ"],
+            [int(26**3), "BAAA"],
         ]
 
         for test_base_26_iter in range(0, len(list_base_10_and_26)):
@@ -2409,7 +2398,7 @@ class TestCharmmWriterData(BaseTest):
             assert str(base10_to_base26_alph(test_10_iter)) == str(test_26_iter)
 
         unique_entries_base_26_list = []
-        for test_unique_base_26 in range(0, 26 ** 2):
+        for test_unique_base_26 in range(0, 26**2):
             unique_entries_base_26_list.append(
                 base10_to_base26_alph(test_unique_base_26)
             )
@@ -2441,8 +2430,8 @@ class TestCharmmWriterData(BaseTest):
             [200, "Ds"],
             [1000, "TM"],
             [5000, "BsI"],
-            [int(52 ** 3 - 1), "zzz"],
-            [int(52 ** 3), "BAAA"],
+            [int(52**3 - 1), "zzz"],
+            [int(52**3), "BAAA"],
         ]
 
         for test_base_52_iter in range(0, len(list_base_10_and_52)):
@@ -2451,7 +2440,7 @@ class TestCharmmWriterData(BaseTest):
             assert str(base10_to_base52_alph(test_10_iter)) == str(test_52_iter)
 
         unique_entries_base_52_list = []
-        for test_unique_base_52 in range(0, 52 ** 2):
+        for test_unique_base_52 in range(0, 52**2):
             unique_entries_base_52_list.append(
                 base10_to_base52_alph(test_unique_base_52)
             )
@@ -2483,8 +2472,8 @@ class TestCharmmWriterData(BaseTest):
             [200, "3E"],
             [1000, "G8"],
             [5000, "1Ie"],
-            [int(62 ** 3 - 1), "zzz"],
-            [int(62 ** 3), "1000"],
+            [int(62**3 - 1), "zzz"],
+            [int(62**3), "1000"],
         ]
 
         for test_base_62_iter in range(0, len(list_base_10_and_62)):
@@ -2495,7 +2484,7 @@ class TestCharmmWriterData(BaseTest):
             )
 
         unique_entries_base_62_list = []
-        for test_unique_base_62 in range(0, 62 ** 2):
+        for test_unique_base_62 in range(0, 62**2):
             unique_entries_base_62_list.append(
                 base10_to_base62_alph_num(test_unique_base_62)
             )
@@ -2641,11 +2630,11 @@ class TestCharmmWriterData(BaseTest):
         with pytest.raises(
             ValueError,
             match=r"Please make sure you are entering the correct foyer FF path, "
-                  r"including the FF file name.xml. "
-                  r"If you are using the pre-build FF files in foyer, "
-                  r"only use the string name without any extension. "
-                  r"The selected FF file could also could not formated properly, "
-                  r"or there may be errors in the FF file itself.",
+            r"including the FF file name.xml. "
+            r"If you are using the pre-build FF files in foyer, "
+            r"only use the string name without any extension. "
+            r"The selected FF file could also could not formated properly, "
+            r"or there may be errors in the FF file itself.",
         ):
             test_box_ethane_gomc = mb.fill_box(
                 compound=[ethane_gomc], n_compounds=[1], box=[4, 5, 6]
@@ -2662,12 +2651,12 @@ class TestCharmmWriterData(BaseTest):
     def test_specific_ff_wrong_path(self, ethane_gomc):
         with pytest.raises(
             ValueError,
-                match=r"Please make sure you are entering the correct foyer FF path, "
-                      r"including the FF file name.xml. "
-                      r"If you are using the pre-build FF files in foyer, "
-                      r"only use the string name without any extension. "
-                      r"The selected FF file could also could not formated properly, "
-                      r"or there may be errors in the FF file itself.",
+            match=r"Please make sure you are entering the correct foyer FF path, "
+            r"including the FF file name.xml. "
+            r"If you are using the pre-build FF files in foyer, "
+            r"only use the string name without any extension. "
+            r"The selected FF file could also could not formated properly, "
+            r"or there may be errors in the FF file itself.",
         ):
             specific_ff_to_residue(
                 ethane_gomc,
@@ -2844,8 +2833,8 @@ class TestCharmmWriterData(BaseTest):
             boxes_for_simulation=1,
         )
 
-        print("test_topology = " +str(test_topology))
-        assert ("Topology main, 17 sites" in str(test_topology))
+        print("test_topology = " + str(test_topology))
+        assert "Topology main, 17 sites" in str(test_topology)
         assert test_electrostatics14Scale_dict == {"ETO": 0.5, "ETH": 0.5}
         assert test_nonBonded14Scale_dict == {"ETO": 0.5, "ETH": 0.5}
         assert test_residues_applied_list == ["ETH", "ETO"]
@@ -3852,7 +3841,7 @@ class TestCharmmWriterData(BaseTest):
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
                 if (
-                     "! atom_types" in line
+                    "! atom_types" in line
                     and "mass" in line
                     and "atomClass_ResidueName" in line
                 ):
@@ -4144,7 +4133,9 @@ class TestCharmmWriterData(BaseTest):
 
                     atom_type_res_part_2_list = []
                     for f_i in range(0, no_methane_atoms):
-                        atom_type_res_part_2_list.append(["1.00", "0.00", "_CH4"])
+                        atom_type_res_part_2_list.append(
+                            ["1.00", "0.00", "_CH4"]
+                        )
 
                     assert out_gomc[i].split()[0:7] == crystal_box_length_angles
 
@@ -4166,8 +4157,8 @@ class TestCharmmWriterData(BaseTest):
     # test warning the for non-zero charged system box 0
     def test_save_system_charge_non_zero_box_0_only_gomc_ff(self, water):
         with pytest.warns(
-                UserWarning,
-                match="System is not charge neutral for structure_box_0. Total charge is -0.8476.",
+            UserWarning,
+            match="System is not charge neutral for structure_box_0. Total charge is -0.8476.",
         ):
             Charmm(
                 water,
@@ -4182,10 +4173,12 @@ class TestCharmmWriterData(BaseTest):
             )
 
     # test warning the for non-zero charged system box 0
-    def test_save_system_charge_non_zero_box_0_gomc_ff(self, water, two_propanol_ua):
+    def test_save_system_charge_non_zero_box_0_gomc_ff(
+        self, water, two_propanol_ua
+    ):
         with pytest.warns(
-                UserWarning,
-                match="System is not charge neutral for structure_box_0. Total charge is -0.8476.",
+            UserWarning,
+            match="System is not charge neutral for structure_box_0. Total charge is -0.8476.",
         ):
             Charmm(
                 water,
@@ -4196,14 +4189,18 @@ class TestCharmmWriterData(BaseTest):
                 residues=[water.name, two_propanol_ua.name],
                 forcefield_selection={
                     water.name: get_fn("gmso_spce_water_bad_charges.xml"),
-                    two_propanol_ua.name: get_fn("gmso_two_propanol_CHARMM_dihedrals_ua.xml"),
+                    two_propanol_ua.name: get_fn(
+                        "gmso_two_propanol_CHARMM_dihedrals_ua.xml"
+                    ),
                 },
             )
 
-    def test_save_system_charge_non_zero_box_1_gomc_ff(self, water, two_propanol_ua):
+    def test_save_system_charge_non_zero_box_1_gomc_ff(
+        self, water, two_propanol_ua
+    ):
         with pytest.warns(
-                UserWarning,
-                match="System is not charge neutral for structure_box_1. Total charge is -0.8476.",
+            UserWarning,
+            match="System is not charge neutral for structure_box_1. Total charge is -0.8476.",
         ):
             Charmm(
                 two_propanol_ua,
@@ -4214,7 +4211,9 @@ class TestCharmmWriterData(BaseTest):
                 residues=[water.name, two_propanol_ua.name],
                 forcefield_selection={
                     water.name: get_fn("gmso_spce_water_bad_charges.xml"),
-                    two_propanol_ua.name: get_fn("gmso_two_propanol_CHARMM_dihedrals_ua.xml"),
+                    two_propanol_ua.name: get_fn(
+                        "gmso_two_propanol_CHARMM_dihedrals_ua.xml"
+                    ),
                 },
             )
 
@@ -4227,7 +4226,9 @@ class TestCharmmWriterData(BaseTest):
             ff_filename="gmso_RB_dihedral_gomc",
             residues=[two_propanol_ua.name],
             forcefield_selection={
-                two_propanol_ua.name: get_fn("gmso_two_propanol_RB_dihedrals_ua.xml"),
+                two_propanol_ua.name: get_fn(
+                    "gmso_two_propanol_RB_dihedrals_ua.xml"
+                ),
             },
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
         )
@@ -4238,17 +4239,17 @@ class TestCharmmWriterData(BaseTest):
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
                 if (
-                        "! type_1" in line
-                        and "type_2" in line
-                        and "type_3" in line
-                        and "type_4" in line
-                        and "Kchi" in line
-                        and "n" in line
-                        and "delta" in line
-                        and "extended_type_1" in line
-                        and "extended_type_2" in line
-                        and "extended_type_3" in line
-                        and "extended_type_4" in line
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "type_4" in line
+                    and "Kchi" in line
+                    and "n" in line
+                    and "delta" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                    and "extended_type_4" in line
                 ):
                     dihedrals_read = True
                     dihedral_types = [
@@ -4260,11 +4261,11 @@ class TestCharmmWriterData(BaseTest):
                     ]
                     for j in range(0, len(dihedral_types)):
                         assert (
-                                len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
                         )
                         assert (
-                                out_gomc[i + 1 + j].split("!")[0].split()[0:7]
-                                == dihedral_types[j]
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == dihedral_types[j]
                         )
 
                 else:
@@ -4280,7 +4281,9 @@ class TestCharmmWriterData(BaseTest):
             ff_filename="gmso_OPLS_dihedral_gomc",
             residues=[two_propanol_ua.name],
             forcefield_selection={
-                two_propanol_ua.name: get_fn("gmso_two_propanol_OPLS_dihedrals_ua.xml"),
+                two_propanol_ua.name: get_fn(
+                    "gmso_two_propanol_OPLS_dihedrals_ua.xml"
+                ),
             },
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
         )
@@ -4291,17 +4294,17 @@ class TestCharmmWriterData(BaseTest):
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
                 if (
-                        "! type_1" in line
-                        and "type_2" in line
-                        and "type_3" in line
-                        and "type_4" in line
-                        and "Kchi" in line
-                        and "n" in line
-                        and "delta" in line
-                        and "extended_type_1" in line
-                        and "extended_type_2" in line
-                        and "extended_type_3" in line
-                        and "extended_type_4" in line
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "type_4" in line
+                    and "Kchi" in line
+                    and "n" in line
+                    and "delta" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                    and "extended_type_4" in line
                 ):
                     dihedrals_read = True
                     dihedral_types = [
@@ -4313,11 +4316,11 @@ class TestCharmmWriterData(BaseTest):
                     ]
                     for j in range(0, len(dihedral_types)):
                         assert (
-                                len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
                         )
                         assert (
-                                out_gomc[i + 1 + j].split("!")[0].split()[0:7]
-                                == dihedral_types[j]
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == dihedral_types[j]
                         )
 
                 else:
@@ -4333,7 +4336,9 @@ class TestCharmmWriterData(BaseTest):
             ff_filename="gmso_CHARMM_dihedral_gomc",
             residues=[two_propanol_ua.name],
             forcefield_selection={
-                two_propanol_ua.name: get_fn("gmso_two_propanol_CHARMM_dihedrals_ua.xml"),
+                two_propanol_ua.name: get_fn(
+                    "gmso_two_propanol_CHARMM_dihedrals_ua.xml"
+                ),
             },
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
         )
@@ -4344,17 +4349,17 @@ class TestCharmmWriterData(BaseTest):
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
                 if (
-                        "! type_1" in line
-                        and "type_2" in line
-                        and "type_3" in line
-                        and "type_4" in line
-                        and "Kchi" in line
-                        and "n" in line
-                        and "delta" in line
-                        and "extended_type_1" in line
-                        and "extended_type_2" in line
-                        and "extended_type_3" in line
-                        and "extended_type_4" in line
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "type_4" in line
+                    and "Kchi" in line
+                    and "n" in line
+                    and "delta" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                    and "extended_type_4" in line
                 ):
                     dihedrals_read = True
                     dihedral_types = [
@@ -4366,11 +4371,11 @@ class TestCharmmWriterData(BaseTest):
                     ]
                     for j in range(0, len(dihedral_types)):
                         assert (
-                                len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
                         )
                         assert (
-                                out_gomc[i + 1 + j].split("!")[0].split()[0:7]
-                                == dihedral_types[j]
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == dihedral_types[j]
                         )
 
                 else:
@@ -4381,10 +4386,10 @@ class TestCharmmWriterData(BaseTest):
     # test the gmso harmonic dihderal input
     def test_save_gmso_harmonic_dihedral_gomc_ff(self, two_propanol_ua):
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {'POL'} residue has a "
-                      f"{'HarmonicTorsionPotential'} torsion potential, which "
-                      f"is not currently supported in this writer.",
+            TypeError,
+            match=f"ERROR: The {'POL'} residue has a "
+            f"{'HarmonicTorsionPotential'} torsion potential, which "
+            f"is not currently supported in this writer.",
         ):
             charmm = Charmm(
                 two_propanol_ua,
@@ -4392,7 +4397,9 @@ class TestCharmmWriterData(BaseTest):
                 ff_filename="gmso_harmonic_dihedral_gomc",
                 residues=[two_propanol_ua.name],
                 forcefield_selection={
-                    two_propanol_ua.name: get_fn("gmso_two_propanol_harmonic_dihedrals_ua.xml"),
+                    two_propanol_ua.name: get_fn(
+                        "gmso_two_propanol_harmonic_dihedrals_ua.xml"
+                    ),
                 },
                 bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
             )
@@ -4401,12 +4408,12 @@ class TestCharmmWriterData(BaseTest):
     # test the gmso other bad_form dihderal input equation
     def test_save_gmso_bad_form_dihedral_gomc_ff(self, two_propanol_ua):
         with pytest.raises(
-                TypeError,
-                match= f"ERROR: The {'POL'} residue and associated force field "
-                       f"has at least one unsupported dihdedral. "
-                       f"The only supported dihedrals are {'HarmonicTorsionPotential'}, "
-                       f"{'OPLSTorsionPotential'}, {'PeriodicTorsionPotential'}, and "
-                       f"{'RyckaertBellemansTorsionPotential'}."
+            TypeError,
+            match=f"ERROR: The {'POL'} residue and associated force field "
+            f"has at least one unsupported dihdedral. "
+            f"The only supported dihedrals are {'HarmonicTorsionPotential'}, "
+            f"{'OPLSTorsionPotential'}, {'PeriodicTorsionPotential'}, and "
+            f"{'RyckaertBellemansTorsionPotential'}.",
         ):
             charmm = Charmm(
                 two_propanol_ua,
@@ -4414,7 +4421,9 @@ class TestCharmmWriterData(BaseTest):
                 ff_filename="gmso_bad_form_dihedral_gomc",
                 residues=[two_propanol_ua.name],
                 forcefield_selection={
-                    two_propanol_ua.name: get_fn("gmso_two_propanol_bad_form_dihedrals_ua.xml"),
+                    two_propanol_ua.name: get_fn(
+                        "gmso_two_propanol_bad_form_dihedrals_ua.xml"
+                    ),
                 },
                 bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
             )
@@ -4423,30 +4432,32 @@ class TestCharmmWriterData(BaseTest):
     # test the gmso other bad_form bond input equation
     def test_save_gmso_bad_form_bonds_gomc_ff(self, two_propanol_ua):
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {'POL'} residue does not have a "
-                      f"{'HarmonicBondPotential'} bond potential, which "
-                      f"is the only supported bond potential."
+            TypeError,
+            match=f"ERROR: The {'POL'} residue does not have a "
+            f"{'HarmonicBondPotential'} bond potential, which "
+            f"is the only supported bond potential.",
         ):
             charmm = Charmm(
-                    two_propanol_ua,
-                    "gmso_bad_form_bonds_gomc",
-                    ff_filename="gmso_bad_form_bonds_gomc",
-                    residues=[two_propanol_ua.name],
-                    forcefield_selection={
-                        two_propanol_ua.name: get_fn("gmso_two_propanol_bad_form_bonds_ua.xml"),
-                    },
-                    bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
-                )
+                two_propanol_ua,
+                "gmso_bad_form_bonds_gomc",
+                ff_filename="gmso_bad_form_bonds_gomc",
+                residues=[two_propanol_ua.name],
+                forcefield_selection={
+                    two_propanol_ua.name: get_fn(
+                        "gmso_two_propanol_bad_form_bonds_ua.xml"
+                    ),
+                },
+                bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            )
             charmm.write_inp()
 
     # test the gmso other bad_form angle input equation
     def test_save_gmso_bad_form_angles_gomc_ff(self, two_propanol_ua):
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {'POL'} residue does not have a "
-                      f"{'HarmonicAnglePotential'} angle potential, which "
-                      f"is the only supported angle potential."
+            TypeError,
+            match=f"ERROR: The {'POL'} residue does not have a "
+            f"{'HarmonicAnglePotential'} angle potential, which "
+            f"is the only supported angle potential.",
         ):
             charmm = Charmm(
                 two_propanol_ua,
@@ -4454,7 +4465,9 @@ class TestCharmmWriterData(BaseTest):
                 ff_filename="gmso_bad_form_angles_gomc",
                 residues=[two_propanol_ua.name],
                 forcefield_selection={
-                    two_propanol_ua.name: get_fn("gmso_two_propanol_bad_form_angles_ua.xml"),
+                    two_propanol_ua.name: get_fn(
+                        "gmso_two_propanol_bad_form_angles_ua.xml"
+                    ),
                 },
                 bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
             )
@@ -4463,11 +4476,11 @@ class TestCharmmWriterData(BaseTest):
     # test the gmso bonds by atom type, not class in input equation
     def test_save_gmso_atom_type_not_class_bonds_gomc_ff(self, two_propanol_ua):
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {'POL'} residue has a least one bond member_types "
-                      f"that is not None. "
-                      f"Currently, the Charmm writer only supports the member_class "
-                      f"designations for bonds."
+            TypeError,
+            match=f"ERROR: The {'POL'} residue has a least one bond member_types "
+            f"that is not None. "
+            f"Currently, the Charmm writer only supports the member_class "
+            f"designations for bonds.",
         ):
             charmm = Charmm(
                 two_propanol_ua,
@@ -4475,20 +4488,24 @@ class TestCharmmWriterData(BaseTest):
                 ff_filename="gmso_atom_type_not_class_bonds_gomc_ff",
                 residues=[two_propanol_ua.name],
                 forcefield_selection={
-                    two_propanol_ua.name: get_fn("gmso_two_propanol_bonds_by_atom_type_ua.xml"),
+                    two_propanol_ua.name: get_fn(
+                        "gmso_two_propanol_bonds_by_atom_type_ua.xml"
+                    ),
                 },
                 bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
             )
             charmm.write_inp()
 
     # test the gmso angles by atom type, not class in input equation
-    def test_save_gmso_atom_type_not_class_angles_gomc_ff(self, two_propanol_ua):
+    def test_save_gmso_atom_type_not_class_angles_gomc_ff(
+        self, two_propanol_ua
+    ):
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {'POL'} residue has a least one angle member_types "
-                      f"that is not None. "
-                      f"Currently, the Charmm writer only supports the member_class "
-                      f"designations for angles."
+            TypeError,
+            match=f"ERROR: The {'POL'} residue has a least one angle member_types "
+            f"that is not None. "
+            f"Currently, the Charmm writer only supports the member_class "
+            f"designations for angles.",
         ):
             charmm = Charmm(
                 two_propanol_ua,
@@ -4496,20 +4513,24 @@ class TestCharmmWriterData(BaseTest):
                 ff_filename="gmso_atom_type_not_class_angles_gomc_ff",
                 residues=[two_propanol_ua.name],
                 forcefield_selection={
-                    two_propanol_ua.name: get_fn("gmso_two_propanol_angles_by_atom_type_ua.xml"),
+                    two_propanol_ua.name: get_fn(
+                        "gmso_two_propanol_angles_by_atom_type_ua.xml"
+                    ),
                 },
                 bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
             )
             charmm.write_inp()
 
     # test the gmso dihedrals by atom type, not class in input equation
-    def test_save_gmso_atom_type_not_class_dihedrals_gomc_ff(self, two_propanol_ua):
+    def test_save_gmso_atom_type_not_class_dihedrals_gomc_ff(
+        self, two_propanol_ua
+    ):
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {'POL'} residue has a least one dihedral member_types "
-                      f"that is not None. "
-                      f"Currently, the Charmm writer only supports the member_class "
-                      f"designations for dihedrals."
+            TypeError,
+            match=f"ERROR: The {'POL'} residue has a least one dihedral member_types "
+            f"that is not None. "
+            f"Currently, the Charmm writer only supports the member_class "
+            f"designations for dihedrals.",
         ):
             charmm = Charmm(
                 two_propanol_ua,
@@ -4517,7 +4538,9 @@ class TestCharmmWriterData(BaseTest):
                 ff_filename="gmso_atom_type_not_class_dihedrals_gomc_ff",
                 residues=[two_propanol_ua.name],
                 forcefield_selection={
-                    two_propanol_ua.name: get_fn("gmso_two_propanol_dihedrals_by_atom_type_ua.xml"),
+                    two_propanol_ua.name: get_fn(
+                        "gmso_two_propanol_dihedrals_by_atom_type_ua.xml"
+                    ),
                 },
                 bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
             )
@@ -4526,12 +4549,12 @@ class TestCharmmWriterData(BaseTest):
     # test bond, angle, and dihedral k-constants are the correct type and units
     def test_save_charmm_mie_ff_with_m_not_equal_6(self, two_propanol_ua):
         with pytest.raises(
-                ValueError,
-                match= f"ERROR: The Mie Potential atom class " 
-                       f"{'O'}_" 
-                       f"{'POL'} " 
-                       f"does not have an m-constant of 6 in the force field XML, " 
-                       f"which is required in GOMC and this file writer."
+            ValueError,
+            match=f"ERROR: The Mie Potential atom class "
+            f"{'O'}_"
+            f"{'POL'} "
+            f"does not have an m-constant of 6 in the force field XML, "
+            f"which is required in GOMC and this file writer.",
         ):
             Charmm(
                 two_propanol_ua,
@@ -4539,13 +4562,15 @@ class TestCharmmWriterData(BaseTest):
                 ff_filename="charmm_mie_ff_with_m_not_equal_6",
                 residues=[two_propanol_ua.name],
                 forcefield_selection={
-                    two_propanol_ua.name: get_fn("gmso_two_propanol_Mie_m_not_equal_6_ua.xml"),
+                    two_propanol_ua.name: get_fn(
+                        "gmso_two_propanol_Mie_m_not_equal_6_ua.xml"
+                    ),
                 },
                 bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
             )
 
     # these tests were tried but will not work propertly in pytest
-    '''
+    """
     # test bond, angle, and dihedral k-constants are the correct type and units
     def evaluate_charmm_bonded_units(self):
         with pytest.raises(
@@ -4579,4 +4604,4 @@ class TestCharmmWriterData(BaseTest):
                                                      'kcal'
                                                      )
 
-    '''
+    """
