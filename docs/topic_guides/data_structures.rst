@@ -41,4 +41,3 @@ The **MosDeF-GOMC** was built on the **MosDeF** ecosystem.  Therefore, please se
     	* `foyer <https://foyer.mosdef.org/en/stable/>`_ -- A package for atom-typing as well as applying and disseminating forcefields
 
     	* `GMSO <https://gmso.mosdef.org/en/stable/>`_ -- Flexible storage of chemical topology for molecular simulation
-

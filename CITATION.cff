@@ -50,7 +50,7 @@ MoSDeF-GOMC: Python software for the
 creation of scientific workflows for the Monte
 Carlo simulation engine GOMC
 
-      MoSDeF-GOMC is designed to produce all the required files to run a Monte Carlo simulation, with only tens of lines of Python code.  Alternately, this software's output can also build the starting files for a single residue molecules via NAMD and and the py-MCMD codes.  
+      MoSDeF-GOMC is designed to produce all the required files to run a Monte Carlo simulation, with only tens of lines of Python code.  Alternately, this software's output can also build the starting files for a single residue molecules via NAMD and and the py-MCMD codes.
 
 keywords:
   - Python

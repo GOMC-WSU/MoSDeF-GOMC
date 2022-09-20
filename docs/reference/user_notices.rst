@@ -13,10 +13,10 @@ The new **MoSDeF-GOMC** version using GMSO allows for a more flexible and better
 
 	#. The user can build a force field file using the **GMSO** formatted XML, which allows the user to enter the equations and units for the non-bonded and bonded interactions. This includes different dihedral forms (RB-torsions, OPLS, and periodic dihedrals) and the ability to use the Kelvin energy units. Provided the equation form is permitted in the **MoSDeF-GOMC** software, **MoSDeF-GOMC** automatically converts them to the usable form and scales the coefficients accordingly
 
-	#. All **MoSDeF-GOMC** functions now require the `unyt <https://unyt.readthedocs.io/en/stable/>`_ package units unless the values are unitless, ensuring the user enters the proper units.   **MoSDeF-GOMC** will internally handle the unit conversions and write the files with the correct units. 
+	#. All **MoSDeF-GOMC** functions now require the `unyt <https://unyt.readthedocs.io/en/stable/>`_ package units unless the values are unitless, ensuring the user enters the proper units.   **MoSDeF-GOMC** will internally handle the unit conversions and write the files with the correct units.
 
 	#. Automatic application of the mixing/combining rules, if provided in the force field XML files.
 
 	#. Other new features exist, so please see the **MoSDeF-GOMC** documentation for more features.
-	
-	
+
+

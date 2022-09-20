@@ -1,9 +1,11 @@
 # GMSO equation or expression comparisons
 import os
+
+# import signac
+import xml.etree.ElementTree as ET
+
 import sympy
 import unyt as u
-#import signac
-import xml.etree.ElementTree as ET
 
 
 # compare Lennard-Jones (LJ) non-bonded equations
@@ -30,28 +32,43 @@ def evaluate_nonbonded_lj_format_with_scaler(new_lj_form, base_lj_form):
             None, if the new_lj_form variable is not a LJ non-bonded form.
     """
     try:
-        eqn_ratio, epsilon, ep, sigma, sig, r, Rmin, rmin, r_min, two = sympy.symbols(
-            'eqn_ratio epsilon ep sigma sig r Rmin rmin r_min two')
+        (
+            eqn_ratio,
+            epsilon,
+            ep,
+            sigma,
+            sig,
+            r,
+            Rmin,
+            rmin,
+            r_min,
+            two,
+        ) = sympy.symbols(
+            "eqn_ratio epsilon ep sigma sig r Rmin rmin r_min two"
+        )
         values = sympy.nonlinsolve(
-            [eqn_ratio -  sympy.sympify(new_lj_form) / sympy.sympify(base_lj_form),
-             ep - epsilon,
-             sig - sigma,
-             r_min - Rmin,
-             rmin - Rmin,
-             Rmin - sigma*two**(1/6),
-             two - 2
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_lj_form) / sympy.sympify(base_lj_form),
+                ep - epsilon,
+                sig - sigma,
+                r_min - Rmin,
+                rmin - Rmin,
+                Rmin - sigma * two ** (1 / 6),
+                two - 2,
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'LJ'
+        form_output = "LJ"
 
     except:
         form_scalar = None
         form_output = None
 
     return [form_output, form_scalar]
+
 
 # compare Mie non-bonded equations
 def evaluate_nonbonded_mie_format_with_scaler(new_mie_form, base_mie_form):
@@ -77,27 +94,43 @@ def evaluate_nonbonded_mie_format_with_scaler(new_mie_form, base_mie_form):
             None, if the new_mie_form variable is not a Mie non-bonded form.
     """
     try:
-        eqn_ratio, epsilon, ep, sigma, sig, r, rmin, r_min, Rmin, N, n = sympy.symbols(
-            'eqn_ratio epsilon ep sigma sig r rmin r_min Rmin N n')
+        (
+            eqn_ratio,
+            epsilon,
+            ep,
+            sigma,
+            sig,
+            r,
+            rmin,
+            r_min,
+            Rmin,
+            N,
+            n,
+        ) = sympy.symbols(
+            "eqn_ratio epsilon ep sigma sig r rmin r_min Rmin N n"
+        )
         values = sympy.nonlinsolve(
-            [eqn_ratio -  sympy.sympify(new_mie_form) / sympy.sympify(base_mie_form),
-             ep - epsilon,
-             sig - sigma,
-             r_min - Rmin,
-             rmin - Rmin,
-             N - n
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_mie_form) / sympy.sympify(base_mie_form),
+                ep - epsilon,
+                sig - sigma,
+                r_min - Rmin,
+                rmin - Rmin,
+                N - n,
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'Mie'
+        form_output = "Mie"
 
     except:
         form_scalar = None
         form_output = None
 
     return [form_output, form_scalar]
+
 
 # compare Exp6 non-bonded equations
 def evaluate_nonbonded_exp6_format_with_scaler(new_exp6_form, base_exp6_form):
@@ -123,21 +156,38 @@ def evaluate_nonbonded_exp6_format_with_scaler(new_exp6_form, base_exp6_form):
             None, if the new_exp6_form variable is not an Exp6 non-bonded form.
     """
     try:
-        eqn_ratio,  epsilon, ep, sigma, sig, r, Rmin, rmin, r_min, N, n, alp, alpha, = sympy.symbols(
-            'eqn_ratio epsilon ep sigma sig r Rmin rmin r_min N n alp alpha')
+        (
+            eqn_ratio,
+            epsilon,
+            ep,
+            sigma,
+            sig,
+            r,
+            Rmin,
+            rmin,
+            r_min,
+            N,
+            n,
+            alp,
+            alpha,
+        ) = sympy.symbols(
+            "eqn_ratio epsilon ep sigma sig r Rmin rmin r_min N n alp alpha"
+        )
         values = sympy.nonlinsolve(
-            [eqn_ratio -  sympy.sympify(new_exp6_form) / sympy.sympify(base_exp6_form),
-             ep - epsilon,
-             r_min - Rmin,
-             rmin - Rmin,
-             N - n,
-             alp - alpha
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_exp6_form) / sympy.sympify(base_exp6_form),
+                ep - epsilon,
+                r_min - Rmin,
+                rmin - Rmin,
+                N - n,
+                alp - alpha,
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'Exp6'
+        form_output = "Exp6"
 
     except:
         form_scalar = None
@@ -147,7 +197,7 @@ def evaluate_nonbonded_exp6_format_with_scaler(new_exp6_form, base_exp6_form):
 
 
 def get_atom_type_expressions_and_scalars(atom_types_dict):
-    '''Get the field file expressions and its scalar from the base forms used from the GMSO XML file.
+    """Get the field file expressions and its scalar from the base forms used from the GMSO XML file.
 
     The expression base forms are as follows.
     'LJ' = "4*epsilon * ((Rmin/r)**12 - 2*(Rmin/r)**6)"
@@ -195,65 +245,130 @@ def get_atom_type_expressions_and_scalars(atom_types_dict):
         'sigma_units': 'nm',
         'epsilon_units': 'kJ/mol'}
         }
-    '''
+    """
 
-    eqn_gomc_std_forms_dict = {'LJ': "4*epsilon * ((sigma/r)**12 - (sigma/r)**6)",
-                               'Mie': "(n/(n-m)) * (n/m)**(m/(n-m)) * epsilon * ((sigma/r)**n - (sigma/r)**m)",
-                               "Exp6": "epsilon*alpha/(alpha-6) * (6/alpha*exp(alpha*(1-r/Rmin)) - (Rmin/r)**6)"
-
+    eqn_gomc_std_forms_dict = {
+        "LJ": "4*epsilon * ((sigma/r)**12 - (sigma/r)**6)",
+        "Mie": "(n/(n-m)) * (n/m)**(m/(n-m)) * epsilon * ((sigma/r)**n - (sigma/r)**m)",
+        "Exp6": "epsilon*alpha/(alpha-6) * (6/alpha*exp(alpha*(1-r/Rmin)) - (Rmin/r)**6)",
     }
 
     atomtypes_data_expression_data_dict = {}
     for res_i in atom_types_dict.keys():
-        for atom_type_m in atom_types_dict[res_i]['atom_types']:
+        for atom_type_m in atom_types_dict[res_i]["atom_types"]:
             modified_atom_type_iter = f"{res_i}_{atom_type_m.name}"
-            atomtypes_data_dict_iter = {modified_atom_type_iter : {'expression': None,
-                                                                   'expression_form': None,
-                                                                   'expression_scalar': None
-                                                                   }
-                                        }
-            expression_iter = atom_types_dict[res_i]['expression']
-            if atomtypes_data_dict_iter[modified_atom_type_iter]['expression_form'] is None \
-                and atomtypes_data_dict_iter[modified_atom_type_iter]['expression_scalar'] is None:
-                [form_output, form_scalar] = evaluate_nonbonded_lj_format_with_scaler(
-                    expression_iter,
-                    eqn_gomc_std_forms_dict['LJ']
+            atomtypes_data_dict_iter = {
+                modified_atom_type_iter: {
+                    "expression": None,
+                    "expression_form": None,
+                    "expression_scalar": None,
+                }
+            }
+            expression_iter = atom_types_dict[res_i]["expression"]
+            if (
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_form"
+                ]
+                is None
+                and atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_scalar"
+                ]
+                is None
+            ):
+                [
+                    form_output,
+                    form_scalar,
+                ] = evaluate_nonbonded_lj_format_with_scaler(
+                    expression_iter, eqn_gomc_std_forms_dict["LJ"]
                 )
-                atomtypes_data_dict_iter[modified_atom_type_iter]['expression'] = expression_iter
-                atomtypes_data_dict_iter[modified_atom_type_iter]['expression_form'] = form_output
-                atomtypes_data_dict_iter[modified_atom_type_iter]['expression_scalar'] = form_scalar
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression"
+                ] = expression_iter
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_form"
+                ] = form_output
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_scalar"
+                ] = form_scalar
 
-            if atomtypes_data_dict_iter[modified_atom_type_iter]['expression_form'] is None \
-                and  atomtypes_data_dict_iter[modified_atom_type_iter]['expression_scalar'] is None:
-                [form_output, form_scalar] = evaluate_nonbonded_mie_format_with_scaler(
-                    expression_iter,
-                    eqn_gomc_std_forms_dict['Mie']
+            if (
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_form"
+                ]
+                is None
+                and atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_scalar"
+                ]
+                is None
+            ):
+                [
+                    form_output,
+                    form_scalar,
+                ] = evaluate_nonbonded_mie_format_with_scaler(
+                    expression_iter, eqn_gomc_std_forms_dict["Mie"]
                 )
-                atomtypes_data_dict_iter[modified_atom_type_iter]['expression'] = expression_iter
-                atomtypes_data_dict_iter[modified_atom_type_iter]['expression_form'] = form_output
-                atomtypes_data_dict_iter[modified_atom_type_iter]['expression_scalar'] = form_scalar
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression"
+                ] = expression_iter
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_form"
+                ] = form_output
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_scalar"
+                ] = form_scalar
 
-            if atomtypes_data_dict_iter[modified_atom_type_iter]['expression_form'] is None \
-                and  atomtypes_data_dict_iter[modified_atom_type_iter]['expression_scalar'] is None:
-                [form_output, form_scalar] = evaluate_nonbonded_exp6_format_with_scaler(
-                    expression_iter,
-                    eqn_gomc_std_forms_dict["Exp6"]
+            if (
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_form"
+                ]
+                is None
+                and atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_scalar"
+                ]
+                is None
+            ):
+                [
+                    form_output,
+                    form_scalar,
+                ] = evaluate_nonbonded_exp6_format_with_scaler(
+                    expression_iter, eqn_gomc_std_forms_dict["Exp6"]
                 )
-                atomtypes_data_dict_iter[modified_atom_type_iter]['expression'] = expression_iter
-                atomtypes_data_dict_iter[modified_atom_type_iter]['expression_form'] = form_output
-                atomtypes_data_dict_iter[modified_atom_type_iter]['expression_scalar'] = form_scalar
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression"
+                ] = expression_iter
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_form"
+                ] = form_output
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_scalar"
+                ] = form_scalar
 
-            if atomtypes_data_dict_iter[modified_atom_type_iter]['expression'] is None \
-                or atomtypes_data_dict_iter[modified_atom_type_iter]['expression_form'] is None \
-                or atomtypes_data_dict_iter[modified_atom_type_iter]['expression_scalar'] is None:
-                print_error_text = 'ERROR: the {} residue does not match the listed standard or scaled ' \
-                                   'LJ, Mie, or Exp6 expressions in the {} function.' \
-                                   ''.format(modified_atom_type_iter, 'get_atom_type_expressions_and_scalars')
+            if (
+                atomtypes_data_dict_iter[modified_atom_type_iter]["expression"]
+                is None
+                or atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_form"
+                ]
+                is None
+                or atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_scalar"
+                ]
+                is None
+            ):
+                print_error_text = (
+                    "ERROR: the {} residue does not match the listed standard or scaled "
+                    "LJ, Mie, or Exp6 expressions in the {} function."
+                    "".format(
+                        modified_atom_type_iter,
+                        "get_atom_type_expressions_and_scalars",
+                    )
+                )
                 raise ValueError(print_error_text)
 
             atomtypes_data_expression_data_dict.update(atomtypes_data_dict_iter)
 
     return atomtypes_data_expression_data_dict
+
 
 # compare harmonic bond equations or expressions
 def evaluate_harmonic_bond_format_with_scaler(new_bond_form, base_bond_form):
@@ -280,20 +395,23 @@ def evaluate_harmonic_bond_format_with_scaler(new_bond_form, base_bond_form):
             None, if the new_bond_form variable is not a harmonic bond.
     """
     try:
-        eqn_ratio, k, r, r_eq = sympy.symbols('eqn_ratio k r r_eq')
+        eqn_ratio, k, r, r_eq = sympy.symbols("eqn_ratio k r r_eq")
         values = sympy.nonlinsolve(
-            [eqn_ratio -  sympy.sympify(new_bond_form) / sympy.sympify(base_bond_form),
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_bond_form) / sympy.sympify(base_bond_form),
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'HarmonicBondPotential'
+        form_output = "HarmonicBondPotential"
     except:
         form_scalar = None
         form_output = None
 
     return [form_output, form_scalar]
+
 
 # compare harmonic angle equations or expressions
 def evaluate_harmonic_angle_format_with_scaler(new_angle_form, base_angle_form):
@@ -320,15 +438,20 @@ def evaluate_harmonic_angle_format_with_scaler(new_angle_form, base_angle_form):
             None, if the new_angle_form variable is not a harmonic.
     """
     try:
-        eqn_ratio, k, theta, theta_eq  = sympy.symbols('eqn_ratio k theta theta_eq')
+        eqn_ratio, k, theta, theta_eq = sympy.symbols(
+            "eqn_ratio k theta theta_eq"
+        )
         values = sympy.nonlinsolve(
-            [eqn_ratio -  sympy.sympify(new_angle_form) / sympy.sympify(base_angle_form),
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_angle_form)
+                / sympy.sympify(base_angle_form),
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'HarmonicAnglePotential'
+        form_output = "HarmonicAnglePotential"
 
     except:
         form_scalar = None
@@ -338,7 +461,9 @@ def evaluate_harmonic_angle_format_with_scaler(new_angle_form, base_angle_form):
 
 
 # check for the harmonic torsion potential equations or expressions
-def evaluate_harmonic_torsion_format_with_scaler(new_torsion_form, base_torsion_form):
+def evaluate_harmonic_torsion_format_with_scaler(
+    new_torsion_form, base_torsion_form
+):
     """Compare a new harmonic torsion form to a base harmonic torsion form
     (new torsion form / base torsion form).
     If the new form is the same as the base form, other than a scaling factor,
@@ -362,15 +487,18 @@ def evaluate_harmonic_torsion_format_with_scaler(new_torsion_form, base_torsion_
             None, if the new_torsion_form variable is not a harmonic torsion.
     """
     try:
-        eqn_ratio, k, phi, phi_eq  = sympy.symbols('eqn_ratio k phi phi_eq')
+        eqn_ratio, k, phi, phi_eq = sympy.symbols("eqn_ratio k phi phi_eq")
         values = sympy.nonlinsolve(
-            [eqn_ratio - sympy.sympify(new_torsion_form) / sympy.sympify(base_torsion_form),
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_torsion_form)
+                / sympy.sympify(base_torsion_form),
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'HarmonicTorsionPotential'
+        form_output = "HarmonicTorsionPotential"
 
     except:
         form_scalar = None
@@ -378,8 +506,11 @@ def evaluate_harmonic_torsion_format_with_scaler(new_torsion_form, base_torsion_
 
     return [form_output, form_scalar]
 
+
 # check for the OPLS torsion potential equations or expressions
-def evaluate_OPLS_torsion_format_with_scaler(new_torsion_form, base_torsion_form):
+def evaluate_OPLS_torsion_format_with_scaler(
+    new_torsion_form, base_torsion_form
+):
     """Compare a new OPLS torsion form to a base OPLS torsion form
     (new torsion form / base torsion form).
     If the new form is the same as the base form, other than a scaling factor,
@@ -403,15 +534,20 @@ def evaluate_OPLS_torsion_format_with_scaler(new_torsion_form, base_torsion_form
             None, if the new_torsion_form variable is not an OPLS torsion.
     """
     try:
-        eqn_ratio, k0, k1, k2, k3, k4, phi  = sympy.symbols('eqn_ratio k0 k1 k2 k3 k4 phi')
+        eqn_ratio, k0, k1, k2, k3, k4, phi = sympy.symbols(
+            "eqn_ratio k0 k1 k2 k3 k4 phi"
+        )
         values = sympy.nonlinsolve(
-            [eqn_ratio - sympy.sympify(new_torsion_form) / sympy.sympify(base_torsion_form),
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_torsion_form)
+                / sympy.sympify(base_torsion_form),
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'OPLSTorsionPotential'
+        form_output = "OPLSTorsionPotential"
 
     except:
         form_scalar = None
@@ -421,7 +557,9 @@ def evaluate_OPLS_torsion_format_with_scaler(new_torsion_form, base_torsion_form
 
 
 # check for the periodic torsion potential equations or expressions
-def evaluate_periodic_torsion_format_with_scaler(new_torsion_form, base_torsion_form):
+def evaluate_periodic_torsion_format_with_scaler(
+    new_torsion_form, base_torsion_form
+):
     """Compare a new periodic torsion form to a base periodic torsion form
     (new torsion form / base torsion form).
     If the new form is the same as the base form, other than a scaling factor,
@@ -445,15 +583,18 @@ def evaluate_periodic_torsion_format_with_scaler(new_torsion_form, base_torsion_
             None, if the new_torsion_form variable is not a periodic torsion.
     """
     try:
-        eqn_ratio, k, n, phi, phi_eq  = sympy.symbols('eqn_ratio k n phi phi_eq')
+        eqn_ratio, k, n, phi, phi_eq = sympy.symbols("eqn_ratio k n phi phi_eq")
         values = sympy.nonlinsolve(
-            [eqn_ratio -  sympy.sympify(new_torsion_form) / sympy.sympify(base_torsion_form),
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_torsion_form)
+                / sympy.sympify(base_torsion_form),
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'PeriodicTorsionPotential'
+        form_output = "PeriodicTorsionPotential"
 
     except:
         form_scalar = None
@@ -487,15 +628,20 @@ def evaluate_RB_torsion_format_with_scaler(new_torsion_form, base_torsion_form):
             None, if the new_torsion_form variable is not an RB torsion.
     """
     try:
-        eqn_ratio, c0, c1, c2, c3, c4, c5, psi  = sympy.symbols('eqn_ratio c0 c1 c2 c3 c4 c5 psi')
+        eqn_ratio, c0, c1, c2, c3, c4, c5, psi = sympy.symbols(
+            "eqn_ratio c0 c1 c2 c3 c4 c5 psi"
+        )
         values = sympy.nonlinsolve(
-            [eqn_ratio - sympy.sympify(new_torsion_form) / sympy.sympify(base_torsion_form),
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_torsion_form)
+                / sympy.sympify(base_torsion_form),
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'RyckaertBellemansTorsionPotential'
+        form_output = "RyckaertBellemansTorsionPotential"
 
     except:
         form_scalar = None
@@ -505,7 +651,9 @@ def evaluate_RB_torsion_format_with_scaler(new_torsion_form, base_torsion_form):
 
 
 # check for the harmonic improper potential equations or expressions
-def evaluate_harmonic_improper_format_with_scaler(new_improper_form, base_improper_form):
+def evaluate_harmonic_improper_format_with_scaler(
+    new_improper_form, base_improper_form
+):
     """Compare a new harmonic improper form to a base harmonic improper form
     (new improper form / base improper form).
     If the new form is the same as the base form, other than a scaling factor,
@@ -529,15 +677,18 @@ def evaluate_harmonic_improper_format_with_scaler(new_improper_form, base_improp
             None, if the new_improper_form variable is not a harmonic improper.
     """
     try:
-        eqn_ratio, k, phi, phi_eq  = sympy.symbols('eqn_ratio k phi phi_eq')
+        eqn_ratio, k, phi, phi_eq = sympy.symbols("eqn_ratio k phi phi_eq")
         values = sympy.nonlinsolve(
-            [eqn_ratio - sympy.sympify(new_improper_form) / sympy.sympify(base_improper_form),
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_improper_form)
+                / sympy.sympify(base_improper_form),
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'HarmonicImproperPotential'
+        form_output = "HarmonicImproperPotential"
 
     except:
         form_scalar = None
@@ -545,8 +696,11 @@ def evaluate_harmonic_improper_format_with_scaler(new_improper_form, base_improp
 
     return [form_output, form_scalar]
 
+
 # check for the periodic improper potential equations or expressions
-def evaluate_periodic_improper_format_with_scaler(new_improper_form, base_improper_form):
+def evaluate_periodic_improper_format_with_scaler(
+    new_improper_form, base_improper_form
+):
     """Compare a new periodic improper form to a base periodic improper form
     (new improper form / base improper form).
     If the new form is the same as the base form, other than a scaling factor,
@@ -570,19 +724,21 @@ def evaluate_periodic_improper_format_with_scaler(new_improper_form, base_improp
             None, if the new_improper_form variable is not a periodic improper.
     """
     try:
-        eqn_ratio, k, n, phi, phi_eq  = sympy.symbols('eqn_ratio k n phi phi_eq')
+        eqn_ratio, k, n, phi, phi_eq = sympy.symbols("eqn_ratio k n phi phi_eq")
         values = sympy.nonlinsolve(
-            [eqn_ratio - sympy.sympify(new_improper_form) / sympy.sympify(base_improper_form),
-             ],
-            [eqn_ratio]
+            [
+                eqn_ratio
+                - sympy.sympify(new_improper_form)
+                / sympy.sympify(base_improper_form),
+            ],
+            [eqn_ratio],
         )
 
         form_scalar = float(list(values)[0][0])
-        form_output = 'PeriodicImproperPotential'
+        form_output = "PeriodicImproperPotential"
 
     except:
         form_scalar = None
         form_output = None
 
     return [form_output, form_scalar]
-

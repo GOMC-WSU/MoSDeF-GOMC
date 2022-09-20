@@ -5,19 +5,19 @@ General Information
     :target: http://opensource.org/licenses/MIT
 
 
-MoSDeF-GOMC Basics 
+MoSDeF-GOMC Basics
 ------------------
 The `Molecular Simulation Design Framework (MoSDeF) <https://mosdef.org>`_
 software is the base software for **MoSDeF-GOMC**, which builds and force fields the systems inside the **MoSDeF-GOMC**.
 This **MoSDeF-GOMC** software generates the required files for simulating a system using
 the `GPU Optimized Monte Carlo (GOMC) <https://github.com/GOMC-WSU/GOMC>`_ or the
 `NAMD <https://www.ks.uiuc.edu/Research/namd/>`_ molecular dynamics software.  The **MoSDeF-GOMC** software
-builds all the required files (PDB, PSF, force field, and **GOMC** control files) to conduct a **GOMC** simulation.  
+builds all the required files (PDB, PSF, force field, and **GOMC** control files) to conduct a **GOMC** simulation.
 
 The **MoSDeF-GOMC** software is compatible with the following software or simulation methods, when the files are generated with the Lennard-Jones (LJ) non-bonded potential:
-	#. The `NAMD <https://www.ks.uiuc.edu/Research/namd/>`_ molecular dynamics software: The NAMD control file needs to be created by another means, but all the other files (PDB, PSF, and force field files) are compatible. 
+	#. The `NAMD <https://www.ks.uiuc.edu/Research/namd/>`_ molecular dynamics software: The NAMD control file needs to be created by another means, but all the other files (PDB, PSF, and force field files) are compatible.
 
-	#. The `py-MCMD <https://py-mcmd.readthedocs.io/en/latest/>`_ software (Hybrid Monte Carlo and molecular dynamics simulations via **GOMC** and **NAMD**): All files are compatible except the GOMC control file (PDB, PSF, and force field files) are compatible. 
+	#. The `py-MCMD <https://py-mcmd.readthedocs.io/en/latest/>`_ software (Hybrid Monte Carlo and molecular dynamics simulations via **GOMC** and **NAMD**): All files are compatible except the GOMC control file (PDB, PSF, and force field files) are compatible.
 
 	#.  Switching back and forth, in any order or duration, between a **GOMC** and **NAMD** simulations, allowing faster equilibrium for **GOMC** simulations and many other advantages. The newest **GOMC** versions also retain the atom/bead velocities and pass them back to **NAMD**.
 
@@ -65,6 +65,3 @@ The **MoSDeF** software is comprised the following core packages:
 	* `foyer <https://foyer.mosdef.org/en/stable/>`_ -- A package for atom-typing as well as applying and disseminating forcefields
 
 	* `GMSO <https://gmso.mosdef.org/en/stable/>`_ -- Flexible storage of chemical topology for molecular simulation
-
-
-

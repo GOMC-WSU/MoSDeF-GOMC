@@ -1,17 +1,11 @@
 import datetime
 import os
+from warnings import warn
 
 import unyt as u
-from unyt.dimensions import (
-    length,
-    energy,
-    pressure,
-    temperature,
-)
+from unyt.dimensions import energy, length, pressure, temperature
 
-from warnings import warn
 from mosdef_gomc.formats.gmso_charmm_writer import Charmm
-
 
 
 def dict_keys_to_list(dict):
@@ -29,6 +23,7 @@ def dict_keys_to_list(dict):
         list of keys from the provided dictionary
     """
     return [key for key in dict.keys()]
+
 
 def print_valid_required_input_variables(description=False):
     """
@@ -111,7 +106,7 @@ def _get_required_data(description=False):
         "to concatenate trajectory files since the molecular transfers rearranges the order of the molecules."
         "Checkpointing will ensure the molecules are loaded in the same order each cycle. "
         "NOTE: the checkpoint_filename with or without the path can be entered with the "
-         ".chk extension, or without an extension; if it "
+        ".chk extension, or without an extension; if it "
         "does not have the file extension, the .chk extension will then be added to the filename.",
         "Parameters": "Required for alternate force field file (all ensembles): "
         "str, (default=None), "
@@ -257,10 +252,10 @@ def _get_all_possible_input_variables(description=False):
         "distance between any atoms. "
         "Sets a specific radius in Angstroms that non-bonded interaction "
         'Note: Rswitch is only used when the "Potential" = SWITCH. '
-        'WARNING: When using a molecule that has charge atoms with non-bonded epsilon values of zero (i.e., water), '
-        'the RcutLow need to be greater than zero, typically 1 angstrom. '           
-        'WARNING: When using the free energy calculations, RcutLow needs to be set to zero (RcutLow=0);'
-        'otherwise, the free energy calculations can produce results that are slightly off or wrong. '
+        "WARNING: When using a molecule that has charge atoms with non-bonded epsilon values of zero (i.e., water), "
+        "the RcutLow need to be greater than zero, typically 1 angstrom. "
+        "WARNING: When using the free energy calculations, RcutLow needs to be set to zero (RcutLow=0);"
+        "otherwise, the free energy calculations can produce results that are slightly off or wrong. "
         "".format(_get_default_variables_dict()["RcutLow"]),
         "LRC": "Simulation info (all ensembles): boolean, default = {}. "
         "If True, the simulation considers the long range tail corrections for the non-bonded VDW or "
@@ -903,7 +898,7 @@ def _get_all_possible_input_variables(description=False):
         "The simulation box in which the targeted swap subvolume will be applied. "
         "NOTE: Only box zero (0) can be used for the GCMC, NPT, and NVT ensembles. "
         '\t\t\t\t\t\t\t\t\t\t\t\t\t --- "SubVolumeCenter" : list of three (3) unyt.unyt_quantity in length units, '
-        '[x-axis, y-axis, z-axis], No default is provided. '
+        "[x-axis, y-axis, z-axis], No default is provided. "
         "The simulation box is centered on this x, y, and z-axis points (written in Angstroms), which is only "
         'utilized when "SubVolumeType" is set to "static". '
         '\t\t\t\t\t\t\t\t\t\t\t\t\t --- "SubVolumeCenterList" : list of int and/or str (>=0), '
@@ -939,7 +934,7 @@ def _get_all_possible_input_variables(description=False):
         'Example 1, "X" applies PBC only in the X axis. Example 2, "XY" applies PBC only in the X and Y axes. '
         'Example 3, "XYZ" applies PBC in the X, Y, and Z axes. '
         '\t\t\t\t\t\t\t\t\t\t\t\t\t --- "SubVolumeChemPot" : '
-        'dict {str (4 dig limit) , unyt.unyt_quantity in energy units (kcal/mol, kJ/mol, or K)}}, '
+        "dict {str (4 dig limit) , unyt.unyt_quantity in energy units (kcal/mol, kJ/mol, or K)}}, "
         "No default is provided. "
         "The chemical potentials are written in GOMC units of energy, K. "
         "If no SubVolumeChemPot is provided the default system chemical potential values are used. "
@@ -955,9 +950,9 @@ def _get_all_possible_input_variables(description=False):
         'TARGET SWAP BOXES (SUBVOLUMES). IF MIX OF "SubVolumeChemPot" AND "SubVolumeFugacity" ARE '
         "USED THE CONTROL FILE WRITER WILL THROW AN ERROR. "
         '\t\t\t\t\t\t\t\t\t\t\t\t\t --- "SubVolumeFugacity" : dict '
-        '{str, unyt.unyt_quantity in pressure units (>= 0)}, '
+        "{str, unyt.unyt_quantity in pressure units (>= 0)}, "
         "No default is provided.  "
-        'The fugacity is written in GOMC units of pressure, bar. '
+        "The fugacity is written in GOMC units of pressure, bar. "
         'If no "SubVolumeFugacity" is provided the default system fugacity values are used. '
         "There is a 4 character limit for the string/residue name since the PDB/PSF "
         "files have a 4 character limitation and require an exact match in the conf file. "
@@ -2489,7 +2484,7 @@ class GOMCControl:
         # set and check valid inputs for the Checkpoint attribute
         if isinstance(Checkpoint, bool):
             if Checkpoint is False:
-                self.Checkpoint = [Checkpoint, '']
+                self.Checkpoint = [Checkpoint, ""]
 
             else:
                 print_error_message = (
@@ -2500,8 +2495,12 @@ class GOMCControl:
                 raise ValueError(print_error_message)
 
         elif isinstance(Checkpoint, list) and len(Checkpoint) == 2:
-            if isinstance(Checkpoint[0], bool) and isinstance(Checkpoint[1], str):
-                checkpoint_extension_ff_name = os.path.splitext(Checkpoint[1])[-1]
+            if isinstance(Checkpoint[0], bool) and isinstance(
+                Checkpoint[1], str
+            ):
+                checkpoint_extension_ff_name = os.path.splitext(Checkpoint[1])[
+                    -1
+                ]
                 if checkpoint_extension_ff_name == "":
                     Checkpoint[1] = f"{Checkpoint[1]}{'.chk'}"
                 elif checkpoint_extension_ff_name == ".chk":
@@ -2540,12 +2539,11 @@ class GOMCControl:
 
         # Check the restart file if None or str
         self.binCoordinates_box_0 = binCoordinates_box_0
-        self.extendedSystem_box_0 =  extendedSystem_box_0
+        self.extendedSystem_box_0 = extendedSystem_box_0
         self.binVelocities_box_0 = binVelocities_box_0
         self.binCoordinates_box_1 = binCoordinates_box_1
         self.extendedSystem_box_1 = extendedSystem_box_1
         self.binVelocities_box_1 = binVelocities_box_1
-
 
         # check if the binary restart files are provided correctly
         if self.Restart and self.ensemble_type in ["NVT", "NPT"]:
@@ -2625,7 +2623,6 @@ class GOMCControl:
                 )
                 raise ValueError(print_error_message)
 
-
         self.RunSteps = RunSteps
         self.Temperature = Temperature
         self.ff_psf_pdb_file_directory = ff_psf_pdb_file_directory
@@ -2657,7 +2654,7 @@ class GOMCControl:
                 self.ff_filename = _add_prepend_path_to_file_directory_and_name(
                     charmm_object.ff_filename,
                     self.ff_psf_pdb_file_directory,
-                    add_extension=None
+                    add_extension=None,
                 )
 
             # check if the FF file exist:
@@ -2675,9 +2672,7 @@ class GOMCControl:
                 "The force field file name was not specified and in the Charmm object ({})."
                 "Therefore, the force field file (.inp) can not be written, and thus, the "
                 "GOMC control file (.conf) can not be created. Please use the force field file "
-                "name when building the Charmm object".format(
-                    type(Charmm)
-                )
+                "name when building the Charmm object".format(type(Charmm))
             )
             raise ValueError(print_error_message)
 
@@ -2695,10 +2690,12 @@ class GOMCControl:
                 self.Coordinates_box_0 = Coordinates_box_0
 
             else:
-                self.Coordinates_box_0 = _add_prepend_path_to_file_directory_and_name(
-                    charmm_object.filename_box_0,
-                    self.ff_psf_pdb_file_directory,
-                    add_extension='.pdb'
+                self.Coordinates_box_0 = (
+                    _add_prepend_path_to_file_directory_and_name(
+                        charmm_object.filename_box_0,
+                        self.ff_psf_pdb_file_directory,
+                        add_extension=".pdb",
+                    )
                 )
 
             if Structure_box_0 is not None:
@@ -2711,10 +2708,12 @@ class GOMCControl:
                 self.Structure_box_0 = Structure_box_0
 
             else:
-                self.Structure_box_0 = _add_prepend_path_to_file_directory_and_name(
-                    charmm_object.filename_box_0,
-                    self.ff_psf_pdb_file_directory,
-                    add_extension='.psf'
+                self.Structure_box_0 = (
+                    _add_prepend_path_to_file_directory_and_name(
+                        charmm_object.filename_box_0,
+                        self.ff_psf_pdb_file_directory,
+                        add_extension=".psf",
+                    )
                 )
 
             _check_if_input_files_exist(
@@ -2783,10 +2782,12 @@ class GOMCControl:
                 self.Coordinates_box_1 = Coordinates_box_1
 
             else:
-                self.Coordinates_box_1 = _add_prepend_path_to_file_directory_and_name(
-                    charmm_object.filename_box_1,
-                    self.ff_psf_pdb_file_directory,
-                    add_extension='.pdb'
+                self.Coordinates_box_1 = (
+                    _add_prepend_path_to_file_directory_and_name(
+                        charmm_object.filename_box_1,
+                        self.ff_psf_pdb_file_directory,
+                        add_extension=".pdb",
+                    )
                 )
 
             if Structure_box_1 is not None:
@@ -2800,10 +2801,12 @@ class GOMCControl:
 
             else:
 
-                self.Structure_box_1 = _add_prepend_path_to_file_directory_and_name(
-                    charmm_object.filename_box_1,
-                    self.ff_psf_pdb_file_directory,
-                    add_extension='.psf'
+                self.Structure_box_1 = (
+                    _add_prepend_path_to_file_directory_and_name(
+                        charmm_object.filename_box_1,
+                        self.ff_psf_pdb_file_directory,
+                        add_extension=".psf",
+                    )
                 )
 
             _check_if_input_files_exist(
@@ -2946,13 +2949,15 @@ class GOMCControl:
         self.conf_filename = None
 
         # get the mixing or combining rule
-        if charmm_object.combining_rule == 'lorentz':
+        if charmm_object.combining_rule == "lorentz":
             self.VDWGeometricSigma = False
-        elif charmm_object.combining_rule == 'geometric':
+        elif charmm_object.combining_rule == "geometric":
             self.VDWGeometricSigma = True
         else:
-            print_error = "ERROR: Neither the lorentz or geometric combining rules were provided" \
-                          "in the input Charmm object."
+            print_error = (
+                "ERROR: Neither the lorentz or geometric combining rules were provided"
+                "in the input Charmm object."
+            )
             raise ValueError(print_error)
 
         # list of bad variable inputs
@@ -2963,55 +2968,58 @@ class GOMCControl:
 
         self.PRNG = default_input_variables_dict["PRNG"]
 
-
         # set defaults and override the CHARMM or Mie styles with the new GOMC-MOSDEF CHARMM and MIE potentials
         self.utilized_NB_expression = charmm_object.utilized_NB_expression
         self.ParaTypeCHARMM = default_input_variables_dict["ParaTypeCHARMM"]
         self.ParaTypeMie = default_input_variables_dict["ParaTypeMie"]
         self.ParaTypeMARTINI = default_input_variables_dict["ParaTypeMARTINI"]
-        if self.utilized_NB_expression == 'LJ':
+        if self.utilized_NB_expression == "LJ":
             self.ParaTypeCHARMM = True
             self.ParaTypeMie = False
             self.ParaTypeMARTINI = False
 
-        elif self.utilized_NB_expression == 'Mie':
+        elif self.utilized_NB_expression == "Mie":
             self.ParaTypeCHARMM = False
             self.ParaTypeMie = True
             self.ParaTypeMARTINI = False
 
-        elif self.utilized_NB_expression == 'Exp6':
+        elif self.utilized_NB_expression == "Exp6":
             print_error = f"ERROR: The non-bonded expression does not currently work for the Exp6 potential."
             raise ValueError(print_error)
 
         else:
-            print_error = f"ERROR: The non-bonded expression is {self.utilized_NB_expression}, " \
-                          f"and it is only allowed to be LJ, Mie, or Exp6."
+            print_error = (
+                f"ERROR: The non-bonded expression is {self.utilized_NB_expression}, "
+                f"and it is only allowed to be LJ, Mie, or Exp6."
+            )
             raise ValueError(print_error)
 
         self.RcutCoulomb_box_0 = default_input_variables_dict[
             "RcutCoulomb_box_0"
         ]
         if self.RcutCoulomb_box_0 is not None:
-            self.RcutCoulomb_box_0 = self.RcutCoulomb_box_0.to_value('angstrom')
+            self.RcutCoulomb_box_0 = self.RcutCoulomb_box_0.to_value("angstrom")
         self.RcutCoulomb_box_1 = default_input_variables_dict[
             "RcutCoulomb_box_1"
         ]
         if self.RcutCoulomb_box_1 is not None:
-            self.RcutCoulomb_box_1 = self.RcutCoulomb_box_1.to_value('angstrom')
+            self.RcutCoulomb_box_1 = self.RcutCoulomb_box_1.to_value("angstrom")
         self.Pressure = default_input_variables_dict["Pressure"]
         if self.Pressure is not None:
-            self.Pressure = self.Pressure.to_value('bar')
+            self.Pressure = self.Pressure.to_value("bar")
         self.Rcut = default_input_variables_dict["Rcut"]
         if self.Rcut is not None:
-            self.Rcut = self.Rcut.to_value('angstrom')
+            self.Rcut = self.Rcut.to_value("angstrom")
         self.RcutLow = default_input_variables_dict["RcutLow"]
         if self.RcutLow is not None:
-            self.RcutLow = self.RcutLow.to_value('angstrom')
+            self.RcutLow = self.RcutLow.to_value("angstrom")
         self.LRC = default_input_variables_dict["LRC"]
         self.IPC = default_input_variables_dict["IPC"]
         self.Exclude = default_input_variables_dict["Exclude"]
         self.Potential = default_input_variables_dict["Potential"]
-        self.Rswitch = default_input_variables_dict["Rswitch"].to_value('angstrom')
+        self.Rswitch = default_input_variables_dict["Rswitch"].to_value(
+            "angstrom"
+        )
         self.ElectroStatic = default_input_variables_dict["ElectroStatic"]
         self.Ewald = default_input_variables_dict["Ewald"]
         self.CachedFourier = default_input_variables_dict["CachedFourier"]
@@ -3048,7 +3056,7 @@ class GOMCControl:
         self.ScaleAlpha = default_input_variables_dict["ScaleAlpha"]
         self.MinSigma = default_input_variables_dict["MinSigma"]
         if self.MinSigma is not None:
-            self.MinSigma = self.MinSigma.to_value('angstrom')
+            self.MinSigma = self.MinSigma.to_value("angstrom")
 
         # standard moves
         self.DisFreq = default_input_variables_dict["DisFreq"][
@@ -3231,14 +3239,16 @@ class GOMCControl:
             raise ValueError(print_error_message)
 
         # check that the Temperature is valid
-        if isinstance(self.Temperature, type(u.unyt_quantity(1, 'K'))):
+        if isinstance(self.Temperature, type(u.unyt_quantity(1, "K"))):
             if temperature == self.Temperature.units.dimensions:
-                self.Temperature = self.Temperature.to_value('K')
+                self.Temperature = self.Temperature.to_value("K")
                 if self.Temperature <= 1:
                     self.input_error = True
                     print_error_message = (
                         "ERROR: The selected Temperature ({}) is equal to or less than 1 Kelvin. "
-                        "Please select a valid Temperature".format(self.Temperature)
+                        "Please select a valid Temperature".format(
+                            self.Temperature
+                        )
                     )
                     raise TypeError(print_error_message)
                 else:
@@ -3246,13 +3256,13 @@ class GOMCControl:
                         "INFO: All the Temperature  (Temperature) input passed the initial error checking"
                     )
             else:
-                print_error_message = (
-                    f"ERROR: The Temperature's unyt.unyt_quantity are not a temperature units."
-                )
+                print_error_message = f"ERROR: The Temperature's unyt.unyt_quantity are not a temperature units."
                 raise TypeError(print_error_message)
         else:
             print_error_message = (
-                "ERROR: The Temperature is not the correct type {}.".format(type(u.unyt_quantity(1, 'K')))
+                "ERROR: The Temperature is not the correct type {}.".format(
+                    type(u.unyt_quantity(1, "K"))
+                )
             )
             raise TypeError(print_error_message)
 
@@ -3362,8 +3372,6 @@ class GOMCControl:
             _get_possible_ensemble_input_variables(self.ensemble_type)
         )
 
-
-
         # check to make sure the VDW FF (ParaTypeCHARMM) is set true  for multiple ones by the user
         # (i.e., ParaTypeCHARMM, ParaTypeMie, ParaTypeMARTINI)
         vdw_ck_list = []
@@ -3381,7 +3389,7 @@ class GOMCControl:
             print_error_message = (
                 "ERROR: There can only be 1 non-bonded type set to true.  Please set only one of the "
                 "ParaTypeCHARMM, ParaTypeMie, ParaTypeMARTINI types to True in the input_variables_dict."
-                )
+            )
             raise ValueError(print_error_message)
 
         # check for MC move ratios and zero all of them if any are in the input variables
@@ -3511,7 +3519,9 @@ class GOMCControl:
 
             key = "RcutCoulomb_box_0"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[key] = _check_if_unyt_length_convert_to_angstrom(
+                self.input_variables_dict[
+                    key
+                ] = _check_if_unyt_length_convert_to_angstrom(
                     key, self.input_variables_dict[key]
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
@@ -3528,7 +3538,9 @@ class GOMCControl:
 
             key = "RcutCoulomb_box_1"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[key] = _check_if_unyt_length_convert_to_angstrom(
+                self.input_variables_dict[
+                    key
+                ] = _check_if_unyt_length_convert_to_angstrom(
                     key, self.input_variables_dict[key]
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
@@ -3545,7 +3557,9 @@ class GOMCControl:
 
             key = "Pressure"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[key] = _check_if_unyt_pressure_convert_to_bar(
+                self.input_variables_dict[
+                    key
+                ] = _check_if_unyt_pressure_convert_to_bar(
                     key, self.input_variables_dict[key]
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
@@ -3562,11 +3576,19 @@ class GOMCControl:
 
             key = "Rcut"
             if input_var_keys_list[var_iter] == key:
-                print('before rcut self.input_variables_dict[key] = ' + str(self.input_variables_dict[key]))
-                self.input_variables_dict[key] = _check_if_unyt_length_convert_to_angstrom(
+                print(
+                    "before rcut self.input_variables_dict[key] = "
+                    + str(self.input_variables_dict[key])
+                )
+                self.input_variables_dict[
+                    key
+                ] = _check_if_unyt_length_convert_to_angstrom(
                     key, self.input_variables_dict[key]
                 )
-                print('after rcut self.input_variables_dict[key] = ' +str(self.input_variables_dict[key]))
+                print(
+                    "after rcut self.input_variables_dict[key] = "
+                    + str(self.input_variables_dict[key])
+                )
                 self.ck_input_variable_int_or_float_zero_or_greater(
                     self.input_variables_dict,
                     key,
@@ -3581,7 +3603,9 @@ class GOMCControl:
 
             key = "RcutLow"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[key] = _check_if_unyt_length_convert_to_angstrom(
+                self.input_variables_dict[
+                    key
+                ] = _check_if_unyt_length_convert_to_angstrom(
                     key, self.input_variables_dict[key]
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
@@ -3662,7 +3686,9 @@ class GOMCControl:
 
             key = "Rswitch"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[key] = _check_if_unyt_length_convert_to_angstrom(
+                self.input_variables_dict[
+                    key
+                ] = _check_if_unyt_length_convert_to_angstrom(
                     key, self.input_variables_dict[key]
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
@@ -4322,7 +4348,9 @@ class GOMCControl:
 
             key = "MinSigma"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[key] = _check_if_unyt_length_convert_to_angstrom(
+                self.input_variables_dict[
+                    key
+                ] = _check_if_unyt_length_convert_to_angstrom(
                     key, self.input_variables_dict[key]
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
@@ -4647,116 +4675,116 @@ class GOMCControl:
                         no_memc_combos = len(self.input_variables_dict[key])
                         for MEMC_iter in range(0, no_memc_combos):
                             if (
-                                    isinstance(
-                                        self.input_variables_dict[key][MEMC_iter],
-                                        list,
-                                    )
-                                    is False
+                                isinstance(
+                                    self.input_variables_dict[key][MEMC_iter],
+                                    list,
+                                )
+                                is False
                             ):
                                 bad_input_variables_values_list.append(key)
                             elif (
-                                    isinstance(
-                                        self.input_variables_dict[key][MEMC_iter],
-                                        list,
-                                    )
-                                    is True
-                                    and len(
-                                self.input_variables_dict[key][MEMC_iter]
-                            )
-                                    == 5
-                            ):
-                                if (
-                                        isinstance(
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][2],
-                                            list,
-                                        )
-                                        is False
-                                        or isinstance(
-                                    self.input_variables_dict[key][
-                                        MEMC_iter
-                                    ][4],
+                                isinstance(
+                                    self.input_variables_dict[key][MEMC_iter],
                                     list,
                                 )
-                                        is False
+                                is True
+                                and len(
+                                    self.input_variables_dict[key][MEMC_iter]
+                                )
+                                == 5
+                            ):
+                                if (
+                                    isinstance(
+                                        self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][2],
+                                        list,
+                                    )
+                                    is False
+                                    or isinstance(
+                                        self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][4],
+                                        list,
+                                    )
+                                    is False
                                 ):
                                     bad_input_variables_values_list.append(key)
                                 elif (
-                                        isinstance(
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][2],
-                                            list,
-                                        )
-                                        is True
-                                        and isinstance(
-                                    self.input_variables_dict[key][
-                                        MEMC_iter
-                                    ][4],
-                                    list,
-                                )
-                                        is True
-                                ):
-                                    if (
-                                            len(
-                                                self.input_variables_dict[key][
-                                                    MEMC_iter
-                                                ][2]
-                                            )
-                                            != 2
-                                            or len(
+                                    isinstance(
                                         self.input_variables_dict[key][
                                             MEMC_iter
-                                        ][4]
+                                        ][2],
+                                        list,
                                     )
-                                            != 2
+                                    is True
+                                    and isinstance(
+                                        self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][4],
+                                        list,
+                                    )
+                                    is True
+                                ):
+                                    if (
+                                        len(
+                                            self.input_variables_dict[key][
+                                                MEMC_iter
+                                            ][2]
+                                        )
+                                        != 2
+                                        or len(
+                                            self.input_variables_dict[key][
+                                                MEMC_iter
+                                            ][4]
+                                        )
+                                        != 2
                                     ):
                                         bad_input_variables_values_list.append(
                                             key
                                         )
                                     elif (
-                                            len(
-                                                self.input_variables_dict[key][
-                                                    MEMC_iter
-                                                ][2]
-                                            )
-                                            == 2
-                                            and len(
-                                        self.input_variables_dict[key][
-                                            MEMC_iter
-                                        ][4]
-                                    )
-                                            == 2
+                                        len(
+                                            self.input_variables_dict[key][
+                                                MEMC_iter
+                                            ][2]
+                                        )
+                                        == 2
+                                        and len(
+                                            self.input_variables_dict[key][
+                                                MEMC_iter
+                                            ][4]
+                                        )
+                                        == 2
                                     ):
                                         if (
-                                                isinstance(
-                                                    self.input_variables_dict[key][
-                                                        MEMC_iter
-                                                    ][0],
-                                                    int,
-                                                )
-                                                is not True
-                                                or str(
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][0]
-                                        )
-                                                == str(True)
-                                                or str(
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][0]
-                                        )
-                                                == str(False)
-                                                or isinstance(
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][1],
-                                            str,
-                                        )
-                                                is False
-                                                or (
+                                            isinstance(
+                                                self.input_variables_dict[key][
+                                                    MEMC_iter
+                                                ][0],
+                                                int,
+                                            )
+                                            is not True
+                                            or str(
+                                                self.input_variables_dict[key][
+                                                    MEMC_iter
+                                                ][0]
+                                            )
+                                            == str(True)
+                                            or str(
+                                                self.input_variables_dict[key][
+                                                    MEMC_iter
+                                                ][0]
+                                            )
+                                            == str(False)
+                                            or isinstance(
+                                                self.input_variables_dict[key][
+                                                    MEMC_iter
+                                                ][1],
+                                                str,
+                                            )
+                                            is False
+                                            or (
                                                 isinstance(
                                                     self.input_variables_dict[
                                                         key
@@ -4768,8 +4796,8 @@ class GOMCControl:
                                                     key
                                                 ][MEMC_iter][2][0]
                                                 is not None
-                                        )
-                                                or (
+                                            )
+                                            or (
                                                 isinstance(
                                                     self.input_variables_dict[
                                                         key
@@ -4781,15 +4809,15 @@ class GOMCControl:
                                                     key
                                                 ][MEMC_iter][2][1]
                                                 is not None
-                                        )
-                                                or isinstance(
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][3],
-                                            str,
-                                        )
-                                                is False
-                                                or (
+                                            )
+                                            or isinstance(
+                                                self.input_variables_dict[key][
+                                                    MEMC_iter
+                                                ][3],
+                                                str,
+                                            )
+                                            is False
+                                            or (
                                                 isinstance(
                                                     self.input_variables_dict[
                                                         key
@@ -4801,8 +4829,8 @@ class GOMCControl:
                                                     key
                                                 ][MEMC_iter][4][0]
                                                 is not None
-                                        )
-                                                or (
+                                            )
+                                            or (
                                                 isinstance(
                                                     self.input_variables_dict[
                                                         key
@@ -4814,7 +4842,7 @@ class GOMCControl:
                                                     key
                                                 ][MEMC_iter][4][1]
                                                 is not None
-                                        )
+                                            )
                                         ):
                                             bad_input_variables_values_list.append(
                                                 key
@@ -4829,112 +4857,104 @@ class GOMCControl:
                                     )
                                     # check that the atom names match the residues that exist
                                     if (
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][1]
-                                            not in all_atom_names_and_res_pairs_keys_list
+                                        self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][1]
+                                        not in all_atom_names_and_res_pairs_keys_list
                                     ):
                                         bad_input_variables_values_list.append(
                                             key
                                         )
 
                                     elif (
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][1]
-                                            in all_atom_names_and_res_pairs_keys_list
+                                        self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][1]
+                                        in all_atom_names_and_res_pairs_keys_list
                                     ):
 
-                                        if (
+                                        if self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][2][0] not in list(
+                                            self.all_residues_unique_atom_name_dict[
                                                 self.input_variables_dict[key][
                                                     MEMC_iter
-                                                ][2][0]
-                                                not in list(self.all_residues_unique_atom_name_dict[
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][1]
-                                                            ]
-                                                            )
+                                                ][1]
+                                            ]
                                         ):
                                             bad_input_variables_values_list.append(
                                                 key
                                             )
 
-                                        if (
+                                        if self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][2][1] not in list(
+                                            self.all_residues_unique_atom_name_dict[
                                                 self.input_variables_dict[key][
                                                     MEMC_iter
-                                                ][2][1]
-                                                not in list(self.all_residues_unique_atom_name_dict[
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][1]
-                                                            ]
-                                                            )
+                                                ][1]
+                                            ]
                                         ):
                                             bad_input_variables_values_list.append(
                                                 key
                                             )
 
                                     if (
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][3]
-                                            not in all_atom_names_and_res_pairs_keys_list
+                                        self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][3]
+                                        not in all_atom_names_and_res_pairs_keys_list
                                     ):
                                         bad_input_variables_values_list.append(
                                             key
                                         )
 
                                     elif (
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][3]
-                                            in all_atom_names_and_res_pairs_keys_list
+                                        self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][3]
+                                        in all_atom_names_and_res_pairs_keys_list
                                     ):
-                                        if (
+                                        if self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][4][0] not in list(
+                                            self.all_residues_unique_atom_name_dict[
                                                 self.input_variables_dict[key][
                                                     MEMC_iter
-                                                ][4][0]
-                                                not in list(self.all_residues_unique_atom_name_dict[
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][3]
-                                                            ]
-                                                            )
+                                                ][3]
+                                            ]
                                         ):
                                             bad_input_variables_values_list.append(
                                                 key
                                             )
 
-                                        if (
+                                        if self.input_variables_dict[key][
+                                            MEMC_iter
+                                        ][4][1] not in list(
+                                            self.all_residues_unique_atom_name_dict[
                                                 self.input_variables_dict[key][
                                                     MEMC_iter
-                                                ][4][1]
-                                                not in list(self.all_residues_unique_atom_name_dict[
-                                            self.input_variables_dict[key][
-                                                MEMC_iter
-                                            ][3]
-                                                            ]
-                                                            )
+                                                ][3]
+                                            ]
                                         ):
                                             bad_input_variables_values_list.append(
                                                 key
                                             )
 
                                     if (
-                                            isinstance(
-                                                self.input_variables_dict[key][
-                                                    MEMC_iter
-                                                ][0],
-                                                int,
-                                            )
-                                            is True
+                                        isinstance(
+                                            self.input_variables_dict[key][
+                                                MEMC_iter
+                                            ][0],
+                                            int,
+                                        )
+                                        is True
                                     ):
                                         if (
-                                                self.input_variables_dict[key][
-                                                    MEMC_iter
-                                                ][0]
-                                                <= 0
+                                            self.input_variables_dict[key][
+                                                MEMC_iter
+                                            ][0]
+                                            <= 0
                                         ):
                                             bad_input_variables_values_list.append(
                                                 key
@@ -4944,8 +4964,8 @@ class GOMCControl:
                                     bad_input_variables_values_list.append(key)
 
                 if (
-                        input_var_keys_list[var_iter] == key
-                        and key in possible_ensemble_variables_list
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
                 ):
                     self.MEMC_DataInput = self.input_variables_dict[key]
 
@@ -5177,29 +5197,57 @@ class GOMCControl:
                                         ):
                                             # set to list it was an list of unyt.unyt_quantity if it was
                                             # a unyt.unyt_array
-                                            self.input_variables_dict[input_var_keys_list[var_iter]][tag_id_keys_i][
-                                                "subvolumecenter"] = \
-                                                list(self.input_variables_dict[
-                                                         input_var_keys_list[var_iter]][
-                                                         tag_id_keys_i]["subvolumecenter"])
+                                            self.input_variables_dict[
+                                                input_var_keys_list[var_iter]
+                                            ][tag_id_keys_i][
+                                                "subvolumecenter"
+                                            ] = list(
+                                                self.input_variables_dict[
+                                                    input_var_keys_list[
+                                                        var_iter
+                                                    ]
+                                                ][tag_id_keys_i][
+                                                    "subvolumecenter"
+                                                ]
+                                            )
                                             # set the numbers to int/floats only in angstroms
-                                            for (x_y_z_iter_j, set_x_y_z_center_j) \
-                                                    in enumerate(target_swap_tag_id_dict_key_data["subvolumecenter"]):
-                                                self.input_variables_dict[input_var_keys_list[var_iter]][
-                                                    tag_id_keys_i]["subvolumecenter"][
-                                                    x_y_z_iter_j] = _check_if_unyt_length_convert_to_angstrom(
+                                            for (
+                                                x_y_z_iter_j,
+                                                set_x_y_z_center_j,
+                                            ) in enumerate(
+                                                target_swap_tag_id_dict_key_data[
+                                                    "subvolumecenter"
+                                                ]
+                                            ):
+                                                self.input_variables_dict[
+                                                    input_var_keys_list[
+                                                        var_iter
+                                                    ]
+                                                ][tag_id_keys_i][
+                                                    "subvolumecenter"
+                                                ][
+                                                    x_y_z_iter_j
+                                                ] = _check_if_unyt_length_convert_to_angstrom(
                                                     "subvolumecenter",
-                                                    set_x_y_z_center_j
+                                                    set_x_y_z_center_j,
                                                 )
 
                                             for (
-                                                x_y_z_iter_i, set_x_y_z_center_i
-                                            ) in enumerate(self.input_variables_dict[input_var_keys_list[var_iter]][
-                                                    tag_id_keys_i]["subvolumecenter"]
-                                                            ):
+                                                x_y_z_iter_i,
+                                                set_x_y_z_center_i,
+                                            ) in enumerate(
+                                                self.input_variables_dict[
+                                                    input_var_keys_list[
+                                                        var_iter
+                                                    ]
+                                                ][tag_id_keys_i][
+                                                    "subvolumecenter"
+                                                ]
+                                            ):
 
                                                 if not isinstance(
-                                                    set_x_y_z_center_i, (int, float)
+                                                    set_x_y_z_center_i,
+                                                    (int, float),
                                                 ):
                                                     bad_input_variables_values_list.append(
                                                         "subvolumecenter"
@@ -5388,26 +5436,39 @@ class GOMCControl:
                                     == 3
                                 ):
                                     # set to list it was an list of unyt.unyt_quantity if it was a unyt.unyt_array
-                                    self.input_variables_dict[input_var_keys_list[var_iter]][tag_id_keys_i][
-                                        "subvolumedim"] = \
-                                        list(self.input_variables_dict[
-                                                 input_var_keys_list[var_iter]][tag_id_keys_i]["subvolumedim"])
+                                    self.input_variables_dict[
+                                        input_var_keys_list[var_iter]
+                                    ][tag_id_keys_i]["subvolumedim"] = list(
+                                        self.input_variables_dict[
+                                            input_var_keys_list[var_iter]
+                                        ][tag_id_keys_i]["subvolumedim"]
+                                    )
                                     # set the numbers to int/floats only in angstroms
-                                    for (x_y_z_iter_j, set_x_y_z_dim_j) \
-                                            in enumerate(target_swap_tag_id_dict_key_data["subvolumedim"]):
+                                    for (
+                                        x_y_z_iter_j,
+                                        set_x_y_z_dim_j,
+                                    ) in enumerate(
+                                        target_swap_tag_id_dict_key_data[
+                                            "subvolumedim"
+                                        ]
+                                    ):
 
-                                        self.input_variables_dict[input_var_keys_list[var_iter]][tag_id_keys_i][
-                                            "subvolumedim"][x_y_z_iter_j] = \
-                                            _check_if_unyt_length_convert_to_angstrom(
-                                                "subvolumedim",
-                                                set_x_y_z_dim_j
+                                        self.input_variables_dict[
+                                            input_var_keys_list[var_iter]
+                                        ][tag_id_keys_i]["subvolumedim"][
+                                            x_y_z_iter_j
+                                        ] = _check_if_unyt_length_convert_to_angstrom(
+                                            "subvolumedim", set_x_y_z_dim_j
                                         )
 
                                     for (
-                                            x_y_z_iter_i, set_x_y_z_dim_i
-                                    ) in enumerate(self.input_variables_dict[input_var_keys_list[var_iter]][
-                                                    tag_id_keys_i]["subvolumedim"]
-                                                   ):
+                                        x_y_z_iter_i,
+                                        set_x_y_z_dim_i,
+                                    ) in enumerate(
+                                        self.input_variables_dict[
+                                            input_var_keys_list[var_iter]
+                                        ][tag_id_keys_i]["subvolumedim"]
+                                    ):
 
                                         if not isinstance(
                                             set_x_y_z_dim_i, (int, float)
@@ -5723,14 +5784,24 @@ class GOMCControl:
             raise ValueError(print_error_message)
 
         # check to see if the Charmm_object is the same as the selected non-bonded form
-        if self.utilized_NB_expression == 'LJ' and self.ParaTypeCHARMM is not True:
-            print_warning = f"WARNING: MoSDeF-GOMC has selected the non-bonded for to be {'LJ'}, " \
-                            f"but ParaTypeCHARMM = {self.ParaTypeCHARMM}."
+        if (
+            self.utilized_NB_expression == "LJ"
+            and self.ParaTypeCHARMM is not True
+        ):
+            print_warning = (
+                f"WARNING: MoSDeF-GOMC has selected the non-bonded for to be {'LJ'}, "
+                f"but ParaTypeCHARMM = {self.ParaTypeCHARMM}."
+            )
             warn(print_warning)
 
-        elif self.utilized_NB_expression == 'Mie' and self.ParaTypeMie is not True:
-            print_warning = f"WARNING: MoSDeF-GOMC has selected the non-bonded for to be {'Mie'}, " \
-                            f"but ParaTypeMie = {self.ParaTypeMie}."
+        elif (
+            self.utilized_NB_expression == "Mie"
+            and self.ParaTypeMie is not True
+        ):
+            print_warning = (
+                f"WARNING: MoSDeF-GOMC has selected the non-bonded for to be {'Mie'}, "
+                f"but ParaTypeMie = {self.ParaTypeMie}."
+            )
             warn(print_warning)
 
         # check to see if the moves sum up to 1
@@ -6107,16 +6178,16 @@ class GOMCControl:
 
         # check that all required free energy values are provided and RcutLow is zero (0)
         if (
-                self.FreeEnergyCalc is not None
-                or self.MoleculeType is not None
-                or self.InitialState is not None
-                or self.LambdaVDW is not None
+            self.FreeEnergyCalc is not None
+            or self.MoleculeType is not None
+            or self.InitialState is not None
+            or self.LambdaVDW is not None
         ):
             if (
-                    self.FreeEnergyCalc is None
-                    or self.MoleculeType is None
-                    or self.InitialState is None
-                    or self.LambdaVDW is None
+                self.FreeEnergyCalc is None
+                or self.MoleculeType is None
+                or self.InitialState is None
+                or self.LambdaVDW is None
             ):
                 self.input_error = True
                 print_error_message = (
@@ -6187,22 +6258,31 @@ class GOMCControl:
 
         # send a warning if the geometric mixing rule is used
         if self.VDWGeometricSigma == True:
-            print_warning_message = "WARNING: The geometric combining rules is being used in the GOMC " \
-                                    "control file.  If this is OK or intentional, please ignore this warning. " \
-                                    "NOTE: This could just be the force file XML files correct parameters, " \
-                                    "but many GOMC simulations utilize 'lorentz' mixing rules, so a " \
-                                    "warning is provided."
+            print_warning_message = (
+                "WARNING: The geometric combining rules is being used in the GOMC "
+                "control file.  If this is OK or intentional, please ignore this warning. "
+                "NOTE: This could just be the force file XML files correct parameters, "
+                "but many GOMC simulations utilize 'lorentz' mixing rules, so a "
+                "warning is provided."
+            )
             warn(print_warning_message)
 
         # check/ensure if the RestartFreq and CheckpointFreq are the same number of steps
         if self.Checkpoint[0] is True and self.Restart is False:
-            print_error_message = "ERROR: If Checkpoint is True, Restart must also be True."
+            print_error_message = (
+                "ERROR: If Checkpoint is True, Restart must also be True."
+            )
             raise ValueError(print_error_message)
 
-        if self.CheckpointFreq[0] is True and self.CheckpointFreq[1] != self.RestartFreq[1]:
-            print_error_message = "ERROR: If CheckpointFreq is True, the CheckpointFreq and RestartFreq " \
-                                  "output frequencies must be the same to start GOMC. This ensures the " \
-                                  "simulation can always be properly restarted."
+        if (
+            self.CheckpointFreq[0] is True
+            and self.CheckpointFreq[1] != self.RestartFreq[1]
+        ):
+            print_error_message = (
+                "ERROR: If CheckpointFreq is True, the CheckpointFreq and RestartFreq "
+                "output frequencies must be the same to start GOMC. This ensures the "
+                "simulation can always be properly restarted."
+            )
             raise ValueError(print_error_message)
 
     # ***********************
@@ -6303,7 +6383,9 @@ class GOMCControl:
         data_control_file.write("{:25s} {}\n".format("Restart", self.Restart))
         data_control_file.write("\n")
         data_control_file.write(
-            "{:25s} {:10s} {}\n".format("Checkpoint", str(self.Checkpoint[0]), self.Checkpoint[1])
+            "{:25s} {:10s} {}\n".format(
+                "Checkpoint", str(self.Checkpoint[0]), self.Checkpoint[1]
+            )
         )
         data_control_file.write("\n")
         data_control_file.write(
@@ -6459,7 +6541,9 @@ class GOMCControl:
                     "{:25s} {:10s} {}\n".format(
                         "ChemPot",
                         chem_pot_residue_iter,
-                        self.ChemPot[chem_pot_residue_iter].to_value('K', equivalence='thermal'),
+                        self.ChemPot[chem_pot_residue_iter].to_value(
+                            "K", equivalence="thermal"
+                        ),
                     )
                 )
 
@@ -6477,7 +6561,7 @@ class GOMCControl:
                     "{:25s} {:10s} {}\n".format(
                         "Fugacity",
                         fugacity_residue_iter,
-                        self.Fugacity[fugacity_residue_iter].to_value('bar'),
+                        self.Fugacity[fugacity_residue_iter].to_value("bar"),
                     )
                 )
 
@@ -6880,8 +6964,11 @@ class GOMCControl:
                                 str(
                                     self.TargetedSwap_DataInput[
                                         sub_vol_tag_id_i
-                                    ]["subvolumechempot"][subvol_chempot_key_i
-                                    ].to_value('K', equivalence='thermal')
+                                    ]["subvolumechempot"][
+                                        subvol_chempot_key_i
+                                    ].to_value(
+                                        "K", equivalence="thermal"
+                                    )
                                 ),
                             )
                         )
@@ -6905,7 +6992,9 @@ class GOMCControl:
                                         sub_vol_tag_id_i
                                     ]["subvolumefugacity"][
                                         subvol_fugacity_key_i
-                                    ].to_value('bar')
+                                    ].to_value(
+                                        "bar"
+                                    )
                                 ),
                             )
                         )
@@ -7803,7 +7892,6 @@ class GOMCControl:
                 else:
                     bad_input_variables_values_list.append(key)
 
-
     def ck_input_variable_GCMC_chempot_dict(
         self, input_variables_dict, key, bad_input_variables_values_list
     ):
@@ -7855,8 +7943,10 @@ class GOMCControl:
                     if len(key_iter) > 4:
                         bad_input_variables_values_list.append(key)
 
-                if isinstance(value_iter, type(u.unyt_quantity(1, 'kcal/mol'))):
-                    if energy != value_iter.units.dimensions and 'K' != str(value_iter.units):
+                if isinstance(value_iter, type(u.unyt_quantity(1, "kcal/mol"))):
+                    if energy != value_iter.units.dimensions and "K" != str(
+                        value_iter.units
+                    ):
                         print_error_message = (
                             f"ERROR: The {key} input {u.array.unyt_quantity} needs to be a "
                             f"{u.array.unyt_quantity} in energy units, "
@@ -7874,8 +7964,15 @@ class GOMCControl:
 
                 if (
                     (
-                        isinstance(value_iter.to_value('K', equivalence='thermal'), int) is False
-                        and isinstance(value_iter.to_value('K', equivalence='thermal'), float) is False
+                        isinstance(
+                            value_iter.to_value("K", equivalence="thermal"), int
+                        )
+                        is False
+                        and isinstance(
+                            value_iter.to_value("K", equivalence="thermal"),
+                            float,
+                        )
+                        is False
                     )
                     or str(value_iter) == str(True)
                     or str(value_iter) == str(False)
@@ -7933,7 +8030,7 @@ class GOMCControl:
                     if len(key_iter) > 4:
                         bad_input_variables_values_list.append(key)
 
-                if isinstance(value_iter, type(u.unyt_quantity(1, 'bar'))):
+                if isinstance(value_iter, type(u.unyt_quantity(1, "bar"))):
                     if pressure != value_iter.units.dimensions:
                         print_error_message = (
                             f"ERROR: The {key} input {u.array.unyt_quantity} needs to be a "
@@ -7950,12 +8047,13 @@ class GOMCControl:
 
                 if (
                     (
-                        isinstance(value_iter.to_value('bar'), int) is False
-                        and isinstance(value_iter.to_value('bar'), float) is False
+                        isinstance(value_iter.to_value("bar"), int) is False
+                        and isinstance(value_iter.to_value("bar"), float)
+                        is False
                     )
                     or str(value_iter) == str(True)
                     or str(value_iter) == str(False)
-                    or value_iter.to_value('bar') < 0
+                    or value_iter.to_value("bar") < 0
                 ):
                     bad_input_variables_values_list.append(key)
 
@@ -8215,13 +8313,19 @@ def _add_prepend_path_to_file_directory_and_name(
 
 
     """
-    if not isinstance(file_directory_and_name, str) and file_directory_and_name is not None:
+    if (
+        not isinstance(file_directory_and_name, str)
+        and file_directory_and_name is not None
+    ):
         print_error_message = (
             f"ERROR: The {file_directory_and_name}  must be None or a string."
         )
         raise TypeError(print_error_message)
 
-    if not isinstance(prepend_file_directory, str) and prepend_file_directory is not None:
+    if (
+        not isinstance(prepend_file_directory, str)
+        and prepend_file_directory is not None
+    ):
         print_error_message = (
             f"ERROR: The {prepend_file_directory} must be None or a string."
         )
@@ -8234,18 +8338,25 @@ def _add_prepend_path_to_file_directory_and_name(
         raise TypeError(print_error_message)
 
     elif add_extension is None:
-        add_extension = ''
+        add_extension = ""
 
     if file_directory_and_name is None:
         prepended_path_file_directory_and_name = None
 
-    elif isinstance(file_directory_and_name, str) and prepend_file_directory is None:
-        prepended_path_file_directory_and_name = f"{file_directory_and_name}{add_extension}"
+    elif (
+        isinstance(file_directory_and_name, str)
+        and prepend_file_directory is None
+    ):
+        prepended_path_file_directory_and_name = (
+            f"{file_directory_and_name}{add_extension}"
+        )
 
-    elif isinstance(file_directory_and_name, str) and isinstance(prepend_file_directory, str):
-        prepended_path_file_directory_and_name = f"{prepend_file_directory}/{file_directory_and_name}{add_extension}"
-
-
+    elif isinstance(file_directory_and_name, str) and isinstance(
+        prepend_file_directory, str
+    ):
+        prepended_path_file_directory_and_name = (
+            f"{prepend_file_directory}/{file_directory_and_name}{add_extension}"
+        )
 
     return prepended_path_file_directory_and_name
 
@@ -8379,11 +8490,9 @@ def _check_if_bool(
         )
         raise TypeError(print_error_message)
 
+
 # check if it is a unyt length and convert it to angstroms
-def _check_if_unyt_length_convert_to_angstrom(
-        variable_as_a_string,
-        variable
-):
+def _check_if_unyt_length_convert_to_angstrom(variable_as_a_string, variable):
     """
     Checks to see if the value is in length units, and if so, converted to angstroms
 
@@ -8403,7 +8512,7 @@ def _check_if_unyt_length_convert_to_angstrom(
     """
     if isinstance(variable, u.array.unyt_quantity):
         if length == variable.units.dimensions:
-            return variable.to_value('angstrom')
+            return variable.to_value("angstrom")
         else:
             print_error_message = (
                 f"ERROR: The {variable_as_a_string} input {u.array.unyt_quantity} needs to be a "
@@ -8418,11 +8527,9 @@ def _check_if_unyt_length_convert_to_angstrom(
         )
         raise TypeError(print_error_message)
 
+
 # check if it is a unyt pressure and convert it to bar
-def _check_if_unyt_pressure_convert_to_bar(
-        variable_as_a_string,
-        variable
-):
+def _check_if_unyt_pressure_convert_to_bar(variable_as_a_string, variable):
     """
     Checks to see if the value is in pressure units, and if so, converted to bar
 
@@ -8442,7 +8549,7 @@ def _check_if_unyt_pressure_convert_to_bar(
 
     if isinstance(variable, u.array.unyt_quantity):
         if pressure == variable.units.dimensions:
-            return variable.to_value('bar')
+            return variable.to_value("bar")
         else:
             print_error_message = (
                 f"ERROR: The {variable_as_a_string} input {u.array.unyt_quantity} needs to be a "
@@ -8456,7 +8563,6 @@ def _check_if_unyt_pressure_convert_to_bar(
             f"and needs to be a {u.array.unyt_quantity} in pressure units."
         )
         raise TypeError(print_error_message)
-
 
 
 # user callable function to write the GOMC control file

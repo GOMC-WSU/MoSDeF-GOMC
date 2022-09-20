@@ -19,7 +19,7 @@
   <HarmonicAngleForce>
     <Angle class1="CT" class2="CT" class3="CT" angle="1.966986067" k="400"/>
     <Angle class1="CT" class2="CT" class3="CE" angle="1.966986067" k="400"/>
-    <Angle class1="CT" class2="CE" class3="CE" angle="1.966986067" k="400"/> 
+    <Angle class1="CT" class2="CE" class3="CE" angle="1.966986067" k="400"/>
     <Angle class1="CE" class2="CE" class3="CE" angle="1.0471975511966" k="500"/>
     <Angle class1="HCE" class2="CE" class3="CE" angle="1.0471975511966" k="300"/>
     <Angle class1="HCE" class2="CE" class3="CT" angle="1.0471975511966" k="300"/>
