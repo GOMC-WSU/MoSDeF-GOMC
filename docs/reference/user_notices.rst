@@ -18,5 +18,3 @@ The new **MoSDeF-GOMC** version using GMSO allows for a more flexible and better
 	#. Automatic application of the mixing/combining rules, if provided in the force field XML files.
 
 	#. Other new features exist, so please see the **MoSDeF-GOMC** documentation for more features.
-
-
