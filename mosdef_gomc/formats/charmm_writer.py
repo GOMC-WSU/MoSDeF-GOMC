@@ -1210,24 +1210,38 @@ class Charmm:
 
         * Example name structure: {atom_type: first_part_pf atom name_without_numbering}
 
-    fix_residue : list  or None, default = None
+        fix_residue : list  or None, default = None
         Changes occcur in the pdb file only.
+        All the atoms in the residue are have their Beta values in the PDB file set to 1.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, this only fixes atoms automatically as listed below.
+        NOTE: In NAMD, these all fixes need to be manually set in the control file (please see NAMD manual).
         When residues are listed here, all the atoms in the residue are
-        fixed and can not move via setting the Beta values in the PDB
-        file to 1.00.
+        fixed and can not move via setting the Beta values in the PDB file to 1.00
         If neither fix_residue or fix_residue_in_box lists a
-        residue or both equal None, then the Beta values for all the atoms
+        residue or both equal None, then the Beta (Temperature factor) values for all the atoms
         in the residue are free to move in the simulation and Beta values
-        in the PDB file is set to 0.00
+        in the PDB file is set to 0.00.
     fix_residue_in_box : list  or None, default = None
         Changes occcur in the pdb file only.
+        All the atoms in the residue are have their Beta values in the PDB file set to 2.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, this only fixes atoms automatically as listed below.
+        NOTE: In NAMD, these all fixes need to be manually set in the control file (please see NAMD manual).
         When residues are listed here, all the atoms in the residue
         can move within the box but cannot be transferred between boxes
-        via setting the Beta values in the PDB file to 2.00.
+        via setting the Beta (Temperature factor) values in the PDB file to 2.00.
         If neither fix_residue or fix_residue_in_box lists a
         residue or both equal None, then the Beta values for all the atoms
         in the residue are free to move in the simulation and Beta values
-        in the PDB file is set to 0.00
+        in the PDB file is set to 0.00.
+        NOTE that this is mainly for GOMC but also applies for NAMD (please see NAMD manual).
+    set_residue_pdb_occupancy_to_1 : list  or None, default = None
+        Changes occcur in the pdb file only.
+        All the atoms in the residue are have their occupancy values in the PDB file set to 1.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, This defines which atoms belong to which box for the GCMC and GEMC ensembles.
+        NOTE: In NAMD, This can be used for fixes which are manually set in the control file (please see NAMD manual).
     ff_filename : str, default =None
         If a string, it will write the  force field files that work in
         GOMC and NAMD structures.
@@ -1327,24 +1341,38 @@ class Charmm:
 
         * Example name structure: {atom_type: first_part_pf atom name_without_numbering}
 
-    fix_residue : list  or None, default = None
+        fix_residue : list  or None, default = None
         Changes occcur in the pdb file only.
+        All the atoms in the residue are have their Beta values in the PDB file set to 1.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, this only fixes atoms automatically as listed below.
+        NOTE: In NAMD, these all fixes need to be manually set in the control file (please see NAMD manual).
         When residues are listed here, all the atoms in the residue are
-        fixed and can not move via setting the Beta values in the PDB
-        file to 1.00.
+        fixed and can not move via setting the Beta values in the PDB file to 1.00
         If neither fix_residue or fix_residue_in_box lists a
-        residue or both equal None, then the Beta values for all the atoms
+        residue or both equal None, then the Beta (Temperature factor) values for all the atoms
         in the residue are free to move in the simulation and Beta values
-        in the PDB file is set to 0.00
+        in the PDB file is set to 0.00.
     fix_residue_in_box : list  or None, default = None
         Changes occcur in the pdb file only.
+        All the atoms in the residue are have their Beta values in the PDB file set to 2.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, this only fixes atoms automatically as listed below.
+        NOTE: In NAMD, these all fixes need to be manually set in the control file (please see NAMD manual).
         When residues are listed here, all the atoms in the residue
         can move within the box but cannot be transferred between boxes
-        via setting the Beta values in the PDB file to 2.00.
+        via setting the Beta (Temperature factor) values in the PDB file to 2.00.
         If neither fix_residue or fix_residue_in_box lists a
         residue or both equal None, then the Beta values for all the atoms
         in the residue are free to move in the simulation and Beta values
-        in the PDB file is set to 0.00
+        in the PDB file is set to 0.00.
+        NOTE that this is mainly for GOMC but also applies for NAMD (please see NAMD manual).
+    set_residue_pdb_occupancy_to_1 : list  or None, default = None
+        Changes occcur in the pdb file only.
+        All the atoms in the residue are have their occupancy values in the PDB file set to 1.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, This defines which atoms belong to which box for the GCMC and GEMC ensembles.
+        NOTE: In NAMD, This can be used for fixes which are manually set in the control file (please see NAMD manual).
     ff_filename : str, default =None
         If a string, it will write the  force field files that work in
         GOMC and NAMD structures.
@@ -1497,9 +1525,17 @@ class Charmm:
         bead_to_atom_name_dict=None,
         fix_residue=None,
         fix_residue_in_box=None,
+        set_residue_pdb_occupancy_to_1=None,
         ff_filename=None,
         reorder_res_in_pdb_psf=False,
     ):
+        # depreciation warning that charmm_writer will be depreciated soon
+        depreciation_warning = (
+            "The mosdef_gomc charmm_writer.py will be depreciated soon, (by the end of 2022 or sooner). "
+            "The this only effects the mosdef-gomc charmm_writer parmed version.  The GMSO version, "
+            "gmso_charmm_writer.py, will replace it."
+        )
+        warn(depreciation_warning, DeprecationWarning)
 
         # set all input variables to the class
         self.structure_box_0 = structure_box_0
@@ -1516,6 +1552,7 @@ class Charmm:
         self.bead_to_atom_name_dict = bead_to_atom_name_dict
         self.fix_residue = fix_residue
         self.fix_residue_in_box = fix_residue_in_box
+        self.set_residue_pdb_occupancy_to_1 = set_residue_pdb_occupancy_to_1
         self.ff_filename = ff_filename
         self.reorder_res_in_pdb_psf = reorder_res_in_pdb_psf
 
@@ -1727,6 +1764,25 @@ class Charmm:
                     print_error_message = (
                         "Error: Please ensure that all the residue names in the "
                         "fix_residue_in_box list are also in the residues list."
+                    )
+                    raise ValueError(print_error_message)
+
+        if self.set_residue_pdb_occupancy_to_1 is not None and not isinstance(
+            self.set_residue_pdb_occupancy_to_1, list
+        ):
+            self.input_error = True
+            print_error_message = "ERROR: Please enter the set_residue_pdb_occupancy_to_1 in a list format."
+            raise TypeError(print_error_message)
+
+        if isinstance(self.set_residue_pdb_occupancy_to_1, list):
+            for (
+                set_residue_pdb_occupancy_to_1_q
+            ) in self.set_residue_pdb_occupancy_to_1:
+                if set_residue_pdb_occupancy_to_1_q not in self.residues:
+                    self.input_error = True
+                    print_error_message = (
+                        "Error: Please ensure that all the residue names in the "
+                        "set_residue_pdb_occupancy_to_1 list are also in the residues list."
                     )
                     raise ValueError(print_error_message)
 
@@ -3734,6 +3790,11 @@ class Charmm:
         print("write_charmm_pdb: residues == {}".format(self.residues))
         print("fix_residue = {}".format(self.fix_residue))
         print("fix_residue_in_box = {}".format(self.fix_residue_in_box))
+        print(
+            "set_residue_pdb_occupancy_to_1 = {}".format(
+                self.set_residue_pdb_occupancy_to_1
+            )
+        )
         print("bead_to_atom_name_dict = {}".format(self.bead_to_atom_name_dict))
 
         if self.fix_residue is None and self.fix_residue_in_box is None:
@@ -3808,6 +3869,7 @@ class Charmm:
                         )
                         raise ValueError(print_error_message)
 
+            occupancy_values_atoms_list = []
             residue_names_list = []
             fix_atoms_list = []
             for k, atom in enumerate(stuct_only_iteration.atoms):
@@ -3823,6 +3885,14 @@ class Charmm:
                 else:
                     beta_iteration = 0.00
                 fix_atoms_list.append(beta_iteration)
+
+                if (self.set_residue_pdb_occupancy_to_1 is not None) and (
+                    atom.residue.name in self.set_residue_pdb_occupancy_to_1
+                ):
+                    occupancy_iteration = 1.00
+                else:
+                    occupancy_iteration = 0.00
+                occupancy_values_atoms_list.append(occupancy_iteration)
 
             if stuct_only_iteration.box is not None:
                 output_write.write(
@@ -3969,7 +4039,7 @@ class Charmm:
                             x_list[v],
                             y_list[v],
                             z_list[v],
-                            locked_occupany_factor,
+                            occupancy_values_atoms_list[v],
                             fix_atoms_list[v],
                             segment_id,
                             element_list[v],

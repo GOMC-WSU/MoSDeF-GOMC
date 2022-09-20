@@ -1,0 +1,32 @@
+<ForceField name="bead psf writer testing for bonds, angles, dihedrals, impropers connections" version="0.0.1">
+  <AtomTypes>
+    <Type name="BD" class="BD" element="_BD" mass="10" def="_BD" desc="_BD anywhere"/>
+    <Type name="XB" class="XB" element="_XB" mass="20" def="_XB" desc="_XB anywhere"/>
+  </AtomTypes>
+  <HarmonicBondForce>
+    <Bond class1="BD" class2="BD" length="0.15" k="200000"/>
+    <Bond class1="BD" class2="XB" length="0.15" k="200000"/>
+    <Bond class1="XB" class2="XB" length="0.15" k="200000"/>
+  </HarmonicBondForce>
+  <HarmonicAngleForce>
+    <Angle class1="BD" class2="BD" class3="BD" angle="2" k="400"/>
+    <Angle class1="XB" class2="BD" class3="BD" angle="2" k="400"/>
+    <Angle class1="BD" class2="XB" class3="BD" angle="2" k="400"/>
+    <Angle class1="BD" class2="XB" class3="XB" angle="2" k="400"/>
+    <Angle class1="XB" class2="BD" class3="XB" angle="2" k="400"/>
+    <Angle class1="XB" class2="XB" class3="XB" angle="2" k="400"/>
+  </HarmonicAngleForce>
+  <RBTorsionForce>
+    <Proper class1="BD" class2="BD" class3="BD" class4="BD" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>
+    <Proper class1="BD" class2="BD" class3="BD" class4="XB" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>
+    <Proper class1="BD" class2="BD" class3="XB" class4="XB" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>
+    <Proper class1="BD" class2="XB" class3="XB" class4="XB" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>  
+  </RBTorsionForce>
+  <PeriodicTorsionForce>
+    <Improper class1="BD" class2="BD" class3="BD" class4="BD" k1="4" periodicity1="1" phase1="0"  k2="4.5" periodicity2="3" phase2="3.14159265"/>
+  </PeriodicTorsionForce>
+  <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
+    <Atom type="BD" charge="0" sigma="0.3" epsilon="0.4"/>
+    <Atom type="XB" charge="0" sigma="0.5" epsilon="0.6"/>
+  </NonbondedForce>
+</ForceField>

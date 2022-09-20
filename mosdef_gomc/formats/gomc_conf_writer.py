@@ -2362,6 +2362,13 @@ class GOMCControl:
         binVelocities_box_1=None,
         input_variables_dict=None,
     ):
+        # depreciation warning that gomc_conf_writer will be depreciated soon
+        depreciation_warning = (
+            "The mosdef_gomc gomc_conf_writer.py will be depreciated soon (by the end of 2022 or sooner). "
+            "The this only effects the mosdef-gomc charmm_writer parmed version.  The GMSO version, "
+            "gmso_gomc_conf_writer.py, will replace it."
+        )
+        warn(depreciation_warning, DeprecationWarning)
 
         # set this to check and see if all the input pass
         self.input_error = False
