@@ -25,9 +25,9 @@ jobs:
         python-version: "3.9"
     - name: Install dependencies
       run: |
-        create env mosdef_gomc_dev 
+        create env mosdef_gomc_dev
         /home/runner/micromamba-bin/micromamba create -n mosdef_gomc_dev -y --log-level warning python=3.9 -f /home/runner/work/mosdef_gomc/mosdef_gomc/environment-dev.yml
-        
+
         python -m pip install --upgrade pip
         pip install flake8 pytest
 
