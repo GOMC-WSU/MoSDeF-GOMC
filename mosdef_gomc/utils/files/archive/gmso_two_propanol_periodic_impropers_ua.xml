@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ForceField name="trappe-ua two-propanol-ua" version="0.0.1">
+  <FFMetaData electrostatics14Scale="0.0" nonBonded14Scale="0.0" combiningRule="lorentz">
+    <Units energy="kJ/mol" mass="amu" charge="elementary_charge" distance="nm"/>
+  </FFMetaData>
+  <AtomTypes expression="4 * epsilon * ((sigma/r)**12 - (sigma/r)**6)">
+    <ParametersUnitDef parameter="sigma" unit="nm"/>
+    <ParametersUnitDef parameter="epsilon" unit="kJ/mol"/>
+    <AtomType name="CH3_sp3" atomclass="CH3" element="_CH3" charge="0.0" mass="15.03500" definition="[_CH3;X1][_CH3,_HC]" description="Alkane CH3, united atom" doi="10.1021/jp972543+" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="0.814817"/>
+        <Parameter name="sigma" value="0.375"/>
+      </Parameters>
+    </AtomType>
+    <AtomType name="CH_O" atomclass="CH" element="_HC" charge="0.265" mass="13.01900" definition="[_HC;X3]([_CH3,_HC])([_CH3,_HC])OH" description="CH, united atom, attached to hydroxyl" doi="10.1021/jp003882x" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="0.0831445"/>
+        <Parameter name="sigma" value="0.433"/>
+      </Parameters>
+    </AtomType>
+    <AtomType name="O" atomclass="O" element="O" charge="-0.700" mass="15.99940" definition="OH"  description="Oxygen in hydroxyl"  doi="10.1021/jp003882x" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="0.773245"/>
+        <Parameter name="sigma" value="0.302"/>
+      </Parameters>
+    </AtomType>
+  <AtomType name="H" atomclass="H" element="H" charge="0.435" mass="1.00800" definition="HO" description="Hydrogen in hydroxyl" doi="10.1021/jp003882x" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="0.0"/>
+        <Parameter name="sigma" value="1.0"/>
+      </Parameters>
+    </AtomType>
+  </AtomTypes>
+  <BondTypes expression="k/2 * (r-r_eq)**2">
+    <ParametersUnitDef parameter="r_eq" unit="nm"/>
+    <ParametersUnitDef parameter="k" unit="kJ/mol/nm**2"/>
+    <BondType name="BondType_Harmonic_CH3_CH" class1="CH3" class2="CH">
+      <Parameters>
+        <Parameter name="k" value="502416.0"/>
+        <Parameter name="r_eq" value="0.1540"/>
+      </Parameters>
+    </BondType>
+    <BondType name="BondType_Harmonic_CH_O" class1="CH" class2="O">
+      <Parameters>
+        <Parameter name="k" value="502416.0"/>
+        <Parameter name="r_eq" value="0.1430"/>
+      </Parameters>
+    </BondType>
+    <BondType name="BondType_Harmonic_O_H" class1="O" class2="H">
+      <Parameters>
+        <Parameter name="k" value="502416.0"/>
+        <Parameter name="r_eq" value="0.0945"/>
+      </Parameters>
+    </BondType>
+  </BondTypes>
+  <AngleTypes expression="k/2 * (theta - theta_eq)**2">
+    <ParametersUnitDef parameter="theta_eq" unit="radian"/>
+    <ParametersUnitDef parameter="k" unit="kJ/mol/radian**2"/>
+    <AngleType name="AngleType_Harmonic_CH3_CH_CH3" class1="CH3" class2="CH" class3="CH3">
+      <Parameters>
+        <Parameter name="k" value="519.65389"/>
+        <Parameter name="theta_eq" value="1.95477"/>
+      </Parameters>
+    </AngleType>
+   <AngleType name="AngleType_Harmonic_CH3_CH_O" class1="CH3" class2="CH" class3="O">
+      <Parameters>
+        <Parameter name="k" value="419.04889"/>
+        <Parameter name="theta_eq" value="1.91061"/>
+      </Parameters>
+    </AngleType>
+    <AngleType name="AngleType_Harmonic_CH_O_H" class1="CH" class2="O" class3="H">
+      <Parameters>
+        <Parameter name="k" value="460.62120"/>
+        <Parameter name="theta_eq" value="1.89368"/>
+      </Parameters>
+    </AngleType>
+  </AngleTypes>
+  <DihedralTypes expression="k * (1 + cos(n * phi - phi_eq))">
+    <ParametersUnitDef parameter="k" unit="kJ/mol"/>
+    <ParametersUnitDef parameter="n" unit="dimensionless"/>
+    <ParametersUnitDef parameter="phi_eq" unit="radian"/>
+    <DihedralType name="DihedralType_RB_Proper_CH3_CH_O_H" class1="CH3" class2="CH" class3="O" class4="H">
+      <Parameters>
+        <Parameter name="n">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>2.70802</Value>
+          <Value>-1.6406925</Value>
+          <Value>-0.261575</Value>
+          <Value>1.4460525</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>1.570796326794897</Value>
+          <Value>3.141592653589793</Value>
+          <Value>0.0</Value>
+          <Value>3.141592653589793</Value>
+        </Parameter>
+      </Parameters>
+    </DihedralType>
+  </DihedralTypes>
+  <ImproperTypes expression="k * (1 + cos(n * phi - phi_eq))">
+    <ParametersUnitDef parameter="k" unit="kJ/mol"/>
+    <ParametersUnitDef parameter="n" unit="dimensionless"/>
+    <ParametersUnitDef parameter="phi_eq" unit="radian"/>
+    <ImproperType name="DihedralType_RB_Proper_CH_O_CH3_CH3" class1="CH" class2="O" class3="CH3" class4="CH3">
+      <Parameters>
+        <Parameter name="n">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>3</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>4.184</Value>
+          <Value>-8.368</Value>
+          <Value>4.184</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>1.570796326794897</Value>
+          <Value>3.141592653589793</Value>
+          <Value>3.141592653589793</Value>
+        </Parameter>
+      </Parameters>
+    </ImproperType>
+  </ImproperTypes>
+</ForceField>

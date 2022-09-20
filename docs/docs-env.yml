@@ -1,0 +1,22 @@
+name: MoSDeF-GOMC-docs
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - unyt
+  - gsd
+  - sphinx
+  - ele
+  - nbsphinx
+  - lark-parser
+  - requests
+  - mock
+  - numpydoc
+  - anaconda 
+  - sphinxcontrib
+  - pip:
+    - sphinx_rtd_theme
+    - sphinxcontrib-svg2pdfconverter
+    - sphinxcontrib-video
+sphinx:
+  fail_on_warning: true

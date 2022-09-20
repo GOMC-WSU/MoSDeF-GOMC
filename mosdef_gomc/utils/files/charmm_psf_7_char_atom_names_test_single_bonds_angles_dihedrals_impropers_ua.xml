@@ -1,0 +1,32 @@
+<ForceField name="bead psf writer testing for bonds, angles, dihedrals, impropers connections" version="0.0.1">
+  <AtomTypes>
+    <Type name="BDABCDE" class="BDABCDE" element="_BD" mass="10" def="_BD" desc="_BD anywhere"/>
+    <Type name="XBZXYWR" class="XBZXYWR" element="_XB" mass="20" def="_XB" desc="_XB anywhere"/>
+  </AtomTypes>
+  <HarmonicBondForce>
+    <Bond class1="BDABCDE" class2="BDABCDE" length="0.15" k="200000"/>
+    <Bond class1="BDABCDE" class2="XBZXYWR" length="0.15" k="200000"/>
+    <Bond class1="XBZXYWR" class2="XBZXYWR" length="0.15" k="200000"/>
+  </HarmonicBondForce>
+  <HarmonicAngleForce>
+    <Angle class1="BDABCDE" class2="BDABCDE" class3="BDABCDE" angle="2" k="400"/>
+    <Angle class1="XBZXYWR" class2="BDABCDE" class3="BDABCDE" angle="2" k="400"/>
+    <Angle class1="BDABCDE" class2="XBZXYWR" class3="BDABCDE" angle="2" k="400"/>
+    <Angle class1="BDABCDE" class2="XBZXYWR" class3="XBZXYWR" angle="2" k="400"/>
+    <Angle class1="XBZXYWR" class2="BDABCDE" class3="XBZXYWR" angle="2" k="400"/>
+    <Angle class1="XBZXYWR" class2="XBZXYWR" class3="XBZXYWR" angle="2" k="400"/>
+  </HarmonicAngleForce>
+  <RBTorsionForce>
+    <Proper class1="BDABCDE" class2="BDABCDE" class3="BDABCDE" class4="BDABCDE" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>
+    <Proper class1="BDABCDE" class2="BDABCDE" class3="BDABCDE" class4="XBZXYWR" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>
+    <Proper class1="BDABCDE" class2="BDABCDE" class3="XBZXYWR" class4="XBZXYWR" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>
+    <Proper class1="BDABCDE" class2="XBZXYWR" class3="XBZXYWR" class4="XBZXYWR" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>  
+  </RBTorsionForce>
+  <PeriodicTorsionForce>
+    <Improper class1="BDABCDE" class2="BDABCDE" class3="BDABCDE" class4="BDABCDE" k1="4" periodicity1="1" phase1="0"  k2="4.5" periodicity2="3" phase2="3.14159265"/>
+  </PeriodicTorsionForce>
+  <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
+    <Atom type="BDABCDE" charge="0" sigma="0.3" epsilon="0.4"/>
+    <Atom type="XBZXYWR" charge="0" sigma="0.5" epsilon="0.6"/>
+  </NonbondedForce>
+</ForceField>
