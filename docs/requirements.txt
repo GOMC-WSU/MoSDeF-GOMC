@@ -7,7 +7,7 @@ lark-parser
 requests
 mock
 numpydoc
-anaconda 
+anaconda
 widgetsnbextension
 ipywidgets
 sphinxcontrib

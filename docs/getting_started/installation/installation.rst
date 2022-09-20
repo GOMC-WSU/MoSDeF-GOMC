@@ -14,8 +14,8 @@ Install with `conda <https://repo.anaconda.com/miniconda/>`_
 Install an editable version from the source code
 ------------------------------------------------
 
-It is good practice to use a pre-packaged Python distribution like 
-`Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_, 
+It is good practice to use a pre-packaged Python distribution like
+`Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_,
 which ensures all of the dependencies are installed::
 
     $ git clone https://github.com/GOMC-WSU/MoSDeF-GOMC
@@ -44,14 +44,14 @@ To check all the file, you can run::
 Supported Python Versions
 -------------------------
 
-Python 3.9 are officially supported and tested during development and with the final product. 
+Python 3.9 are officially supported and tested during development and with the final product.
 Python versions older than 3.9 may work, but there is no guarantee.
 
 Testing your installation
 -------------------------
 
-MoSDeF-GOMC uses `pytest <https://docs.pytest.org/en/stable/>`_ to test the code for accuracy and possible errors.  
-The pytest package is installed for testing code changes or if the existing implementation is correct, which is auto-installed in the dev environment (``mosdef_gomc_dev``). 
+MoSDeF-GOMC uses `pytest <https://docs.pytest.org/en/stable/>`_ to test the code for accuracy and possible errors.
+The pytest package is installed for testing code changes or if the existing implementation is correct, which is auto-installed in the dev environment (``mosdef_gomc_dev``).
 Alternatively, pytest can be installed inside the active ``mosdef_gomc`` conda environment via the following commands::
 
     $ conda install -c conda-forge pytest
@@ -63,7 +63,7 @@ To run these unit tests, run the following from the base directory::
 Building the documentation
 --------------------------
 
-MoSDeF-GOMC documentation is all built using `sphinx <https://www.sphinx-doc.org/en/master/index.html>`_. 
+MoSDeF-GOMC documentation is all built using `sphinx <https://www.sphinx-doc.org/en/master/index.html>`_.
 After installing the software via the **Install an editable version from the source code** (``mosdef_gomc_dev`` environment), the ``docs`` can be built locally with the following commands when in the ``docs`` directory::
 
     $ conda activate mosdef_gomc_dev

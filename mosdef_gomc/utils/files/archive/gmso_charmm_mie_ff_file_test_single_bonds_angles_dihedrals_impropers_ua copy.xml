@@ -76,7 +76,7 @@
         <Parameter name="k" value="400"/>
         <Parameter name="theta_eq" value="2"/>
       </Parameters>
-    </AngleType>    
+    </AngleType>
   </AngleTypes>
   <DihedralTypes expression="k * (1 + cos(n * phi - phi_eq))">
     <ParametersUnitDef parameter="k" unit="kJ/mol"/>
@@ -170,7 +170,7 @@
         </Parameter>
       </Parameters>
     </DihedralType>
-  </DihedralTypes>      
+  </DihedralTypes>
   <ImproperTypes expression="k * (1 + cos(n * phi - phi_eq))">
     <ParametersUnitDef parameter="k" unit="kJ/mol"/>
     <ParametersUnitDef parameter="n" unit="dimensionless"/>
@@ -194,5 +194,5 @@
         </Parameter>
       </Parameters>
     </ImproperType>
-  </ImproperTypes>  
+  </ImproperTypes>
 </ForceField>

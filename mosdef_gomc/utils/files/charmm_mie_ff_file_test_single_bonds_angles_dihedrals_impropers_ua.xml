@@ -20,7 +20,7 @@
     <Proper class1="BD" class2="BD" class3="BD" class4="BD" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>
     <Proper class1="BD" class2="BD" class3="BD" class4="XB" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>
     <Proper class1="BD" class2="BD" class3="XB" class4="XB" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>
-    <Proper class1="BD" class2="XB" class3="XB" class4="XB" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>  
+    <Proper class1="BD" class2="XB" class3="XB" class4="XB" c0="-4" c1="7" c2="2" c3="-5" c4="0.0" c5="0.0"/>
   </RBTorsionForce>
   <PeriodicTorsionForce>
     <Improper class1="BD" class2="BD" class3="BD" class4="BD" k1="4" periodicity1="1" phase1="0"  k2="4.5" periodicity2="3" phase2="3.14159265"/>

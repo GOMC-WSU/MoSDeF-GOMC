@@ -12,7 +12,7 @@ dependencies:
   - requests
   - mock
   - numpydoc
-  - anaconda 
+  - anaconda
   - sphinxcontrib
   - pip:
     - sphinx_rtd_theme

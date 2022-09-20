@@ -23,7 +23,7 @@ Import the required mbuild package.
 Construct a hexane and pentane all-atom (AA) system using the OPLS-AA force field (FF),
 which is a standard FF supplied with `foyer <https://foyer.mosdef.org/en/stable/>`_.
 The molecules are built via `smiles strings <https://www.daylight.com/dayhtml/doc/theory/theory.smiles.html>`_.
-The hexane and pentane residues are named `"HEX"` and `"PEN"`, respectively.  
+The hexane and pentane residues are named `"HEX"` and `"PEN"`, respectively.
 All the `GPU Optimized Monte Carlo (GOMC) <https://github.com/GOMC-WSU/GOMC>`_ files for conducting a are written, including the **GOMC** control file.  The GOMC control file selects many defaults, minimizes novice user errors, and allows expert users to change GOMC parameters.
 
 .. code:: ipython3
@@ -70,10 +70,10 @@ All the `GPU Optimized Monte Carlo (GOMC) <https://github.com/GOMC-WSU/GOMC>`_ f
     charmm.write_psf()
     charmm.write_pdb()
 
-    gomc_control.write_gomc_control_file(charmm, 
-                                         'in_NPT.conf',  
-                                         'NPT', 
-                                         100, 
+    gomc_control.write_gomc_control_file(charmm,
+                                         'in_NPT.conf',
+                                         'NPT',
+                                         100,
                                          300 * u.K,
                                          input_variables_dict={"Pressure": 10 * u.bar}
                                          )

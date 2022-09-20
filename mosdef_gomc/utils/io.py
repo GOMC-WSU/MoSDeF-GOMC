@@ -1,5 +1,6 @@
 """General module for IO operations in MOSDEF-GOMC."""
 import os
+
 from pkg_resources import resource_filename
 
 
@@ -20,7 +21,9 @@ def get_mosdef_gomc_fn(filename):
     fn : str
         Full path to filename
     """
-    fn = resource_filename("mosdef_gomc", os.path.join("utils", "files", filename))
+    fn = resource_filename(
+        "mosdef_gomc", os.path.join("utils", "files", filename)
+    )
     if not os.path.exists(fn):
         raise IOError("Sorry! {} does not exists.".format(fn))
     return fn

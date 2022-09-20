@@ -1,28 +1,20 @@
 import os
 
-import pytest
-
-import unyt as u
-from unyt.dimensions import (
-    length,
-    energy,
-    pressure,
-    temperature,
-)
-
-from mosdef_gomc.formats.gmso_charmm_writer import Charmm
-import mosdef_gomc.formats.gmso_gomc_conf_writer as gomc_control
-from mosdef_gomc.utils.io import get_mosdef_gomc_fn
-from mosdef_gomc.tests.base_test import BaseTest
-
 import mbuild as mb
+import pytest
+import unyt as u
 from mbuild.lattice import load_cif
 from mbuild.utils.io import get_fn, has_foyer
+from unyt.dimensions import energy, length, pressure, temperature
+
+import mosdef_gomc.formats.gmso_gomc_conf_writer as gomc_control
+from mosdef_gomc.formats.gmso_charmm_writer import Charmm
+from mosdef_gomc.tests.base_test import BaseTest
+from mosdef_gomc.utils.io import get_mosdef_gomc_fn
 
 
 @pytest.mark.skipif(not has_foyer, reason="Foyer package not installed")
 class TestGOMCControlFileWriter(BaseTest):
-
     def test_dict_keys_to_list(
         self,
     ):
@@ -4836,7 +4828,6 @@ class TestGOMCControlFileWriter(BaseTest):
                 input_variables_dict={"XXXXXX": []},
             )
 
-
     def test_save_NVT_bad_variables_part_5(self, ethane_gomc, ethanol_gomc):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -6194,8 +6185,8 @@ class TestGOMCControlFileWriter(BaseTest):
         with pytest.warns(
             UserWarning,
             match="WARNING: The free energy calculations are being used when RcutLow is not zero \(0\), "
-                  "which can produce free energy results that are slightly off or wrong. "
-                  "Please set RcutLow to zero \(RcutLow=0\) when using the free energy calculations.",
+            "which can produce free energy results that are slightly off or wrong. "
+            "Please set RcutLow to zero \(RcutLow=0\) when using the free energy calculations.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -8362,7 +8353,7 @@ class TestGOMCControlFileWriter(BaseTest):
             residues=[ETV_triclinic_1_cell.name, ETV_triclinic_3_cell.name],
             bead_to_atom_name_dict=None,
             fix_residue=[ETV_triclinic_1_cell.name, ETV_triclinic_3_cell.name],
-            gmso_match_ff_by='group',
+            gmso_match_ff_by="group",
         )
 
         gomc_control.write_gomc_control_file(
@@ -8450,7 +8441,7 @@ class TestGOMCControlFileWriter(BaseTest):
         methane_box_orth = mb.fill_box(
             compound=methane, n_compounds=1, box=[1, 2, 3]
         )
-        print(f'methane.name = {methane.name}')
+        print(f"methane.name = {methane.name}")
 
         charmm_bad_box_0 = Charmm(
             methane_box_orth,
@@ -8458,7 +8449,7 @@ class TestGOMCControlFileWriter(BaseTest):
             ff_filename="methane_box_orth_bad_box_0_non_orth",
             residues=[methane.name],
             forcefield_selection="trappe-ua",
-            gmso_match_ff_by='group',
+            gmso_match_ff_by="group",
         )
 
         # set the vectors all too long
@@ -8480,7 +8471,7 @@ class TestGOMCControlFileWriter(BaseTest):
             ff_filename="methane_box_orth_bad_box_1_non_orth",
             residues=[methane.name],
             forcefield_selection="trappe-ua",
-            gmso_match_ff_by='group',
+            gmso_match_ff_by="group",
         )
 
         # set the vectors all too long
@@ -8902,8 +8893,8 @@ class TestGOMCControlFileWriter(BaseTest):
         restart_input = "XXXXX"
         with pytest.raises(
             TypeError,
-            match= r"ERROR: The {} input is {} and needs to be a boolean \(i.e., True or False\)."
-                   "".format("Restart", type(restart_input)),
+            match=r"ERROR: The {} input is {} and needs to be a boolean \(i.e., True or False\)."
+            "".format("Restart", type(restart_input)),
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -8918,8 +8909,8 @@ class TestGOMCControlFileWriter(BaseTest):
         with pytest.raises(
             TypeError,
             match=r"ERROR: Checkpoint is a list, and the list need to be "
-                  r"\[True, str\] ---> \[True, checkpoint_filename\] or "
-                  r"\[False, str\] ---> \[False, checkpoint_filename\]."
+            r"\[True, str\] ---> \[True, checkpoint_filename\] or "
+            r"\[False, str\] ---> \[False, checkpoint_filename\].",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -9378,7 +9369,7 @@ class TestGOMCControlFileWriter(BaseTest):
             300 * u.K,
             ff_psf_pdb_file_directory=None,
             Restart=True,
-            Checkpoint=[True, '../../Folder_1/test_checkpoint.chk'],
+            Checkpoint=[True, "../../Folder_1/test_checkpoint.chk"],
             Coordinates_box_0=None,
             Structure_box_0="../test_files_2/NVT_toluene_box_0.psf",
             check_input_files_exist=False,
@@ -9446,7 +9437,7 @@ class TestGOMCControlFileWriter(BaseTest):
             300 * u.K,
             ff_psf_pdb_file_directory=None,
             Restart=True,
-            Checkpoint=[True, 'test_checkpoint'],
+            Checkpoint=[True, "test_checkpoint"],
             Coordinates_box_0="../test_files_1/NVT_toluene_box_0.pdb",
             Structure_box_0=None,
             Coordinates_box_1="../test_files_2/NVT_toluene_box_1.pdb",
@@ -9534,7 +9525,7 @@ class TestGOMCControlFileWriter(BaseTest):
             300 * u.K,
             ff_psf_pdb_file_directory="../Test",
             Restart=True,
-            Checkpoint=[False, 'test_checkpoint_1.chk'],
+            Checkpoint=[False, "test_checkpoint_1.chk"],
             Coordinates_box_0=None,
             Structure_box_0="../test_files_1/NVT_toluene_box_0.psf",
             Coordinates_box_1=None,
@@ -9587,7 +9578,7 @@ class TestGOMCControlFileWriter(BaseTest):
                     variables_read_dict["Checkpoint"] = True
                     split_line = line.split()
                     assert split_line[1] == "False"
-                    assert split_line[2] == 'test_checkpoint_1.chk'
+                    assert split_line[2] == "test_checkpoint_1.chk"
 
         assert variables_read_dict == {
             "Coordinates_box_0": True,
@@ -9621,7 +9612,7 @@ class TestGOMCControlFileWriter(BaseTest):
             ff_psf_pdb_file_directory="../Test",
             Parameters="../test_folder/new.inp",
             Restart=True,
-            Checkpoint=[True, 'test_checkpoint_2.chk'],
+            Checkpoint=[True, "test_checkpoint_2.chk"],
             check_input_files_exist=False,
             input_variables_dict={},
         )
@@ -9676,7 +9667,7 @@ class TestGOMCControlFileWriter(BaseTest):
                     variables_read_dict["Checkpoint"] = True
                     split_line = line.split()
                     assert split_line[1] == "True"
-                    assert split_line[2] == 'test_checkpoint_2.chk'
+                    assert split_line[2] == "test_checkpoint_2.chk"
 
         assert variables_read_dict == {
             "Parameters": True,
@@ -9768,7 +9759,6 @@ class TestGOMCControlFileWriter(BaseTest):
                     "DCDFreq": [True, 1000],
                 },
             )
-
 
     def test_failures_restarting_dcd_and_binary_files_GEMC_NVT(
         self, ethane_gomc
@@ -9870,7 +9860,7 @@ class TestGOMCControlFileWriter(BaseTest):
         with pytest.raises(
             TypeError,
             match="ERROR: The Coordinates_box_0 variable expects a str with a file extension of \['.pdb'\], "
-                  'but the actual file extension is "".'
+            'but the actual file extension is "".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -9889,7 +9879,7 @@ class TestGOMCControlFileWriter(BaseTest):
         with pytest.raises(
             TypeError,
             match="ERROR: The Coordinates_box_1 variable expects a str with a file extension of \['.pdb'\], "
-                  'but the actual file extension is "".',
+            'but the actual file extension is "".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -9908,7 +9898,7 @@ class TestGOMCControlFileWriter(BaseTest):
         with pytest.raises(
             TypeError,
             match="ERROR: The Structure_box_0 variable expects a str with a file extension of \['.psf'\], "
-                  'but the actual file extension is "".',
+            'but the actual file extension is "".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -9927,7 +9917,7 @@ class TestGOMCControlFileWriter(BaseTest):
         with pytest.raises(
             TypeError,
             match="ERROR: The Structure_box_1 variable expects a str with a file extension of \['.psf'\], "
-                  'but the actual file extension is "".',
+            'but the actual file extension is "".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -10327,17 +10317,28 @@ class TestGOMCControlFileWriter(BaseTest):
                         "SubVolumeResidueKind": ["all"],
                         "SubVolumeRigidSwap": True,
                         "SubVolumePBC": "XY",
-                        "SubVolumeChemPot": {"ETH": -222 * u.K, "ETO": -22 * u.K},
+                        "SubVolumeChemPot": {
+                            "ETH": -222 * u.K,
+                            "ETO": -22 * u.K,
+                        },
                     },
                     1: {
                         "SubVolumeType": "static",
                         "SubVolumeBox": 0,
                         "SubVolumeCenter": [2, 3, 4] * u.angstrom,
-                        "SubVolumeDim": [4.0 * 10**(-10), 3.0 * 10**(-10), 2.0 * 10**(-10)] * u.m,
+                        "SubVolumeDim": [
+                            4.0 * 10 ** (-10),
+                            3.0 * 10 ** (-10),
+                            2.0 * 10 ** (-10),
+                        ]
+                        * u.m,
                         "SubVolumeResidueKind": "All",
                         "SubVolumeRigidSwap": False,
                         "SubVolumePBC": "XYZ",
-                        "SubVolumeChemPot": {"ETH": -333 * u.K, "ETO": -33 * u.K},
+                        "SubVolumeChemPot": {
+                            "ETH": -333 * u.K,
+                            "ETO": -33 * u.K,
+                        },
                     },
                 },
             },
@@ -10545,13 +10546,21 @@ class TestGOMCControlFileWriter(BaseTest):
                         "SubVolumeResidueKind": ["ETH", "ETO"],
                         "SubVolumeRigidSwap": False,
                         "SubVolumePBC": "XY",
-                        "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                        "SubVolumeFugacity": {
+                            "ETH": 2.22 * u.bar,
+                            "ETO": 0.22 * u.bar,
+                        },
                     },
                     1: {
                         "SubVolumeType": "static",
                         "SubVolumeBox": 0,
                         "SubVolumeCenter": [2, 3, 4] * u.angstrom,
-                        "SubVolumeDim": [4.0 * 10**(-10), 3.0 * 10**(-10), 2.0 * 10**(-10)] * u.m,
+                        "SubVolumeDim": [
+                            4.0 * 10 ** (-10),
+                            3.0 * 10 ** (-10),
+                            2.0 * 10 ** (-10),
+                        ]
+                        * u.m,
                         "SubVolumeResidueKind": "ETH",
                         "SubVolumeFugacity": {"ETH": 3.33 * u.bar},
                     },
@@ -10760,7 +10769,7 @@ class TestGOMCControlFileWriter(BaseTest):
                     1: {
                         "SubVolumeType": "static",
                         "SubVolumeBox": 1,
-                        "SubVolumeCenter": [2, 3, 4]* u.angstrom,
+                        "SubVolumeCenter": [2, 3, 4] * u.angstrom,
                         "SubVolumeDim": [4, 3, 2] * u.angstrom,
                         "SubVolumeResidueKind": "ETH",
                         "SubVolumeRigidSwap": False,
@@ -10965,7 +10974,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             },
         )
-        
+
         with open("test_save_basic_NVT_use_targetedswap.conf", "r") as fp:
             variables_read_dict = {
                 "IntraTargetedSwapFreq": False,
@@ -11197,7 +11206,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.atm, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.atm,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11236,7 +11248,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.atm, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.atm,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11275,7 +11290,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11314,7 +11332,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11353,7 +11374,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11392,7 +11416,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11431,7 +11458,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11470,7 +11500,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11509,7 +11542,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11548,7 +11584,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": -2.22 * u.K, "ETO": 0.22 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": -2.22 * u.K,
+                                "ETO": 0.22 * u.K,
+                            },
                         },
                     },
                 },
@@ -11587,7 +11626,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11626,7 +11668,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11665,7 +11710,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11704,7 +11752,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": [0, "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11743,7 +11794,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": "x",
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11782,7 +11836,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": 0,
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11821,7 +11878,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["x"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11860,7 +11920,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": 0,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11899,7 +11962,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": "s",
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11938,7 +12004,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": [True],
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -11977,7 +12046,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "s",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12016,7 +12088,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": 0,
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12055,7 +12130,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": [0],
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12094,7 +12172,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"X": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "X": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12133,7 +12214,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ET": -2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ET": -2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12289,7 +12373,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 2.22 * u.K, "ETO": 0.22 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 2.22 * u.K,
+                                "ETO": 0.22 * u.K,
+                            },
                         },
                     },
                 },
@@ -12328,7 +12415,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12366,13 +12456,18 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
             )
-
 
         with pytest.raises(
             ValueError,
@@ -12407,7 +12502,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12446,7 +12544,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12485,7 +12586,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12563,7 +12667,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": "All",
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12600,7 +12707,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": "all",
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12674,7 +12784,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeresidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidswap": True,
                             "Subvolume": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12713,7 +12826,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeresidueKind": ["ETO"],
                             "SubVolumeRigidswap": True,
                             "SubvolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -12752,7 +12868,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeresidueKind": "ETH",
                             "SubVolumeRigidswap": True,
                             "SubvolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 4.44 * u.bar, "ETO": 5.55 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 4.44 * u.bar,
+                                "ETO": 5.55 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12791,7 +12910,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeresidueKind": "all",
                             "SubVolumeRigidswap": True,
                             "SubvolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 4.44 * u.bar, "ETO": 5.55 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 4.44 * u.bar,
+                                "ETO": 5.55 * u.bar,
+                            },
                         },
                     },
                 },
@@ -12830,7 +12952,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeDim": [1, 1, 1] * u.angstrom,
                             "SubVolumeresidueKind": "all",
                             "SubVolumeRigidswap": True,
-                            "SubVolumeFugacity": {"ETH": 4.44 * u.bar, "ETO": 5.55 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 4.44 * u.bar,
+                                "ETO": 5.55 * u.bar,
+                            },
                         },
                     },
                 },
@@ -13025,7 +13150,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeChemPot": {"ETH": 4.44 * u.K, "ETO": 5.55 * u.K},
+                            "SubVolumeChemPot": {
+                                "ETH": 4.44 * u.K,
+                                "ETO": 5.55 * u.K,
+                            },
                         },
                     },
                 },
@@ -13106,7 +13234,7 @@ class TestGOMCControlFileWriter(BaseTest):
                     },
                 },
             )
-    
+
     def test_failures_targetedswap_NVT(self, ethane_gomc, ethanol_gomc):
         test_box_ethane_gomc_ethanol_gomc = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -13220,7 +13348,10 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 4.44 * u.bar, "ETO": 5.55 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 4.44 * u.bar,
+                                "ETO": 5.55 * u.bar,
+                            },
                         },
                     },
                 },
@@ -13616,12 +13747,12 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
 
-        r_cut_coul_str = 'RcutCoulomb_box_0'
+        r_cut_coul_str = "RcutCoulomb_box_0"
         r_cut_coul_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_coul_str} input is {type(r_cut_coul_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_coul_str} input is {type(r_cut_coul_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13636,12 +13767,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_coul_str = 'RcutCoulomb_box_1'
+        r_cut_coul_str = "RcutCoulomb_box_1"
         r_cut_coul_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_coul_str} input is {type(r_cut_coul_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_coul_str} input is {type(r_cut_coul_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13656,12 +13787,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_coul_str = 'RcutCoulomb_box_0'
+        r_cut_coul_str = "RcutCoulomb_box_0"
         r_cut_coul_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_coul_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_coul_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13676,12 +13807,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_coul_str = 'RcutCoulomb_box_1'
+        r_cut_coul_str = "RcutCoulomb_box_1"
         r_cut_coul_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_coul_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_coul_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13711,12 +13842,12 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
 
-        pressure_str = 'Pressure'
+        pressure_str = "Pressure"
         pressure_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {pressure_str} input is {type(pressure_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in pressure units.",
+            TypeError,
+            match=f"ERROR: The {pressure_str} input is {type(pressure_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13731,12 +13862,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        pressure_str = 'Pressure'
+        pressure_str = "Pressure"
         pressure_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {pressure_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in pressure units.",
+            TypeError,
+            match=f"ERROR: The {pressure_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13766,12 +13897,12 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
 
-        r_cut_str = 'Rcut'
+        r_cut_str = "Rcut"
         r_cut_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_str} input is {type(r_cut_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_str} input is {type(r_cut_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13786,12 +13917,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_str = 'Rcut'
+        r_cut_str = "Rcut"
         r_cut_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13806,12 +13937,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_low_str = 'RcutLow'
+        r_cut_low_str = "RcutLow"
         r_cut_low_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_low_str} input is {type(r_cut_low_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_low_str} input is {type(r_cut_low_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13826,12 +13957,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_cut_low_str = 'RcutLow'
+        r_cut_low_str = "RcutLow"
         r_cut_low_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_cut_low_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_cut_low_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13846,12 +13977,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_switch_str = 'Rswitch'
+        r_switch_str = "Rswitch"
         r_switch_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_switch_str} input is {type(r_switch_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_switch_str} input is {type(r_switch_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13866,12 +13997,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        r_switch_str = 'Rswitch'
+        r_switch_str = "Rswitch"
         r_switch_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {r_switch_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {r_switch_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13901,12 +14032,12 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
 
-        min_sigma_str = 'MinSigma'
+        min_sigma_str = "MinSigma"
         min_sigma_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {min_sigma_str} input is {type(min_sigma_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {min_sigma_str} input is {type(min_sigma_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13926,12 +14057,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        min_sigma_str = 'MinSigma'
+        min_sigma_str = "MinSigma"
         min_sigma_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {min_sigma_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {min_sigma_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -13965,13 +14096,13 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
 
-        chempot_str = 'ChemPot'
+        chempot_str = "ChemPot"
         chempot_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {chempot_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in energy units, "
-                      f"such as kcal/mol, kJ/mol, or K."
+            TypeError,
+            match=f"ERROR: The {chempot_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in energy units, "
+            f"such as kcal/mol, kJ/mol, or K.",
         ):
 
             gomc_control.write_gomc_control_file(
@@ -13986,13 +14117,13 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        chempot_str = 'ChemPot'
+        chempot_str = "ChemPot"
         chempot_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {chempot_str} input is {type(chempot_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in energy units, "
-                      f"such as kcal/mol, kJ/mol, or K."
+            TypeError,
+            match=f"ERROR: The {chempot_str} input is {type(chempot_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in energy units, "
+            f"such as kcal/mol, kJ/mol, or K.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14006,13 +14137,13 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        subvolume_chempot_str = 'SubVolumeChempot'
+        subvolume_chempot_str = "SubVolumeChempot"
         subvolume_chempot_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_chempot_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in energy units, "
-                      f"such as kcal/mol, kJ/mol, or K."
+            TypeError,
+            match=f"ERROR: The {subvolume_chempot_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in energy units, "
+            f"such as kcal/mol, kJ/mol, or K.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14041,19 +14172,21 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["all"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            subvolume_chempot_str: {"ETH": subvolume_chempot_value},
+                            subvolume_chempot_str: {
+                                "ETH": subvolume_chempot_value
+                            },
                         },
                     },
                 },
             )
 
-        subvolume_chempot_str = 'SubVolumeChempot'
+        subvolume_chempot_str = "SubVolumeChempot"
         subvolume_chempot_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_chempot_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in energy units, "
-                      f"such as kcal/mol, kJ/mol, or K."
+            TypeError,
+            match=f"ERROR: The {subvolume_chempot_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in energy units, "
+            f"such as kcal/mol, kJ/mol, or K.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14082,18 +14215,20 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["all"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            subvolume_chempot_str: {"ETH": subvolume_chempot_value},
+                            subvolume_chempot_str: {
+                                "ETH": subvolume_chempot_value
+                            },
                         },
                     },
                 },
             )
 
-        fugacity_str = 'Fugacity'
+        fugacity_str = "Fugacity"
         fugacity_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {fugacity_str} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in pressure units."
+            TypeError,
+            match=f"ERROR: The {fugacity_str} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14107,12 +14242,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        fugacity_str = 'Fugacity'
+        fugacity_str = "Fugacity"
         fugacity_value = 1
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {fugacity_str} input is {type(fugacity_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in pressure units."
+            TypeError,
+            match=f"ERROR: The {fugacity_str} input is {type(fugacity_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14126,12 +14261,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        subvolume_fugacity_str = 'SubVolumeFugacity'
+        subvolume_fugacity_str = "SubVolumeFugacity"
         subvolume_fugacity_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_fugacity_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in pressure units."
+            TypeError,
+            match=f"ERROR: The {subvolume_fugacity_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14160,18 +14295,20 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["all"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            subvolume_fugacity_str: {"ETH": subvolume_fugacity_value},
+                            subvolume_fugacity_str: {
+                                "ETH": subvolume_fugacity_value
+                            },
                         },
                     },
                 },
             )
 
-        subvolume_fugacity_str = 'SubVolumeFugacity'
+        subvolume_fugacity_str = "SubVolumeFugacity"
         subvolume_fugacity_value = 1 * u.m
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_fugacity_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in pressure units."
+            TypeError,
+            match=f"ERROR: The {subvolume_fugacity_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in pressure units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14200,18 +14337,20 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeResidueKind": ["all"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            subvolume_fugacity_str: {"ETH": subvolume_fugacity_value},
+                            subvolume_fugacity_str: {
+                                "ETH": subvolume_fugacity_value
+                            },
                         },
                     },
                 },
             )
 
-        subvolume_dim_str = 'SubVolumeDim'
+        subvolume_dim_str = "SubVolumeDim"
         subvolume_dim_value = 11
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_dim_str.lower()} input is {type(subvolume_dim_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {subvolume_dim_str.lower()} input is {type(subvolume_dim_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14235,22 +14374,29 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeType": "dynamic",
                             "SubVolumeBox": 0,
                             "SubVolumeCenterList": ["1-6", 7, 8],
-                            subvolume_dim_str: [subvolume_dim_value, 2 * u.angstrom, 1 * u.angstrom],
+                            subvolume_dim_str: [
+                                subvolume_dim_value,
+                                2 * u.angstrom,
+                                1 * u.angstrom,
+                            ],
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
             )
 
-        subvolume_dim_str = 'SubVolumeDim'
+        subvolume_dim_str = "SubVolumeDim"
         subvolume_dim_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_dim_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {subvolume_dim_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14274,22 +14420,29 @@ class TestGOMCControlFileWriter(BaseTest):
                             "SubVolumeType": "dynamic",
                             "SubVolumeBox": 0,
                             "SubVolumeCenterList": ["1-6", 7, 8],
-                            subvolume_dim_str: [2 * u.angstrom, subvolume_dim_value, 1 * u.angstrom],
+                            subvolume_dim_str: [
+                                2 * u.angstrom,
+                                subvolume_dim_value,
+                                1 * u.angstrom,
+                            ],
                             "SubVolumeResidueKind": ["ETH", "ETO"],
                             "SubVolumeRigidSwap": True,
                             "SubVolumePBC": "XY",
-                            "SubVolumeFugacity": {"ETH": 2.22 * u.bar, "ETO": 0.22 * u.bar},
+                            "SubVolumeFugacity": {
+                                "ETH": 2.22 * u.bar,
+                                "ETO": 0.22 * u.bar,
+                            },
                         },
                     },
                 },
             )
 
-        subvolume_center_str = 'SubVolumeCenter'
+        subvolume_center_str = "SubVolumeCenter"
         subvolume_center_value = 11
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_center_str.lower()} input is {type(subvolume_center_value)} "
-                      f"and needs to be a {u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {subvolume_center_str.lower()} input is {type(subvolume_center_value)} "
+            f"and needs to be a {u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14311,7 +14464,11 @@ class TestGOMCControlFileWriter(BaseTest):
                         0: {
                             "SubVolumeType": "static",
                             "SubVolumeBox": 0,
-                            subvolume_center_str: [2 * u.angstrom, 3 * u.angstrom, subvolume_center_value],
+                            subvolume_center_str: [
+                                2 * u.angstrom,
+                                3 * u.angstrom,
+                                subvolume_center_value,
+                            ],
                             "SubVolumeDim": [4, 3, 2] * u.angstrom,
                             "SubVolumeResidueKind": "ETH",
                             "SubVolumeRigidSwap": False,
@@ -14321,12 +14478,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-        subvolume_center_str = 'SubVolumeCenter'
+        subvolume_center_str = "SubVolumeCenter"
         subvolume_center_value = 1 * u.bar
         with pytest.raises(
-                TypeError,
-                match=f"ERROR: The {subvolume_center_str.lower()} input {u.array.unyt_quantity} needs to be a "
-                      f"{u.array.unyt_quantity} in length units.",
+            TypeError,
+            match=f"ERROR: The {subvolume_center_str.lower()} input {u.array.unyt_quantity} needs to be a "
+            f"{u.array.unyt_quantity} in length units.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14348,7 +14505,11 @@ class TestGOMCControlFileWriter(BaseTest):
                         0: {
                             "SubVolumeType": "static",
                             "SubVolumeBox": 0,
-                            subvolume_center_str: [2 * u.angstrom, subvolume_center_value, 3 * u.angstrom],
+                            subvolume_center_str: [
+                                2 * u.angstrom,
+                                subvolume_center_value,
+                                3 * u.angstrom,
+                            ],
                             "SubVolumeDim": [4, 3, 2] * u.angstrom,
                             "SubVolumeResidueKind": "ETH",
                             "SubVolumeRigidSwap": False,
@@ -14373,12 +14534,12 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
         with pytest.warns(
-                UserWarning,
-                match=r"WARNING: The geometric combining rules is being used in the GOMC " \
-                      r"control file.  If this is OK or intentional, please ignore this warning. " \
-                      r"NOTE: This could just be the force file XML files correct parameters, " \
-                      r"but many GOMC simulations utilize 'lorentz' mixing rules, so a " \
-                      r"warning is provided.",
+            UserWarning,
+            match=r"WARNING: The geometric combining rules is being used in the GOMC "
+            r"control file.  If this is OK or intentional, please ignore this warning. "
+            r"NOTE: This could just be the force file XML files correct parameters, "
+            r"but many GOMC simulations utilize 'lorentz' mixing rules, so a "
+            r"warning is provided.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14390,7 +14551,6 @@ class TestGOMCControlFileWriter(BaseTest):
                 input_variables_dict={},
             )
 
-
     def test_default_VDWGeometricSigma_if_True(self, water):
         test_box_water_gomc = mb.fill_box(
             compound=[water], n_compounds=[1], box=[1, 1, 1]
@@ -14400,7 +14560,9 @@ class TestGOMCControlFileWriter(BaseTest):
             "water",
             ff_filename="water",
             residues=[water.name],
-            forcefield_selection=get_mosdef_gomc_fn("gmso_spce_water__no_combining_rule.xml"),
+            forcefield_selection=get_mosdef_gomc_fn(
+                "gmso_spce_water__no_combining_rule.xml"
+            ),
         )
         charmm.write_inp()
 
@@ -14441,7 +14603,9 @@ class TestGOMCControlFileWriter(BaseTest):
             "water",
             ff_filename="water",
             residues=[water.name],
-            forcefield_selection=get_mosdef_gomc_fn("gmso_spce_water__no_combining_rule.xml"),
+            forcefield_selection=get_mosdef_gomc_fn(
+                "gmso_spce_water__no_combining_rule.xml"
+            ),
         )
         charmm.write_inp()
 
@@ -14550,7 +14714,9 @@ class TestGOMCControlFileWriter(BaseTest):
             "Checkpoint": True,
         }
 
-    def test_restarting_pdb_psf_restart_checkpoint_false_with_filename_NVT(self, ethane_gomc):
+    def test_restarting_pdb_psf_restart_checkpoint_false_with_filename_NVT(
+        self, ethane_gomc
+    ):
         test_box_ethane_gomc = mb.fill_box(
             compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
         )
@@ -14627,7 +14793,9 @@ class TestGOMCControlFileWriter(BaseTest):
             "Checkpoint": True,
         }
 
-    def test_restarting_pdb_psf_restart_checkpoint_false_without_filename_NVT(self, ethane_gomc):
+    def test_restarting_pdb_psf_restart_checkpoint_false_without_filename_NVT(
+        self, ethane_gomc
+    ):
         test_box_ethane_gomc = mb.fill_box(
             compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
         )
@@ -14653,7 +14821,7 @@ class TestGOMCControlFileWriter(BaseTest):
             Coordinates_box_0="../test_folder_1/new.pdb",
             Structure_box_0="../test_folder_2/new.psf",
             Restart=True,
-            Checkpoint=[False, 'output.chk'],
+            Checkpoint=[False, "output.chk"],
             check_input_files_exist=False,
             input_variables_dict={},
         )
@@ -14703,7 +14871,9 @@ class TestGOMCControlFileWriter(BaseTest):
             "Checkpoint": True,
         }
 
-    def test_restarting_pdb_psf_restart_checkpoint_false_without_filename_GEMC_NVT(self, ethane_gomc):
+    def test_restarting_pdb_psf_restart_checkpoint_false_without_filename_GEMC_NVT(
+        self, ethane_gomc
+    ):
         test_box_ethane_gomc = mb.fill_box(
             compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
         )
@@ -14797,10 +14967,12 @@ class TestGOMCControlFileWriter(BaseTest):
             "Checkpoint": True,
         }
 
-    def test_restarting_pdb_psf_restart_false_checkpoint_true(self, ethane_gomc):
+    def test_restarting_pdb_psf_restart_false_checkpoint_true(
+        self, ethane_gomc
+    ):
         with pytest.raises(
-                ValueError,
-                match= r"ERROR: If Checkpoint is True, Restart must also be True.",
+            ValueError,
+            match=r"ERROR: If Checkpoint is True, Restart must also be True.",
         ):
             test_box_ethane_gomc = mb.fill_box(
                 compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
@@ -14824,17 +14996,19 @@ class TestGOMCControlFileWriter(BaseTest):
                 300 * u.K,
                 ff_psf_pdb_file_directory=None,
                 Restart=False,
-                Checkpoint=[True, 'Output.chk'],
+                Checkpoint=[True, "Output.chk"],
                 check_input_files_exist=False,
                 input_variables_dict={},
             )
 
-    def test_restarting_pdb_psf_restartfreq_checkpointfreq_not_equal(self, ethane_gomc):
+    def test_restarting_pdb_psf_restartfreq_checkpointfreq_not_equal(
+        self, ethane_gomc
+    ):
         with pytest.raises(
-                ValueError,
-                match=r"ERROR: If CheckpointFreq is True, the CheckpointFreq and RestartFreq " 
-                      r"output frequencies must be the same to start GOMC. This ensures the " 
-                      r"simulation can always be properly restarted.",
+            ValueError,
+            match=r"ERROR: If CheckpointFreq is True, the CheckpointFreq and RestartFreq "
+            r"output frequencies must be the same to start GOMC. This ensures the "
+            r"simulation can always be properly restarted.",
         ):
             test_box_ethane_gomc = mb.fill_box(
                 compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
@@ -14858,14 +15032,13 @@ class TestGOMCControlFileWriter(BaseTest):
                 300 * u.K,
                 ff_psf_pdb_file_directory=None,
                 Restart=True,
-                Checkpoint=[True, 'Output.chk'],
+                Checkpoint=[True, "Output.chk"],
                 check_input_files_exist=False,
                 input_variables_dict={
                     "RestartFreq": [True, 100],
                     "CheckpointFreq": [True, 1000],
                 },
             )
-
 
     def test_checkpoint_errors(self, ethane_gomc):
         test_box_ethane_gomc = mb.fill_box(
@@ -14885,9 +15058,9 @@ class TestGOMCControlFileWriter(BaseTest):
         # test_checkpoint_list_bool_True
         with pytest.raises(
             ValueError,
-            match= r"ERROR: Checkpoint is only allowed to be the bool False, not True. "
-                   r"When Checkpoint is True it need to be "
-                   r"\[True, str\] ---> \[True, checkpoint_filename\].",
+            match=r"ERROR: Checkpoint is only allowed to be the bool False, not True. "
+            r"When Checkpoint is True it need to be "
+            r"\[True, str\] ---> \[True, checkpoint_filename\].",
         ):
 
             gomc_control.write_gomc_control_file(
@@ -14909,9 +15082,9 @@ class TestGOMCControlFileWriter(BaseTest):
         # test_checkpoint_list_len_not_2
         with pytest.raises(
             TypeError,
-            match= r"ERROR: Checkpoint is a list, and the list need to be "
-                   r"\[True, str\] ---> \[True, checkpoint_filename\] or "
-                   r"\[False, str\] ---> \[False, checkpoint_filename\].",
+            match=r"ERROR: Checkpoint is a list, and the list need to be "
+            r"\[True, str\] ---> \[True, checkpoint_filename\] or "
+            r"\[False, str\] ---> \[False, checkpoint_filename\].",
         ):
 
             gomc_control.write_gomc_control_file(
@@ -14922,16 +15095,16 @@ class TestGOMCControlFileWriter(BaseTest):
                 300 * u.K,
                 ff_psf_pdb_file_directory=None,
                 Restart=True,
-                Checkpoint=[True, 'name', 'bad_length'],
+                Checkpoint=[True, "name", "bad_length"],
                 check_input_files_exist=False,
                 input_variables_dict={},
             )
 
         # test_checkpoint_wrong_extension
         with pytest.raises(
-                ValueError,
-                match= r"ERROR: Please enter the Checkpoint file name without an "
-                       r"extension or the .chk extension.",
+            ValueError,
+            match=r"ERROR: Please enter the Checkpoint file name without an "
+            r"extension or the .chk extension.",
         ):
 
             gomc_control.write_gomc_control_file(
@@ -14942,16 +15115,16 @@ class TestGOMCControlFileWriter(BaseTest):
                 300 * u.K,
                 ff_psf_pdb_file_directory=None,
                 Restart=True,
-                Checkpoint=[True, 'filename_wrong_extension.dat'],
+                Checkpoint=[True, "filename_wrong_extension.dat"],
                 check_input_files_exist=False,
                 input_variables_dict={},
             )
 
         # test_checkpoint_check_input_files_exist_True
         with pytest.raises(
-                ValueError,
-                match=r"The checkpoint \(chk\) file with the file directory "
-                      r"and name name.chk, does not exist.",
+            ValueError,
+            match=r"The checkpoint \(chk\) file with the file directory "
+            r"and name name.chk, does not exist.",
         ):
 
             gomc_control.write_gomc_control_file(
@@ -14962,12 +15135,10 @@ class TestGOMCControlFileWriter(BaseTest):
                 300 * u.K,
                 ff_psf_pdb_file_directory=None,
                 Restart=True,
-                Checkpoint=[True, 'name'],
+                Checkpoint=[True, "name"],
                 check_input_files_exist=True,
                 input_variables_dict={},
             )
-
-
 
     # test the other restart binCoordinates, extendedSystem, and binVelocities errors
     def test_coor_xsc_vel_list_or_no_extension_errors(self, ethane_gomc):
@@ -14988,9 +15159,9 @@ class TestGOMCControlFileWriter(BaseTest):
         # binCoordinates_box_0 is a list not str
         with pytest.raises(
             TypeError,
-            match= r"ERROR: The {} variable for directly entering the "
-                   r"{} file directory and name is a {} and not a string."
-                   r"".format('binCoordinates_box_0', 'coor', "<class 'list'>"),
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("binCoordinates_box_0", "coor", "<class 'list'>"),
         ):
 
             gomc_control.write_gomc_control_file(
@@ -15000,7 +15171,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 1000,
                 300 * u.K,
                 check_input_files_exist=False,
-                binCoordinates_box_0=['list'],
+                binCoordinates_box_0=["list"],
                 extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
                 binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
                 binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
@@ -15011,13 +15182,13 @@ class TestGOMCControlFileWriter(BaseTest):
 
         # extendedSystem_box_0 is a list not str
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The {} variable for directly entering the "
-                      r"{} file directory and name is a {} and not a string."
-                      r"".format('extendedSystem_box_0', 'xsc', "<class 'list'>"),
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("extendedSystem_box_0", "xsc", "<class 'list'>"),
         ):
 
-           gomc_control.write_gomc_control_file(
+            gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true",
                 "GEMC_NVT",
@@ -15025,7 +15196,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 300 * u.K,
                 check_input_files_exist=False,
                 binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
-                extendedSystem_box_0=['list'],
+                extendedSystem_box_0=["list"],
                 binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
                 binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
                 extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
@@ -15035,10 +15206,10 @@ class TestGOMCControlFileWriter(BaseTest):
 
         # binVelocities_box_0 is a list not str
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The {} variable for directly entering the "
-                      r"{} file directory and name is a {} and not a string."
-                      r"".format('binVelocities_box_0', 'vel', "<class 'list'>"),
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("binVelocities_box_0", "vel", "<class 'list'>"),
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -15049,7 +15220,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 check_input_files_exist=False,
                 binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
                 extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
-                binVelocities_box_0=['list'],
+                binVelocities_box_0=["list"],
                 binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
                 extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
                 binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
@@ -15058,10 +15229,10 @@ class TestGOMCControlFileWriter(BaseTest):
 
         # binCoordinates_box_1 is a list not str
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The {} variable for directly entering the "
-                      r"{} file directory and name is a {} and not a string."
-                      r"".format('binCoordinates_box_1', 'coor', "<class 'list'>"),
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("binCoordinates_box_1", "coor", "<class 'list'>"),
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -15073,7 +15244,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
                 extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
                 binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
-                binCoordinates_box_1=['list'],
+                binCoordinates_box_1=["list"],
                 extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
                 binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
                 input_variables_dict={},
@@ -15081,10 +15252,10 @@ class TestGOMCControlFileWriter(BaseTest):
 
         # extendedSystem_box_1 is a list not str
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The {} variable for directly entering the "
-                      r"{} file directory and name is a {} and not a string."
-                      r"".format('extendedSystem_box_1', 'xsc', "<class 'list'>"),
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("extendedSystem_box_1", "xsc", "<class 'list'>"),
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -15097,17 +15268,17 @@ class TestGOMCControlFileWriter(BaseTest):
                 extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
                 binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
                 binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
-                extendedSystem_box_1=['list'],
+                extendedSystem_box_1=["list"],
                 binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
                 input_variables_dict={},
             )
 
         # binVelocities_box_1 is a list not str
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The {} variable for directly entering the "
-                      r"{} file directory and name is a {} and not a string."
-                      r"".format('binVelocities_box_1', 'vel', "<class 'list'>"),
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("binVelocities_box_1", "vel", "<class 'list'>"),
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -15121,18 +15292,18 @@ class TestGOMCControlFileWriter(BaseTest):
                 binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
                 binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
                 extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
-                binVelocities_box_1=['list'],
+                binVelocities_box_1=["list"],
                 input_variables_dict={},
             )
 
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The binCoordinates_box_0 variable expects a "
-                      r"str with a file extension of \['.coor'\], "
-                      r'but the actual file extension is ".psf".',
+            TypeError,
+            match=r"ERROR: The binCoordinates_box_0 variable expects a "
+            r"str with a file extension of \['.coor'\], "
+            r'but the actual file extension is ".psf".',
         ):
 
-           gomc_control.write_gomc_control_file(
+            gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true",
                 "GEMC_NVT",
@@ -15149,13 +15320,13 @@ class TestGOMCControlFileWriter(BaseTest):
             )
 
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The extendedSystem_box_0 variable expects a "
-                      r"str with a file extension of \['.xsc'\], "
-                      r'but the actual file extension is ".pdb".',
+            TypeError,
+            match=r"ERROR: The extendedSystem_box_0 variable expects a "
+            r"str with a file extension of \['.xsc'\], "
+            r'but the actual file extension is ".pdb".',
         ):
 
-           gomc_control.write_gomc_control_file(
+            gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true",
                 "GEMC_NVT",
@@ -15172,13 +15343,13 @@ class TestGOMCControlFileWriter(BaseTest):
             )
 
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The binVelocities_box_0 variable expects a "
-                      r"str with a file extension of \['.vel'\], "
-                      r'but the actual file extension is ".csv".',
+            TypeError,
+            match=r"ERROR: The binVelocities_box_0 variable expects a "
+            r"str with a file extension of \['.vel'\], "
+            r'but the actual file extension is ".csv".',
         ):
 
-           gomc_control.write_gomc_control_file(
+            gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true",
                 "GEMC_NVT",
@@ -15195,10 +15366,10 @@ class TestGOMCControlFileWriter(BaseTest):
             )
 
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The binCoordinates_box_1 variable expects a "
-                      r"str with a file extension of \['.coor'\], "
-                      r'but the actual file extension is ".txt".',
+            TypeError,
+            match=r"ERROR: The binCoordinates_box_1 variable expects a "
+            r"str with a file extension of \['.coor'\], "
+            r'but the actual file extension is ".txt".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -15217,10 +15388,10 @@ class TestGOMCControlFileWriter(BaseTest):
             )
 
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The extendedSystem_box_1 variable expects a "
-                      r"str with a file extension of \['.xsc'\], "
-                      r'but the actual file extension is ".xml".',
+            TypeError,
+            match=r"ERROR: The extendedSystem_box_1 variable expects a "
+            r"str with a file extension of \['.xsc'\], "
+            r'but the actual file extension is ".xml".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -15239,10 +15410,10 @@ class TestGOMCControlFileWriter(BaseTest):
             )
 
         with pytest.raises(
-                TypeError,
-                match=r"ERROR: The binVelocities_box_1 variable expects a "
-                      r"str with a file extension of \['.vel'\], "
-                      r'but the actual file extension is ".tmp".',
+            TypeError,
+            match=r"ERROR: The binVelocities_box_1 variable expects a "
+            r"str with a file extension of \['.vel'\], "
+            r'but the actual file extension is ".tmp".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -15262,22 +15433,21 @@ class TestGOMCControlFileWriter(BaseTest):
 
     def test_save_Mie_conf_config(self, two_propanol_ua):
         box_0 = mb.fill_box(
-            compound=[two_propanol_ua],
-            n_compounds=[1],
-            box=[3, 3, 3]
+            compound=[two_propanol_ua], n_compounds=[1], box=[3, 3, 3]
         )
 
         charmm = Charmm(
             box_0,
             "charmm_data_Mie_UA",
             ff_filename="charmm_data_Mie_UA",
-            residues=[two_propanol_ua.name
-                      ],
+            residues=[two_propanol_ua.name],
             forcefield_selection={
-                two_propanol_ua.name: get_mosdef_gomc_fn("gmso_two_propanol_Mie_ua.xml"),
+                two_propanol_ua.name: get_mosdef_gomc_fn(
+                    "gmso_two_propanol_Mie_ua.xml"
+                ),
             },
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
-            gomc_fix_bonds_angles=None
+            gomc_fix_bonds_angles=None,
         )
 
         gomc_control.write_gomc_control_file(
@@ -15340,21 +15510,21 @@ class TestGOMCControlFileWriter(BaseTest):
 
     def test_save_Mie_with_LJ_conf_config(self, water, two_propanol_ua):
         box_0 = mb.fill_box(
-            compound=[water, two_propanol_ua],
-            n_compounds=[1, 1],
-            box=[3, 3, 3]
+            compound=[water, two_propanol_ua], n_compounds=[1, 1], box=[3, 3, 3]
         )
 
         charmm = Charmm(
             box_0,
             "charmm_data_Mie_UA",
             ff_filename="charmm_data_Mie_UA",
-            residues=[water.name,
-                      two_propanol_ua.name
-                      ],
+            residues=[water.name, two_propanol_ua.name],
             forcefield_selection={
-                water.name: get_mosdef_gomc_fn("gmso_spce_water__lorentz_combining.xml"),
-                two_propanol_ua.name: get_mosdef_gomc_fn("gmso_two_propanol_Mie_ua.xml"),
+                water.name: get_mosdef_gomc_fn(
+                    "gmso_spce_water__lorentz_combining.xml"
+                ),
+                two_propanol_ua.name: get_mosdef_gomc_fn(
+                    "gmso_two_propanol_Mie_ua.xml"
+                ),
             },
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
             gomc_fix_bonds_angles=[water.name],
@@ -15419,7 +15589,9 @@ class TestGOMCControlFileWriter(BaseTest):
         }
 
     # test non-bonded setting errors
-    def test_overriding_nb_without_setting_charmm_object_one_to_False(self, ethane_gomc):
+    def test_overriding_nb_without_setting_charmm_object_one_to_False(
+        self, ethane_gomc
+    ):
         test_box_ethane_gomc = mb.fill_box(
             compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
         )
@@ -15436,8 +15608,8 @@ class TestGOMCControlFileWriter(BaseTest):
 
         with pytest.raises(
             ValueError,
-            match= r"ERROR: There can only be 1 non-bonded type set to true.  Please set only one of the "
-                   "ParaTypeCHARMM, ParaTypeMie, ParaTypeMARTINI types to True in the input_variables_dict.",
+            match=r"ERROR: There can only be 1 non-bonded type set to true.  Please set only one of the "
+            "ParaTypeCHARMM, ParaTypeMie, ParaTypeMARTINI types to True in the input_variables_dict.",
         ):
 
             gomc_control.write_gomc_control_file(
@@ -15447,15 +15619,17 @@ class TestGOMCControlFileWriter(BaseTest):
                 1000,
                 300 * u.K,
                 check_input_files_exist=False,
-                input_variables_dict={"ParaTypeCHARMM": True,
-                                      "ParaTypeMie": True},
+                input_variables_dict={
+                    "ParaTypeCHARMM": True,
+                    "ParaTypeMie": True,
+                },
             )
 
     # test non-bonded setting errors for LJ
     def test_lj_mosdef_gomc_nb_not_match_set_one(self, ethane_gomc):
         with pytest.warns(
-                UserWarning,
-                match=r"MoSDeF-GOMC has selected the non-bonded for to be LJ, but ParaTypeCHARMM = False.",
+            UserWarning,
+            match=r"MoSDeF-GOMC has selected the non-bonded for to be LJ, but ParaTypeCHARMM = False.",
         ):
             test_box_ethane_gomc = mb.fill_box(
                 compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
@@ -15484,26 +15658,25 @@ class TestGOMCControlFileWriter(BaseTest):
     # test non-bonded setting errors for Mie
     def test_mie_mosdef_gomc_nb_not_match_set_one(self, two_propanol_ua):
         with pytest.warns(
-                UserWarning,
-                match=r"MoSDeF-GOMC has selected the non-bonded for to be Mie, but ParaTypeMie = False.",
+            UserWarning,
+            match=r"MoSDeF-GOMC has selected the non-bonded for to be Mie, but ParaTypeMie = False.",
         ):
             box_0 = mb.fill_box(
-                compound=[two_propanol_ua],
-                n_compounds=[1],
-                box=[3, 3, 3]
+                compound=[two_propanol_ua], n_compounds=[1], box=[3, 3, 3]
             )
 
             charmm = Charmm(
                 box_0,
                 "mie_mosdef_gomc_nb_not_match_set_one",
                 ff_filename="mie_mosdef_gomc_nb_not_match_set_one",
-                residues=[two_propanol_ua.name
-                          ],
+                residues=[two_propanol_ua.name],
                 forcefield_selection={
-                    two_propanol_ua.name: get_mosdef_gomc_fn("gmso_two_propanol_Mie_ua.xml"),
+                    two_propanol_ua.name: get_mosdef_gomc_fn(
+                        "gmso_two_propanol_Mie_ua.xml"
+                    ),
                 },
                 bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
-                gomc_fix_bonds_angles=None
+                gomc_fix_bonds_angles=None,
             )
 
             gomc_control.write_gomc_control_file(
@@ -15519,8 +15692,8 @@ class TestGOMCControlFileWriter(BaseTest):
     # test non-bonded setting errors for Mie
     def test_potential_exp6_not_available(self, ethane_gomc):
         with pytest.warns(
-                UserWarning,
-                match=r"WARNING: The Potential = EXP6 is not currently available.",
+            UserWarning,
+            match=r"WARNING: The Potential = EXP6 is not currently available.",
         ):
             test_box_ethane_gomc = mb.fill_box(
                 compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
