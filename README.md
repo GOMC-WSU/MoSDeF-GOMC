@@ -12,7 +12,7 @@ This Python code allows the auto-generation of the [GPU Optimized Monte Carlo (G
 ### Warning
 MoSDeF-GOMC is a new product continually adding functionality to provide an optimal user experience. Therefore, there could be some user-noticeable changes to this software when upgrading newer MoSDeF-GOMC versions.
 
-The original version of MoSDeF-GOMC, which uses Parmed as the software backend, will be depreciated by December 2022.  This Parmed version is already replaced with the new MoSDeF-GOMC version, which uses MoSDeF's GMSO software as the new backend.  We recommend that the new **GMSO** version of MoSDeF-GOMC be used because it has many new features, and the Parmed is no longer supported.
+The original version of MoSDeF-GOMC, which uses Parmed as the software backend, will be deprecated by December 2022.  This Parmed version is already replaced with the new MoSDeF-GOMC version, which uses MoSDeF's GMSO software as the new backend.  We recommend that the new **GMSO** version of MoSDeF-GOMC be used because it has many new features, and the Parmed is no longer supported.
 
 ### Resources
  - [GOMC Github repository](https://github.com/GOMC-WSU)
@@ -30,4 +30,4 @@ Please cite MoSDeF-GOMC, GOMC, and MoSDeF tools, which are provided [here](XXX).
 
 The MoSDeF-GOMC package is available via conda:
 
-conda create --name mosdef_gomc -c conda-forge mosdef_gomc
+`conda create --name mosdef_gomc -c conda-forge mosdef_gomc`
