@@ -357,14 +357,14 @@ class TestCharmmWriterData(BaseTest):
                         ["ATOM", "8", "H6", "ETH", "A", "1"],
                     ]
                     atom_type_res_part_2_list = [
-                        ["1.00", "0.00", "C"],
-                        ["1.00", "0.00", "C"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
+                        ["0.00", "0.00", "C"],
+                        ["0.00", "0.00", "C"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
                     ]
 
                     for j in range(0, len(atom_type_res_part_1_list)):
@@ -694,11 +694,11 @@ class TestCharmmWriterData(BaseTest):
                         ["ATOM", "5", "C2", "POL", "A", "1"],
                     ]
                     atom_type_res_part_2_list = [
-                        ["1.00", "0.00", "EP"],
-                        ["1.00", "0.00", "EP"],
-                        ["1.00", "0.00", "O"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "EP"],
+                        ["0.00", "0.00", "EP"],
+                        ["0.00", "0.00", "EP"],
+                        ["0.00", "0.00", "O"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "EP"],
                     ]
 
                     for j in range(0, len(atom_type_res_part_1_list)):
@@ -890,23 +890,118 @@ class TestCharmmWriterData(BaseTest):
                         ["ATOM", "17", "H6", "ETO", "A", "2"],
                     ]
                     atom_type_res_part_2_list = [
-                        ["1.00", "1.00", "C"],
-                        ["1.00", "1.00", "C"],
-                        ["1.00", "1.00", "H"],
-                        ["1.00", "1.00", "H"],
-                        ["1.00", "1.00", "H"],
-                        ["1.00", "1.00", "H"],
-                        ["1.00", "1.00", "H"],
-                        ["1.00", "1.00", "H"],
-                        ["1.00", "2.00", "C"],
-                        ["1.00", "2.00", "C"],
-                        ["1.00", "2.00", "O"],
-                        ["1.00", "2.00", "H"],
-                        ["1.00", "2.00", "H"],
-                        ["1.00", "2.00", "H"],
-                        ["1.00", "2.00", "H"],
-                        ["1.00", "2.00", "H"],
-                        ["1.00", "2.00", "H"],
+                        ["0.00", "1.00", "C"],
+                        ["0.00", "1.00", "C"],
+                        ["0.00", "1.00", "H"],
+                        ["0.00", "1.00", "H"],
+                        ["0.00", "1.00", "H"],
+                        ["0.00", "1.00", "H"],
+                        ["0.00", "1.00", "H"],
+                        ["0.00", "1.00", "H"],
+                        ["0.00", "2.00", "C"],
+                        ["0.00", "2.00", "C"],
+                        ["0.00", "2.00", "O"],
+                        ["0.00", "2.00", "H"],
+                        ["0.00", "2.00", "H"],
+                        ["0.00", "2.00", "H"],
+                        ["0.00", "2.00", "H"],
+                        ["0.00", "2.00", "H"],
+                        ["0.00", "2.00", "H"],
+                    ]
+
+                    for j in range(0, len(atom_type_res_part_1_list)):
+                        assert (
+                            out_gomc[i + 1 + j].split()[0:6]
+                            == atom_type_res_part_1_list[j]
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split()[9:12]
+                            == atom_type_res_part_2_list[j]
+                        )
+
+                else:
+                    pass
+
+        assert read_pdb_part_1
+        assert read_pdb_part_2
+
+    def test_charmm_pdb_set_residue_pdb_occupancy_to_1(
+        self, ethane_gomc, ethanol_gomc
+    ):
+        test_box_ethane_ethanol = mb.fill_box(
+            compound=[ethane_gomc, ethanol_gomc],
+            n_compounds=[1, 1],
+            box=[2.0, 2.0, 2.0],
+        )
+        charmm = Charmm(
+            test_box_ethane_ethanol,
+            "Test_set_residue_pdb_occupancy_to_1",
+            ff_filename="Test_set_residue_pdb_occupancy_to_1",
+            residues=[ethanol_gomc.name, ethane_gomc.name],
+            forcefield_selection="oplsaa",
+            fix_residue=None,
+            fix_residue_in_box=None,
+            set_residue_pdb_occupancy_to_1=[ethane_gomc.name],
+            gomc_fix_bonds_angles=None,
+        )
+        charmm.write_pdb()
+
+        with open("Test_set_residue_pdb_occupancy_to_1.pdb", "r") as fp:
+            read_pdb_part_1 = False
+            read_pdb_part_2 = False
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if "CRYST1" in line:
+                    read_pdb_part_1 = True
+                    assert out_gomc[i].split()[0:7] == [
+                        "CRYST1",
+                        "20.000",
+                        "20.000",
+                        "20.000",
+                        "90.00",
+                        "90.00",
+                        "90.00",
+                    ]
+
+                if "CRYST1" in line:
+                    read_pdb_part_2 = True
+                    atom_type_res_part_1_list = [
+                        ["ATOM", "1", "C1", "ETH", "A", "1"],
+                        ["ATOM", "2", "C2", "ETH", "A", "1"],
+                        ["ATOM", "3", "H1", "ETH", "A", "1"],
+                        ["ATOM", "4", "H2", "ETH", "A", "1"],
+                        ["ATOM", "5", "H3", "ETH", "A", "1"],
+                        ["ATOM", "6", "H4", "ETH", "A", "1"],
+                        ["ATOM", "7", "H5", "ETH", "A", "1"],
+                        ["ATOM", "8", "H6", "ETH", "A", "1"],
+                        ["ATOM", "9", "C1", "ETO", "A", "2"],
+                        ["ATOM", "10", "C2", "ETO", "A", "2"],
+                        ["ATOM", "11", "O1", "ETO", "A", "2"],
+                        ["ATOM", "12", "H1", "ETO", "A", "2"],
+                        ["ATOM", "13", "H2", "ETO", "A", "2"],
+                        ["ATOM", "14", "H3", "ETO", "A", "2"],
+                        ["ATOM", "15", "H4", "ETO", "A", "2"],
+                        ["ATOM", "16", "H5", "ETO", "A", "2"],
+                        ["ATOM", "17", "H6", "ETO", "A", "2"],
+                    ]
+                    atom_type_res_part_2_list = [
+                        ["1.00", "0.00", "C"],
+                        ["1.00", "0.00", "C"],
+                        ["1.00", "0.00", "H"],
+                        ["1.00", "0.00", "H"],
+                        ["1.00", "0.00", "H"],
+                        ["1.00", "0.00", "H"],
+                        ["1.00", "0.00", "H"],
+                        ["1.00", "0.00", "H"],
+                        ["0.00", "0.00", "C"],
+                        ["0.00", "0.00", "C"],
+                        ["0.00", "0.00", "O"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
                     ]
 
                     for j in range(0, len(atom_type_res_part_1_list)):
@@ -926,13 +1021,13 @@ class TestCharmmWriterData(BaseTest):
         assert read_pdb_part_2
 
     def test_charmm_pdb_fix_bonds_only(self, ethane_gomc, ethanol_gomc):
-        test_box_ethane_propane = mb.fill_box(
+        test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
             box=[2.0, 2.0, 2.0],
         )
         charmm = Charmm(
-            test_box_ethane_propane,
+            test_box_ethane_ethanol,
             "Test_fixes_bonds_only",
             ff_filename="Test_fixes_bonds_only",
             residues=[ethanol_gomc.name, ethane_gomc.name],
@@ -1018,13 +1113,13 @@ class TestCharmmWriterData(BaseTest):
     def test_charmm_pdb_fix_bonds_only_and_fix_bonds_angles(
         self, ethane_gomc, ethanol_gomc
     ):
-        test_box_ethane_propane = mb.fill_box(
+        test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
             box=[2.0, 2.0, 2.0],
         )
         charmm = Charmm(
-            test_box_ethane_propane,
+            test_box_ethane_ethanol,
             "Test_fixes_bonds_only_and_fix_bonds_angles",
             ff_filename="Test_fixes_bonds_only_and_fix_bonds_angles",
             residues=[ethanol_gomc.name, ethane_gomc.name],
@@ -1109,13 +1204,13 @@ class TestCharmmWriterData(BaseTest):
         assert angles_read
 
     def test_charmm_pdb_fix_angles_only(self, ethane_gomc, ethanol_gomc):
-        test_box_ethane_propane = mb.fill_box(
+        test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
             box=[2.0, 2.0, 2.0],
         )
         charmm = Charmm(
-            test_box_ethane_propane,
+            test_box_ethane_ethanol,
             "Test_fixes_angles_only",
             ff_filename="Test_fixes_angles_only",
             residues=[ethanol_gomc.name, ethane_gomc.name],
@@ -1201,13 +1296,13 @@ class TestCharmmWriterData(BaseTest):
     def test_charmm_pdb_fix_angles_only_and_fix_bonds_angles(
         self, ethane_gomc, ethanol_gomc
     ):
-        test_box_ethane_propane = mb.fill_box(
+        test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
             box=[2.0, 2.0, 2.0],
         )
         charmm = Charmm(
-            test_box_ethane_propane,
+            test_box_ethane_ethanol,
             "Test_fixes_angles_only_and_fix_bonds_angles",
             ff_filename="Test_fixes_angles_only_and_fix_bonds_angles",
             residues=[ethanol_gomc.name, ethane_gomc.name],
@@ -1392,23 +1487,23 @@ class TestCharmmWriterData(BaseTest):
                     ]
 
                     atom_type_res_part_2_list = [
-                        ["1.00", "0.00", "C"],
-                        ["1.00", "0.00", "C"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "C"],
-                        ["1.00", "0.00", "C"],
-                        ["1.00", "0.00", "O"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "H"],
+                        ["0.00", "0.00", "C"],
+                        ["0.00", "0.00", "C"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "C"],
+                        ["0.00", "0.00", "C"],
+                        ["0.00", "0.00", "O"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "H"],
                     ]
                     for j in range(0, len(atom_type_res_part_1_list)):
                         assert (
@@ -2156,11 +2251,11 @@ class TestCharmmWriterData(BaseTest):
                         ["ATOM", "5", "C2", "POL", "A", "1"],
                     ]
                     atom_type_res_part_2_list = [
-                        ["1.00", "0.00", "EP"],
-                        ["1.00", "0.00", "EP"],
-                        ["1.00", "0.00", "O"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "EP"],
+                        ["0.00", "0.00", "EP"],
+                        ["0.00", "0.00", "EP"],
+                        ["0.00", "0.00", "O"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "EP"],
                     ]
 
                     for j in range(0, len(atom_type_res_part_1_list)):
@@ -2828,11 +2923,11 @@ class TestCharmmWriterData(BaseTest):
                         ["ATOM", "5", "C2", "POL", "A", "1"],
                     ]
                     atom_type_res_part_2_list = [
-                        ["1.00", "0.00", "EP"],
-                        ["1.00", "0.00", "EP"],
-                        ["1.00", "0.00", "O"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "EP"],
+                        ["0.00", "0.00", "EP"],
+                        ["0.00", "0.00", "EP"],
+                        ["0.00", "0.00", "O"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "EP"],
                     ]
 
                     for j in range(0, len(atom_type_res_part_1_list)):
@@ -2902,11 +2997,11 @@ class TestCharmmWriterData(BaseTest):
                         ["ATOM", "5", "C2", "POL", "A", "1"],
                     ]
                     atom_type_res_part_2_list = [
-                        ["1.00", "0.00", "EP"],
-                        ["1.00", "0.00", "EP"],
-                        ["1.00", "0.00", "O"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "EP"],
+                        ["0.00", "0.00", "EP"],
+                        ["0.00", "0.00", "EP"],
+                        ["0.00", "0.00", "O"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "EP"],
                     ]
 
                     for j in range(0, len(atom_type_res_part_1_list)):
@@ -2980,11 +3075,11 @@ class TestCharmmWriterData(BaseTest):
                         ["ATOM", "5", "C2", "POL", "A", "1"],
                     ]
                     atom_type_res_part_2_list = [
-                        ["1.00", "0.00", "EP"],
-                        ["1.00", "0.00", "EP"],
-                        ["1.00", "0.00", "O"],
-                        ["1.00", "0.00", "H"],
-                        ["1.00", "0.00", "EP"],
+                        ["0.00", "0.00", "EP"],
+                        ["0.00", "0.00", "EP"],
+                        ["0.00", "0.00", "O"],
+                        ["0.00", "0.00", "H"],
+                        ["0.00", "0.00", "EP"],
                     ]
 
                     for j in range(0, len(atom_type_res_part_1_list)):
@@ -3379,9 +3474,9 @@ class TestCharmmWriterData(BaseTest):
 
                     atom_type_res_part_2_list = []
                     for f_i in range(0, no_O_atoms):
-                        atom_type_res_part_2_list.append(["1.00", "1.00", "O"])
+                        atom_type_res_part_2_list.append(["0.00", "1.00", "O"])
                     for f_i in range(no_O_atoms, no_O_atoms + no_Si_atoms):
-                        atom_type_res_part_2_list.append(["1.00", "1.00", "SI"])
+                        atom_type_res_part_2_list.append(["0.00", "1.00", "SI"])
 
                     assert out_gomc[i].split()[0:7] == crystal_box_length_angles
 
@@ -3507,7 +3602,7 @@ class TestCharmmWriterData(BaseTest):
 
                     atom_type_res_part_2_list = []
                     for f_i in range(0, no_methane_atoms):
-                        atom_type_res_part_2_list.append(["1.00", "0.00", "EP"])
+                        atom_type_res_part_2_list.append(["0.00", "0.00", "EP"])
 
                     assert out_gomc[i].split()[0:7] == crystal_box_length_angles
 

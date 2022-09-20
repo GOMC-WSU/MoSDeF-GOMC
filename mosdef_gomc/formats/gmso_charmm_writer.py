@@ -2,66 +2,71 @@ import datetime
 import os
 from warnings import warn
 
-import gmso
 import numpy as np
+import gmso
 import unyt as u
-from mbuild.box import Box
-from mbuild.compound import Compound
-from mbuild.utils.conversion import OPLS_to_CHARMM, RB_to_CHARMM
-from mbuild.utils.gmso_equation_compare import (
-    evaluate_harmonic_angle_format_with_scaler,
+from unyt.dimensions import (
+    length,
+    energy,
+    temperature,
+    angle
+)
+
+from mosdef_gomc.utils.conversion import (
+    base10_to_base16_alph_num,
+    base10_to_base26_alph,
+    base10_to_base44_alph,
+    base10_to_base52_alph,
+    base10_to_base62_alph_num,
+    RB_to_periodic,
+    OPLS_to_periodic,
+)
+from mosdef_gomc.utils.gmso_equation_compare import (
+    get_atom_type_expressions_and_scalars,
     evaluate_harmonic_bond_format_with_scaler,
+    evaluate_harmonic_angle_format_with_scaler,
     evaluate_harmonic_torsion_format_with_scaler,
     evaluate_OPLS_torsion_format_with_scaler,
     evaluate_periodic_torsion_format_with_scaler,
     evaluate_RB_torsion_format_with_scaler,
-    get_atom_type_expressions_and_scalars,
-)
-from mbuild.utils.sorting import natural_sort
-from unyt.dimensions import angle, energy, length, temperature
-
-import mosdef_gomc
-from mosdef_gomc.utils.conversion import (
-    base10_to_base16_alph_num,
-    base10_to_base26_alph,
-    base10_to_base52_alph,
-    base10_to_base62_alph_num,
+    evaluate_harmonic_improper_format_with_scaler,
+    evaluate_periodic_improper_format_with_scaler,
 )
 from mosdef_gomc.utils.gmso_specific_ff_to_residue import specific_ff_to_residue
 
+from mbuild.box import Box
+from mbuild.compound import Compound
+
 
 def _check_convert_bond_k_constant_units(
-    bond_class_input_str,
-    bond_energy_input_unyt,
-    bond_energy_output_units_str,
+        bond_class_or_type_input_str,
+        bond_energy_input_unyt,
+        bond_energy_output_units_str,
 ):
     """Checks to see if the value is a valid bond k-constant
     energy value and converts it to kcal/mol/angstroms**2
 
     Parameters
     ----------
-    bond_class_input_str : str
-        The bond class information from the gmso.bond_types.member_class
-    bond_energy_input_unyt : unyt.unyt_quantity
+    bond_class_or_type_input_str: str
+        The bond class information from the gmso.bond_types.member_class or gmso.bond_types.member_type
+    bond_energy_input_unyt: unyt.unyt_quantity
         The bond energy in units of 'energy/mol/angstroms**2' or 'K/angstroms**2'.
         NOTE that the only valid temperature unit for thermal energy is Kelvin (K),
         which in 'K/angstroms**2'.
-    bond_class_output_units_str : str ('kcal/mol/angstrom**2' or 'K/angstrom**2')
+    bond_class_output_units_str: str ('kcal/mol/angstrom**2' or 'K/angstrom**2')
         The bond class information from the gmso.bond_types.member_class
 
 
     Returns
     -------
-    If the bond_energy_input_unyt value is unyt.unyt_quantity of energy/length**2 : unyt.unyt_quantity
+    If the bond_energy_input_unyt value is unyt.unyt_quantity of energy/length**2: unyt.unyt_quantity
         The value is in 'kcal/mol/angstrom**2' or 'K/angstrom**2' units.
-    If the bond_energy_input_unyt value is not unyt.unyt_quantity of energy/length**2 : raise TypeError
+    If the bond_energy_input_unyt value is not unyt.unyt_quantity of energy/length**2: raise TypeError
     If the bond_energy_output_units_str value is not a valid choice: raise ValueError
     """
 
-    if bond_energy_output_units_str not in [
-        "kcal/mol/angstrom**2",
-        "K/angstrom**2",
-    ]:
+    if bond_energy_output_units_str not in ['kcal/mol/angstrom**2', 'K/angstrom**2']:
         print_error_message = (
             "ERROR: The selected bond energy k-constant units via "
             "bond_energy_output_units_str "
@@ -70,56 +75,34 @@ def _check_convert_bond_k_constant_units(
         raise ValueError(print_error_message)
 
     print_error_message = (
-        f"ERROR: The bond class input, {bond_class_input_str} is {type(bond_energy_input_unyt)} "
+        f"ERROR: The bond class input, {bond_class_or_type_input_str} is {type(bond_energy_input_unyt)} "
         f"and needs to be a {u.array.unyt_quantity} "
         f"in energy/length**2 units, "
         f"such as 'kcal/mol/angstrom**2', 'kJ/mol/angstrom**2', or 'K/angstrom**2'."
     )
     if isinstance(bond_energy_input_unyt, u.array.unyt_quantity):
-        if energy / length**2 == bond_energy_input_unyt.units.dimensions:
-            if bond_energy_output_units_str == "kcal/mol/angstrom**2":
-                bond_energy_output_unyt = bond_energy_input_unyt.to(
-                    "kcal/mol/angstrom**2"
-                )
+        if energy / length ** 2 == bond_energy_input_unyt.units.dimensions:
+            if bond_energy_output_units_str == 'kcal/mol/angstrom**2':
+                bond_energy_output_unyt = bond_energy_input_unyt.to('kcal/mol/angstrom**2')
                 return bond_energy_output_unyt
 
-            elif bond_energy_output_units_str == "K/angstrom**2":
-                bond_energy_output_unyt = bond_energy_input_unyt.to(
-                    "kcal/mol/angstrom**2"
-                )
-                bond_energy_output_unyt = (
-                    bond_energy_output_unyt * u.angstrom**2
-                )
-                bond_energy_output_unyt = bond_energy_output_unyt.to(
-                    "K", equivalence="thermal"
-                )
-                bond_energy_output_unyt = (
-                    bond_energy_output_unyt / u.angstrom**2
-                )
+            elif bond_energy_output_units_str == 'K/angstrom**2':
+                bond_energy_output_unyt = bond_energy_input_unyt.to('kcal/mol/angstrom**2')
+                bond_energy_output_unyt = bond_energy_output_unyt * u.angstrom**2
+                bond_energy_output_unyt = bond_energy_output_unyt.to('K', equivalence='thermal')
+                bond_energy_output_unyt = bond_energy_output_unyt / u.angstrom**2
                 return bond_energy_output_unyt
 
-        elif (
-            temperature / length**2 == bond_energy_input_unyt.units.dimensions
-        ):
-            if bond_energy_output_units_str == "kcal/mol/angstrom**2":
-                bond_energy_output_unyt = bond_energy_input_unyt.to(
-                    "K/angstrom**2"
-                )
-                bond_energy_output_unyt = (
-                    bond_energy_output_unyt * u.angstrom**2
-                )
-                bond_energy_output_unyt = bond_energy_output_unyt.to(
-                    "kcal/mol", equivalence="thermal"
-                )
-                bond_energy_output_unyt = (
-                    bond_energy_output_unyt / u.angstrom**2
-                )
+        elif temperature / length ** 2 == bond_energy_input_unyt.units.dimensions:
+            if bond_energy_output_units_str == 'kcal/mol/angstrom**2':
+                bond_energy_output_unyt = bond_energy_input_unyt.to('K/angstrom**2')
+                bond_energy_output_unyt = bond_energy_output_unyt * u.angstrom**2
+                bond_energy_output_unyt = bond_energy_output_unyt.to('kcal/mol', equivalence='thermal')
+                bond_energy_output_unyt = bond_energy_output_unyt / u.angstrom**2
                 return bond_energy_output_unyt
 
-            elif bond_energy_output_units_str == "K/angstrom**2":
-                bond_energy_output_unyt = bond_energy_input_unyt.to(
-                    "K/angstrom**2"
-                )
+            elif bond_energy_output_units_str == 'K/angstrom**2':
+                bond_energy_output_unyt = bond_energy_input_unyt.to('K/angstrom**2')
                 return bond_energy_output_unyt
 
         else:
@@ -127,36 +110,35 @@ def _check_convert_bond_k_constant_units(
     else:
         raise TypeError(print_error_message)
 
-
 def _check_convert_angle_k_constant_units(
-    angle_class_input_str,
-    angle_energy_input_unyt,
-    angle_energy_output_units_str,
+        angle_class_or_type_input_str,
+        angle_energy_input_unyt,
+        angle_energy_output_units_str,
 ):
     """Checks to see if the value is a valid angle k-constant energy value
     and converts it to kcal/mol/rad**2 or 'K/rad**2'.
 
     Parameters
     ----------
-    angle_class_input_str : str
-        The angle class information from the gmso.angle_types.member_class
-    angle_energy_input_unyt : unyt.unyt_quantity
+    angle_class_or_type_input_str: str
+        The angle class information from the gmso.angle_types.member_class or gmso.bond_types.member_type
+    angle_energy_input_unyt: unyt.unyt_quantity
         The angle energy in units of 'energy/mol/rad**2' or 'K/rad**2'.
         NOTE that the only valid temperature unit for thermal energy is Kelvin (K),
         which in 'K/rad**2'.
-    angle_class_output_units_str : str ('kcal/mol/rad**2' or 'K/rad**2')
+    angle_class_output_units_str: str ('kcal/mol/rad**2' or 'K/rad**2')
         The angle class information from the gmso.angle_types.member_class
 
 
     Returns
     -------
-    If the angle_energy_input_unyt value is unyt.unyt_quantity of energy/angle**2 : unyt.unyt_quantity
+    If the angle_energy_input_unyt value is unyt.unyt_quantity of energy/angle**2: unyt.unyt_quantity
         The value is in 'kcal/mol/rad**2' or 'K/rad**2' units.
-    If the angle_energy_input_unyt value is not unyt.unyt_quantity of energy/angle**2 : raise TypeError
+    If the angle_energy_input_unyt value is not unyt.unyt_quantity of energy/angle**2: raise TypeError
     If the angle_energy_output_units_str value is not a valid choice: raise ValueError
     """
 
-    if angle_energy_output_units_str not in ["kcal/mol/rad**2", "K/rad**2"]:
+    if angle_energy_output_units_str not in ['kcal/mol/rad**2', 'K/rad**2']:
         print_error_message = (
             "ERROR: The selected angle energy k-constant units via "
             "angle_energy_output_units_str "
@@ -165,48 +147,34 @@ def _check_convert_angle_k_constant_units(
         raise ValueError(print_error_message)
 
     print_error_message = (
-        f"ERROR: The angle class input, {angle_class_input_str} is {type(angle_energy_input_unyt)} "
+        f"ERROR: The angle class input, {angle_class_or_type_input_str} is {type(angle_energy_input_unyt)} "
         f"and needs to be a {u.array.unyt_quantity} "
         f"in energy/angle**2 units, "
         f"such as 'kcal/mol/rad**2', 'kJ/mol/rad**2', or 'K/rad**2'."
     )
     if isinstance(angle_energy_input_unyt, u.array.unyt_quantity):
-        if energy / angle**2 == angle_energy_input_unyt.units.dimensions:
-            if angle_energy_output_units_str == "kcal/mol/rad**2":
-                angle_energy_output_unyt = angle_energy_input_unyt.to(
-                    "kcal/mol/rad**2"
-                )
+        if energy / angle ** 2 == angle_energy_input_unyt.units.dimensions:
+            if angle_energy_output_units_str == 'kcal/mol/rad**2':
+                angle_energy_output_unyt = angle_energy_input_unyt.to('kcal/mol/rad**2')
                 return angle_energy_output_unyt
 
-            elif angle_energy_output_units_str == "K/rad**2":
-                angle_energy_output_unyt = angle_energy_input_unyt.to(
-                    "kcal/mol/rad**2"
-                )
+            elif angle_energy_output_units_str == 'K/rad**2':
+                angle_energy_output_unyt = angle_energy_input_unyt.to('kcal/mol/rad**2')
                 angle_energy_output_unyt = angle_energy_output_unyt * u.rad**2
-                angle_energy_output_unyt = angle_energy_output_unyt.to(
-                    "K", equivalence="thermal"
-                )
+                angle_energy_output_unyt = angle_energy_output_unyt.to('K', equivalence='thermal')
                 angle_energy_output_unyt = angle_energy_output_unyt / u.rad**2
                 return angle_energy_output_unyt
 
-        elif (
-            temperature / angle**2 == angle_energy_input_unyt.units.dimensions
-        ):
-            if angle_energy_output_units_str == "kcal/mol/rad**2":
-                angle_energy_output_unyt = angle_energy_input_unyt.to(
-                    "K/rad**2"
-                )
+        elif temperature / angle ** 2 == angle_energy_input_unyt.units.dimensions:
+            if angle_energy_output_units_str == 'kcal/mol/rad**2':
+                angle_energy_output_unyt = angle_energy_input_unyt.to('K/rad**2')
                 angle_energy_output_unyt = angle_energy_output_unyt * u.rad**2
-                angle_energy_output_unyt = angle_energy_output_unyt.to(
-                    "kcal/mol", equivalence="thermal"
-                )
+                angle_energy_output_unyt = angle_energy_output_unyt.to('kcal/mol', equivalence='thermal')
                 angle_energy_output_unyt = angle_energy_output_unyt / u.rad**2
                 return angle_energy_output_unyt
 
-            elif angle_energy_output_units_str == "K/rad**2":
-                angle_energy_output_unyt = angle_energy_input_unyt.to(
-                    "K/rad**2"
-                )
+            elif angle_energy_output_units_str == 'K/rad**2':
+                angle_energy_output_unyt = angle_energy_input_unyt.to('K/rad**2')
                 return angle_energy_output_unyt
 
         else:
@@ -215,94 +183,43 @@ def _check_convert_angle_k_constant_units(
         raise TypeError(print_error_message)
 
 
-'''
-def _check_convert_dihedral_k_constant_units(
-        dihedral_energy_input_unyt,
+
+def _LJ_sigma_to_r_min(
+    sigma
 ):
-    """Checks to see if the value is a valid dihedral k-constant energy value
-    and (kcal/mol, kJ/mol or 'K', ...).
-
-    Parameters
-    ----------
-    dihedral_class_input_str : str
-        The dihedral class information from the gmso.dihedral_types.member_class
-    dihedral_energy_input_unyt : unyt.unyt_quantity
-        The dihedral energy in units of 'energy/mol' or 'K'.
-        NOTE that the only valid temperature unit for thermal energy is Kelvin (K),
-        which in 'K'.
-    dihedral_class_output_units_str : str ('kcal/mol' or 'K')
-        The dihedral class information from the gmso.dihedral_types.member_class
-
-
-    Returns
-    -------
-    If the dihedral_energy_input_unyt value is unyt.unyt_quantity of energy : unyt.unyt_quantity
-        The value is in 'kcal/mol' or 'K' units.
-    If the dihedral_energy_input_unyt value is not unyt.unyt_quantity of energy : raise TypeError
-    If the dihedral_energy_output_units_str value is not a valid choice: raise ValueError
-    """
-    if dihedral_energy_output_units_str not in ['kcal/mol', 'K']:
-        print_error_message = (
-            "ERROR: The selected dihedral energy k-constant units via "
-            "dihedral_energy_output_units_str are not 'kcal/mol' or 'K'."
-        )
-        raise ValueError(print_error_message)
-
-    print_error_message = (
-        f"ERROR: The dihedral class input, {dihedral_class_input_str} is {type(dihedral_energy_input_unyt)} "
-        f"and needs to be a {u.array.unyt_quantity} "
-        f"in energy units, such as 'kcal/mol', 'kJ/mol', or 'K'."
-    )
-    raise TypeError(print_error_message)
-    if isinstance(dihedral_energy_input_unyt, u.array.unyt_quantity):
-        if energy == dihedral_energy_input_unyt.units.dimensions:
-            if dihedral_energy_output_units_str in ['kcal/mol', 'K']:
-                dihedral_energy_output_unyt = dihedral_energy_input_unyt.to(
-                    dihedral_energy_output_units, equivalence='thermal')
-                return dihedral_energy_output_unyt
-
-        else:
-            raise TypeError(print_error_message)
-
-    else:
-        raise TypeError(print_error_message)
-'''
-
-
-# this is needed later for the non-bonded fixes (NBFIX)
-def _LJ_sigma_to_r_min(sigma):
     """Convert sigma to Rmin for the non-bonded Lennard-Jones (LJ) potential energy equation.
 
     Parameters
     ----------
-    sigma : int or float
+    sigma: int or float
         The sigma value for the non-bonded Lennard-Jones (LJ) potential energy equation.
 
     Returns
     ----------
-    r_min : float
+    r_min: float
         The radius at the minimum energy (Rmin) for the non-bonded Lennard-Jones (LJ) potential energy equation.
     """
-    r_min = float(sigma * 2 ** (1 / 6))
+    r_min = float(sigma * 2**(1 / 6))
 
     return r_min
 
-
-def _LJ_sigma_to_r_min_div_2(sigma):
+def _LJ_sigma_to_r_min_div_2(
+    sigma
+):
     """Convert sigma to Rmin/2 for the non-bonded Lennard-Jones (LJ) potential energy equation.
 
     Parameters
     ----------
-    sigma : int or float
+    sigma: int or float
         The sigma value for the non-bonded Lennard-Jones (LJ) potential energy equation.
 
     Returns
     ----------
-    r_min_div_2 : float
+    r_min_div_2: float
         The radius at the minimum energy divided by 2 (Rmin/2)
         for the non-bonded Lennard-Jones (LJ) potential energy equation.
     """
-    r_min_div_2 = float(sigma * 2 ** (1 / 6) / 2)
+    r_min_div_2 = float(sigma * 2**(1 / 6) / 2)
 
     return r_min_div_2
 
@@ -316,10 +233,10 @@ def unique_atom_naming(
 
     Parameters
     ----------
-    topology : gmso.Topology object
-    residue_id_list : list, in sequential order
+    topology: gmso.Topology object
+    residue_id_list: list, in sequential order
             The residue ID for every atom in the system
-    residue_names_list : list, in sequential order
+    residue_names_list: list, in sequential order
         The atom names for every atom in the system
     bead_to_atom_name_dict: dictionary ; optional, default =None
         For all atom names/elements/beads with 2 or less digits, this converts
@@ -332,11 +249,11 @@ def unique_atom_naming(
 
     Returns
      ----------
-    unique_individual_atom_names_dict : dictionary
+    unique_individual_atom_names_dict: dictionary
         All the unique atom names comno_piled into a dictionary.
-    individual_atom_names_list : list, in sequential  order
+    individual_atom_names_list: list, in sequential  order
         The atom names for every atom in the system
-    missing_bead_to_atom_name : list, in sequential  order
+    missing_bead_to_atom_name: list, in sequential  order
         The bead names of any atoms beads that did not have a name specificed to them
         via the bead_to_atom_name_dict
     """
@@ -344,7 +261,7 @@ def unique_atom_naming(
     individual_atom_names_list = []
     missing_bead_to_atom_name = []
     for i, site in enumerate(topology.sites):
-        site_name = site.__dict__["name_"]
+        site_name = site.__dict__['name_']
         interate_thru_names = True
         j = 0
         while interate_thru_names is True:
@@ -427,13 +344,13 @@ def _lengths_angles_to_vectors(lengths, angles, precision=6):
 
     Parameters
     ----------
-    lengths : list-like, shape=(3,), dtype=float
+    lengths: list-like, shape=(3,), dtype=float
         Lengths of the edges of the box (user chosen units).
-    angles : list-like, shape=(3,), dtype=float, default=None
+    angles: list-like, shape=(3,), dtype=float, default=None
         Angles (in degrees) that define the tilt of the edges of the box. If
         None is given, angles are assumed to be [90.0, 90.0, 90.0]. These are
         also known as alpha, beta, gamma in the crystallography community.
-    precision : int, optional, default=6
+    precision: int, optional, default=6
         Control the precision of the floating point representation of box
         attributes. If none provided, the default is 6 decimals.
 
@@ -483,7 +400,7 @@ def _check_fixed_bonds_angles_lists(
 
     Parameters
     ----------
-    gomc_fix_bonds_and_or_angles : list of strings, [str, ..., str]
+    gomc_fix_bonds_and_or_angles: list of strings, [str, ..., str]
         A list of the residues (i.e., molecules since GOMC currently considers a
         a whole molecule as a residue) to have their bonds and/or angles held
         rigid/fixed for the GOMC simulation engine.
@@ -492,7 +409,7 @@ def _check_fixed_bonds_angles_lists(
         In GOMC, the residues currently are the same for every bead or atom in
         the molecules. Therefore, when the residue is selected, the whole molecule
         is selected.
-    gomc_fix_bonds_and_or_angles_selection : str
+    gomc_fix_bonds_and_or_angles_selection: str
         The name of the variable that is used but formatted as a string, which is fed
         to the error and information outputs. The
         `gomc_fix_bonds_angles`, `gomc_fix_bonds`, `gomc_fix_angles` are the only possible
@@ -501,7 +418,7 @@ def _check_fixed_bonds_angles_lists(
         string here. For example, if `gomc_fix_bonds_and_or_angles` is equal to
         gomc_fix_bonds_angles, then this should be 'gomc_fix_bonds_angles'
         (i.e., `gomc_fix_bonds_and_or_angles_selection` = 'gomc_fix_bonds_angles').
-    residues : list, [str, ..., str]
+    residues: list, [str, ..., str]
         Labels of unique residues in the Compound. Residues are assigned by
         checking against Compound.name.  Only supply residue names as 4 character
         strings, as the residue names are truncated to 4 characters to fit in the
@@ -549,76 +466,214 @@ class Charmm:
     The units for the GOMC and NAMD output data files.
         * Mw = g/mol
         * charge = e
-        * Harmonic bonds : Kb = kcal/mol, b0 = Angstroms
-        * Harmonic angles : Ktheta = kcal/mol/rad**2 , Theta0 = degrees
-        * Dihedral angles: Ktheta = kcal/mol, n = interger (unitless), delta = degrees
-        * Improper angles (currently unavailable) : TBD
-        * Lennard-Jones (LJ)-NONBONDED: epsilon = kcal/mol, Rmin/2 = Angstroms
-        * Mie-NONBONDED: epsilon = Kelvin, sigma = Angstroms, n = interger (unitless)
-        * Buckingham-NONBONDED (currently unavailable): epsilon = Kelvin, sigma = Angstroms, n = interger (unitless)
-        * Lennard-Jones (LJ)-NBFIX (currently unavailable) : epsilon = kcal/mol, Rmin = Angstroms
-        * Mie-NBFIX (currently unavailable) : same as Mie-NONBONDED
-        * Buckingham-NBFIX (currently unavailable) : same as Buckingham-NONBONDED
+        * Energy units = Lennard-Jones (LJ) -> kcal/mol, Mie and Exp-6 (Buckingham) -> Kelvin (K)
+        * Harmonic bonds: Kb = Energy units, b0 = Angstroms
+        * Harmonic angles: Ktheta = (Energy units)/rad**2 , Theta0 = degrees
+        * Dihedral angles Harmonic (not unavailable): Ktheta = Energy units, n (LJ) = 0 (unitless interger), delta = degrees
+        * Dihedral angles: Periodic: Ktheta = Energy units, n (unitless interger) -> n (LJ) = 1-5 and n (Mie or Buckingham) = 0-5, delta = degrees
+        * Improper angles Harmonic (not unavailable): Ktheta = Energy units, n (LJ) = 0 (unitless interger), delta = degrees
+        * Improper angles: Periodic: Ktheta = Energy units, n = 1-5 (unitless interger), delta = degrees
+        * Lennard-Jones (LJ)-NONBONDED: epsilon = Energy units, Rmin/2 = Angstroms
+        * Mie-NONBONDED: epsilon = Energy units, sigma = Angstroms, n = interger (unitless)
+        * Buckingham-NONBONDED (not unavailable): epsilon = Energy units, sigma = Angstroms, n = interger (unitless)
+        * Lennard-Jones (LJ)-NBFIX (not unavailable): epsilon = Energy units, Rmin = Angstroms
+        * Mie-NBFIX (not unavailable): same as Mie-NONBONDED
+        * Buckingham-NBFIX (not unavailable): same as Buckingham-NONBONDED
 
-    Note: The units are only the same for GOMC and NAMD units, which using the Lennard-Jones (LJ) non-bonded type.
+    Note: The ``Charmm`` object is only compatible with molecules with a single residue (single residue name).
+
+    Note: The units are only the same for GOMC and NAMD when using the Lennard-Jones (LJ) non-bonded type.
+
+    Note: NAMD is only compatible with the Lennard-Jones (LJ) non-bonded type.
+
+    Note: There are CHARMM style atom type naming conventions based on the force field xml provided and
+    the GOMC simulation input parameters, outlined in the atom_type_naming_style input variable.
 
     Parameters
     ----------
-    structure_box_0 : mbuild Compound object (mbuild.Compound) or mbuild Box object (mbuild.Box);
+    structure_box_0: mbuild Compound object (mbuild.Compound) or mbuild Box object (mbuild.Box);
         If the structure has atoms/beads it must be an mbuild Compound.
         If the structure is empty it must be and mbuild Box object.
         Note: If 1 structures are provided (i.e., only structure_box_0),
         it must be an mbuild Compound.
         Note: If 2 structures are provided,
         only 1 structure can be an empty box (i.e., either structure_box_0 or structure_box_1)
-    filename_box_0 : str
+    filename_box_0: str
         The file name of the output file for structure_box_0.  Note: the extension should
         not be provided, as multiple extension (.pdb and .psf) are added to this name.
-    structure_box_1 : mbuild Compound object (mbuild.Compound) or mbuild Box object (mbuild.Box), default = None;
+    structure_box_1: mbuild Compound object (mbuild.Compound) or mbuild Box object (mbuild.Box), default=None;
         If the structure has atoms/beads it must be an mbuild Compound.
         Note: When running a GEMC or GCMC simulation the box 1 stucture should be input
         here.  Otherwise, there is no guarantee that any of the atom type and force field
         information will all work together correctly with box 0, if it is built separately.
         Note: If 2 structures are provided, only 1 structure can be an empty box
         (i.e., either structure_box_0 or structure_box_1).
-    filename_box_1 : str , default = None
+    filename_box_1: str , default=None
         The file name of the output file for structure_box_1 (Ex: for GCMC or GEMC simulations
         which have multiple simulation boxes).  Note: the extension should
         not be provided, as multiple extension (.pdb and .psf) are added to this name.
         Note: When running a GEMC or GCMC simulation the box 1 stucture should be input
         here. Otherwise, there is no guarantee that any of the atom type and force field
         information will all work together correctly with box 0, if it is built separately.
-    residues : list, [str, ..., str]
+    residues: list, [str, ..., str]
         Labels of unique residues in the Compound. Residues are assigned by
         checking against Compound.name.  Only supply residue names as 4 character
         strings, as the residue names are truncated to 4 characters to fit in the
         psf and pdb file.
-    forcefield_selection : str or dictionary, default = None
+    forcefield_selection: str or dictionary, default=None
         Apply a forcefield to the output file by selecting a force field XML file with
         its path or by using the standard force field name provided the `foyer` package.
         Note: to write the NAMD/GOMC force field, pdb, and psf files, the
         residues and forcefields must be provided in a str or
         dictionary.  If a dictionary is provided all residues must
         be specified to a force field.
-        * Example dict for FF file: {'ETH' : 'oplsaa.xml', 'OCT': 'path_to_file/trappe-ua.xml'}
+        * Example dict for FF file: {'ETH': 'oplsaa.xml', 'OCT': 'path_to_file/trappe-ua.xml'}
 
         * Example str for FF file: 'path_to file/trappe-ua.xml'
 
-        * Example dict for standard FF names : {'ETH' : 'oplsaa', 'OCT': 'trappe-ua'}
+        * Example dict for standard FF names: {'ETH': 'oplsaa', 'OCT': 'trappe-ua'}
 
         * Example str for standard FF names: 'trappe-ua'
 
-        * Example of a mixed dict with both : {'ETH' : 'oplsaa', 'OCT': 'path_to_file/'trappe-ua.xml'}
-    ff_filename : str, default =None
+        * Example of a mixed dict with both: {'ETH': 'oplsaa', 'OCT': 'path_to_file/'trappe-ua.xml'}
+
+    gmso_match_ff_by: str ("group" or "molecule"), default = "molecule"
+        How the GMSO force field is applied, using the molecules name/residue name (mbuild.Compound().name)
+        for GOMC and NAMD.  This is regardless number of levels in the (mbuild.Compound().name or mbuild.Box()).
+
+        * "molecule" applies the force field using the molecule's name
+        
+            WARNING: This is the atom's name for a single atom molecule (1 atom/bead  = molecule).
+
+            Molecule > 1 atom ----> uses the "mbuild.Compound().name" (1 level above the atoms/beads)
+            is the molecule's name.  This "mb.Compound().name" (1 level above the atoms/beads) needs
+            to be used in the Charmm object's residue_list and forcefield_selection (if >1 force field), and
+            will be the residue name in the PSF, PDB, and FF files.
+
+            Molecule = 1 atom/bead  ----> uses the "atom/bead's name" is the molecule's name.
+
+            This "atom/bead's name" needs to be used in the Charmm object's residue_list and
+            forcefield_selection (if >1 force field), and will be the residue name in the PSF, PDB, and FF files.
+
+            NOTE: Non-bonded zeolites or other fixed structures without bonds will use the
+            "atom/bead's name" as the molecule's name, if they are single non-bonded atoms.
+            However, the user may want to use the "group" option instead for this type of system,
+            if applicable (see the "group" option).
+
+            Example (Charmm_writer selects the user changeable "ETH", in the Charmm object residue_list and
+            forcefield_selection (if >1 force field), which sets the residue "ETH" in the PSF, PDB, and FF files).
+
+            >>> ethane = mbuild.load("CC", smiles=True)
+            >>> ethane.name = "ETH"
+
+            >>> ethane_box = mbuild.fill_box(
+            >>>     compound=[ethane],
+            >>>     n_compounds=[100],
+            >>>     box=[4, 4, 4]
+            >>> )
+
+            Example (Charmm_writer must to select the non-user changeable "_CH4" (per the foyer TraPPE force field),
+            in the Charmm object residue_list and  forcefield_selection (if >1 force field),
+            which sets the residue "_CH4" in the PSF, PDB, and FF files).
+
+            >>> methane_ua_bead_name = "_CH4"
+            >>> methane_child_bead = mbuild.Compound(name=methane_ua_bead_name)
+            >>> methane_box = mbuild.fill_box(
+            >>>    compound=methane_child_bead,
+            >>>    n_compounds=4,
+            >>>    box=[1, 2, 3]
+            >>> )
+            methane_box.name = "MET"
+
+            Example (Charmm_writer must to select the non-user changeable "Na" and "Cl"
+            in the Charmm object residue_list and  forcefield_selection (if >1 force field),
+            which sets the residues "Na" and "Cl" in the PSF, PDB, and FF files).
+
+            >>> sodium_atom_name = "Na"
+            >>> sodium_child_atom = mbuild.Compound(name=sodium_atom_name)
+            >>> sodium = mb.Compound(name="SOD")
+            >>> sodium.add(sodium_child_atom, inherit_periodicity=False)
+
+            >>> chloride_atom_name = "Cl"
+            >>> chloride_child_bead = mbuild.Compound(name=chloride_atom_name)
+            >>> chloride = mb.Compound(name="CHL")
+            >>> chloride.add(chloride_child_atom, inherit_periodicity=False)
+
+            >>> sodium_chloride_box = mbuild.fill_box(
+            >>>     compound=[sodium, chloride],
+            >>>     n_compounds=[4, 4],
+            >>>     box=[1, 2, 3]
+            >>> )
+
+            Example zeolite (Charmm_writer must to select the non-user changeable "Si" and "O"
+            in the Charmm object residue_list and  forcefield_selection (if >1 force field),
+            which sets the residues "Si" and "O" in the PSF, PDB, and FF files):
+
+            >>> lattice_cif_ETV_triclinic = load_cif(file_or_path=get_mosdef_gomc_fn("ETV_triclinic.cif"))
+            >>> ETV_triclinic = lattice_cif_ETV_triclinic.populate(x=1, y=1, z=1)
+            >>> ETV_triclinic.name = "ETV"
+
+        * "group" applies the force field to any molecules under the mbuild.Compound().name (children).
+
+            The "group" search starts at the top level if there is no mbuild.Compound().name found on that level,
+            then the next level down (children) are searched, keeping moving down every time.
+
+            WARNING: This "group" option will take all the molecules below it, regardless if they
+            are selected to be separate from the group via the residue_list and forcefield_selection
+            (if >1 force field).
+
+            This is ideal to use when you are building simulation box(es) using mbuild.fill_box(),
+            with molecules, and it allows you to add another level to single single atom molecules
+            (1 atom/bead  = molecule) to rename the mbuild.Compound().name, changing the residue's
+            name and allowing keeping the atom/bead name so the force field is applied properly.
+
+            NOTE: This "group" option may be best for non-bonded zeolites or other fixed structures
+            without bonds, if they are single non-bonded atoms. Using this "group" option, the user
+            can select the residue name for the Charmm_writer's residue_list and  forcefield_selection
+            (if >1 force field) to force field all the atoms with a single residue name, and output
+            this residue name in the PSF, PDB, and FF files.
+
+            Example (Charmm_writer select the user changeable "MET" in the Charmm object residue_list
+            and  forcefield_selection (if >1 force field), which sets the residue "MET" in the
+            PSF, PDB, and FF files):
+
+            >>> methane_ua_bead_name = "_CH4"
+            >>> methane_child_bead = mbuild.Compound(name=methane_ua_bead_name)
+            >>> methane_box = mbuild.fill_box(compound=methane_child_bead, n_compounds=4, box=[1, 2, 3])
+            >>> methane_box.name = "MET"
+
+            Example (Charmm_writer select the user changeable "MET" in the Charmm object residue_list
+            and  forcefield_selection (if >1 force field), which sets the residue "MET" in the
+            PSF, PDB, and FF files):
+
+            >>> methane_child_bead = mb.Compound(name="_CH4")
+            >>> methane = mb.Compound(name="MET")
+            >>> methane.add(methane_child_bead, inherit_periodicity=False)
+
+            >>> box_liq = mb.fill_box(
+            >>>     compound=methane,
+            >>>     n_compounds=1230,
+            >>>     box=[4.5, 4.5, 4.5]
+            >>> )
+
+            Example zeolite (Charmm_writer select the user changeable "ETV" in the Charmm object residue_list
+            and  forcefield_selection (if >1 force field), which sets the residue
+            "ETV" in the PSF, PDB, and FF files):
+
+            >>> lattice_cif_ETV_triclinic = load_cif(file_or_path=get_mosdef_gomc_fn("ETV_triclinic.cif"))
+            >>> ETV_triclinic = lattice_cif_ETV_triclinic.populate(x=1, y=1, z=1)
+            >>> ETV_triclinic.name = "ETV"
+
+    ff_filename: str, default =None
         If a string, it will write the  force field files that work in
         GOMC and NAMD structures.
-    gomc_fix_bonds_angles : list, default = None
+    gomc_fix_bonds_angles: list, default=None
         When list of residues is provided, the selected residues will have
         their bonds and angles fixed in the GOMC engine.  This is specifically
         for the GOMC engine and it changes the residue's bond constants (Kbs)
         and angle constants (Kthetas) values to 999999999999 in the
         FF file (i.e., the .inp file).
-    bead_to_atom_name_dict : dict, optional, default =None
+    bead_to_atom_name_dict: dict, optional, default=None
         For all atom names/elements/beads with 2 or less digits, this converts
         the atom name in the GOMC psf and pdb files to a unique atom name,
         provided they do not exceed 3844 atoms (62^2) of the same name/element/bead
@@ -630,54 +685,114 @@ class Charmm:
 
         * Example name structure: {atom_type: first_part_pf atom name_without_numbering}
 
-    fix_residue : list  or None, default = None
+    atom_type_naming_style: str, optional, default='all_unique', ('general' or 'all_unique')
+        'general':
+        WARNING: The 'general' convention is UNSAFE, and the EXPERT user SHOULD USE AT THEIR OWN RISK,
+        making SURE ALL THE BONDED PARAMETERS HAVE THE SAME VALUES IN THE UTILIZED
+        FORCE FIELD XMLs.  Also, this DOES NOT ENSURE that THERE ARE NO specific
+        Foyer XML ATOM TYPE BONDED CONNECTIONS in the Foyer FORCE FIELD XMLs, instead of the Foyer
+        atom class type bonded connections, which could RESULT IN AN INCORRECT FORCE FIELD
+        PARAMETERIZATION.  This is UNSAFE to use even with the same force field XML file, so the
+        EXPERT user SHOULD USE AT THEIR OWN RISK.
+
+        The 'general' convention only tests if the sigma, epsilons, mass, and Mie-n values are
+        identical between the different molecules (residues in this context) and their applied
+        force fields and DOES NOT check that any or all of the bonded parameters have the same
+        or conflicting values.
+
+        The 'general' convention is where all the atom classes in the Foyer force field
+        XML files are converted to the CHARMM-style atom types (FOYER ATOM CLASSES).
+        The 'general' convention ONLY auto-checks that the sigma, epsilon, mass, and Mie-n values
+        are the same and does not currently ensure all the bonded parameters are the same
+        or conflicting between different force field XML files.
+        If the sigma, epsilons, mass, and Mie-n values are the same between force fields
+        the general method can be applied; if not, it defaults to the 'all_unique' method.
+
+        Example of CHARMM style atom types in an all-atom ethane and ethanol system:
+        * Ethane: alkane carbon = CT, alkane hydrogen = HC
+        * Ethanol: alkane carbon = CT, alkane hydrogen = HC , oxygen in alcohol = OH, hydrogen in alcohol = OH
+
+        This is only permitted when the following is true; otherwise it will default to the the 'all_unique':
+        * All the MoSDeF force field XML's atom classes' non-bonded parameters
+        (sigma, epsilon, mass, and Mie-n power constant) values are THE SAME.
+        * If the general CHARMM style atom type in any residue/molecule's gomc_fix_bonds_angles,
+        gomc_fix_bonds, or gomc_fix_angles NOT IN any other residue/molecule, the 'all_unique' type
+        will be used.
+
+        'all_unique':
+        The 'all_unique' convention is the SAFE way to parameterize the system.
+        The MoSDeF force field XML atom names within residue/molecule are all unique,
+        where each one adds an alpha numberic value after the MoSDeF force field XML atom classes to
+        ensure uniqueness within the within residue/molecule.
+        The OPLS atom types/name do not require all the sigma, epsilon, mass values to be the same,
+        but have less bonded class parameters.
+
+        Example of CHARMM style atom types in an all-atom ethane and ethanol system:
+        * Ethane: alkane carbon type 0 = CT0, alkane hydrogen type 0 = HC0
+        * Ethanol: alkane carbon type 1 = CT1, alkane carbon type 2 = CT2,
+        alkane hydrogen type 1 = HC1 , oxygen in alcohol type 0 = OH0, hydrogen in alcohol type 0 = OH0
+
+        This is selected when auto-selected when:
+        * All the MoSDeF force field XML's atom classes' non-bonded parameters
+        (sigma, epsilon, mass, and Mie-n power constant) values are NOT THE SAME.
+        * If the general CHARMM style atom type in any residue/molecule's gomc_fix_bonds_angles,
+        gomc_fix_bonds, or gomc_fix_angles are IN any other residue/molecule.
+    fix_residue: list  or None, default=None
         Changes occcur in the pdb file only.
+        All the atoms in the residue are have their Beta values in the PDB file set to 1.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, this only fixes atoms automatically as listed below.
+        NOTE: In NAMD, these all fixes need to be manually set in the control file (please see NAMD manual).
         When residues are listed here, all the atoms in the residue are
-        fixed and can not move via setting the Beta values in the PDB file to 1.00.
+        fixed and can not move via setting the Beta values in the PDB file to 1.00
         If neither fix_residue or fix_residue_in_box lists a
-        residue or both equal None, then the Beta values for all the atoms
+        residue or both equal None, then the Beta (Temperature factor) values for all the atoms
         in the residue are free to move in the simulation and Beta values
         in the PDB file is set to 0.00.
-        NOTE that this is mainly for GOMC but also applies for NAMD (please see NAMD manual).
-    fix_residue_in_box : list  or None, default = None
+    fix_residue_in_box: list  or None, default=None
         Changes occcur in the pdb file only.
+        All the atoms in the residue are have their Beta values in the PDB file set to 2.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, this only fixes atoms automatically as listed below.
+        NOTE: In NAMD, these all fixes need to be manually set in the control file (please see NAMD manual).
         When residues are listed here, all the atoms in the residue
         can move within the box but cannot be transferred between boxes
-        via setting the Beta values in the PDB file to 2.00.
+        via setting the Beta (Temperature factor) values in the PDB file to 2.00.
         If neither fix_residue or fix_residue_in_box lists a
         residue or both equal None, then the Beta values for all the atoms
         in the residue are free to move in the simulation and Beta values
         in the PDB file is set to 0.00.
         NOTE that this is mainly for GOMC but also applies for NAMD (please see NAMD manual).
-    reorder_res_in_pdb_psf : bool, default =False
-        If False, the order of of the atoms in the pdb file is kept in
-        its original order, as in the Compound sent to the writer.
-        If True, the order of the atoms is reordered based on their
-        residue names in the 'residues' list that was entered.
+    set_residue_pdb_occupancy_to_1: list  or None, default=None
+        Changes occcur in the pdb file only.
+        All the atoms in the residue are have their occupancy values in the PDB file set to 1.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, This defines which atoms belong to which box for the GCMC and GEMC ensembles.
+        NOTE: In NAMD, This can be used for fixes which are manually set in the control file (please see NAMD manual).
 
     Attributes
     ----------
-    input_error : bool
+    input_error: bool
         This error is typically incurred from an error in the user's input values.
         However, it could also be due to a bug, provided the user is inputting
         the data as this Class intends.
-    structure_box_0 : mbuild.compound.Compound
+    structure_box_0: mbuild.compound.Compound
         The mbuild Compound for the input box 0
-    structure_box_1 : mbuild.compound.Compound or None, default = None
+    structure_box_1: mbuild.compound.Compound or None, default=None
         The mbuild Compound for the input box 1
-    filename_box_0 : str
+    filename_box_0: str
         The file name of the output file for structure_box_0.  Note: the extension should
         not be provided, as multiple extension (.pdb and .psf) are added to this name.
-    filename_box_1 : str or None , default = None
+    filename_box_1: str or None , default=None
         The file name of the output file for structure_box_1.  Note: the extension should
         not be provided, as multiple extension (.pdb and .psf) are added to this name.
         (i.e., either structure_box_0 or structure_box_1).
-    residues : list, [str, ..., str]
+    residues: list, [str, ..., str]
         Labels of unique residues in the Compound. Residues are assigned by
         checking against Compound.name.  Only supply residue names as 4 character
         strings, as the residue names are truncated to 4 characters to fit in the
         psf and pdb file.
-    forcefield_selection : str or dictionary, default = None
+    forcefield_selection: str or dictionary, default=None
         Apply a forcefield to the output file by selecting a force field XML file with
         its path or by using the standard force field name provided the `foyer` package.
         Note: to write the NAMD/GOMC force field, pdb, and psf files, the
@@ -685,20 +800,20 @@ class Charmm:
         dictionary.  If a dictionary is provided all residues must
         be specified to a force field.
 
-        * Example dict for FF file: {'ETH' : 'oplsaa.xml', 'OCT': 'path_to_file/trappe-ua.xml'}
+        * Example dict for FF file: {'ETH': 'oplsaa.xml', 'OCT': 'path_to_file/trappe-ua.xml'}
 
         * Example str for FF file: 'path_to file/trappe-ua.xml'
 
-        * Example dict for standard FF names : {'ETH' : 'oplsaa', 'OCT': 'trappe-ua'}
+        * Example dict for standard FF names: {'ETH': 'oplsaa', 'OCT': 'trappe-ua'}
 
         * Example str for standard FF names: 'trappe-ua'
 
-        * Example of a mixed dict with both : {'ETH' : 'oplsaa', 'OCT': 'path_to_file/'trappe-ua.xml'}
+        * Example of a mixed dict with both: {'ETH': 'oplsaa', 'OCT': 'path_to_file/'trappe-ua.xml'}
 
-    ff_filename : str, default =None
+    ff_filename: str, default =None
         If a string, it will write the  force field files that work in
         GOMC and NAMD structures.
-    gomc_fix_bonds_angles : list, default = None
+    gomc_fix_bonds_angles: list, default=None
         When list of residues is provided, the selected residues will have
         their bonds and angles fixed and will ignore the relative bond energies and
         related angle energies in the GOMC engine. Note that GOMC
@@ -711,7 +826,7 @@ class Charmm:
         If the residues are listed in either the gomc_fix_bonds or the gomc_fix_bonds_angles
         lists, the bonds will be fixed for that residue.
         NOTE if this option is utilized it may cause issues if using the FF file in NAMD.
-    gomc_fix_bonds : list, default = None
+    gomc_fix_bonds: list, default=None
         When list of residues is provided, the selected residues will have their
         relative bond energies ignored in the GOMC engine. Note that GOMC
         does not sample bond stretching. This is specifically
@@ -720,7 +835,7 @@ class Charmm:
         If the residues are listed in either the gomc_fix_bonds or the gomc_fix_bonds_angles
         lists, the relative bond energy will be ignored.
         NOTE if this option is utilized it may cause issues if using the FF file in NAMD.
-    gomc_fix_angles : list, default = None
+    gomc_fix_angles: list, default=None
         When list of residues is provided, the selected residues will have
         their angles fixed and will ignore the related angle energies in the GOMC engine.
         This is specifically for the GOMC engine and it changes the residue's angle
@@ -730,7 +845,7 @@ class Charmm:
         lists, the angles will be fixed and the related angle energy will be ignored
         for that residue.
         NOTE if this option is utilized it may cause issues if using the FF file in NAMD.
-    bead_to_atom_name_dict : dict, optional, default =None
+    bead_to_atom_name_dict: dict, optional, default =None
         For all atom names/elements/beads with 2 or less digits, this converts
         the atom name in the GOMC psf and pdb files to a unique atom name,
         provided they do not exceed 3844 atoms (62^2) of the same name/element/bead
@@ -742,103 +857,111 @@ class Charmm:
 
         * Example name structure: {atom_type: first_part_pf atom name_without_numbering}
 
-    fix_residue : list  or None, default = None
+    fix_residue: list  or None, default=None
         Changes occcur in the pdb file only.
+        All the atoms in the residue are have their Beta values in the PDB file set to 1.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, this only fixes atoms automatically as listed below.
+        NOTE: In NAMD, these all fixes need to be manually set in the control file (please see NAMD manual).
         When residues are listed here, all the atoms in the residue are
-        fixed and can not move via setting the Beta values in the PDB file to 1.00.
+        fixed and can not move via setting the Beta values in the PDB file to 1.00
         If neither fix_residue or fix_residue_in_box lists a
-        residue or both equal None, then the Beta values for all the atoms
+        residue or both equal None, then the Beta (Temperature factor) values for all the atoms
         in the residue are free to move in the simulation and Beta values
         in the PDB file is set to 0.00.
-        NOTE that this is mainly for GOMC but also applies for NAMD (please see NAMD manual).
-    fix_residue_in_box : list  or None, default = None
+    fix_residue_in_box: list  or None, default=None
         Changes occcur in the pdb file only.
+        All the atoms in the residue are have their Beta values in the PDB file set to 2.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, this only fixes atoms automatically as listed below.
+        NOTE: In NAMD, these all fixes need to be manually set in the control file (please see NAMD manual).
         When residues are listed here, all the atoms in the residue
         can move within the box but cannot be transferred between boxes
-        via setting the Beta values in the PDB file to 2.00.
+        via setting the Beta (Temperature factor) values in the PDB file to 2.00.
         If neither fix_residue or fix_residue_in_box lists a
         residue or both equal None, then the Beta values for all the atoms
         in the residue are free to move in the simulation and Beta values
         in the PDB file is set to 0.00.
         NOTE that this is mainly for GOMC but also applies for NAMD (please see NAMD manual).
-    reorder_res_in_pdb_psf : bool, default =False
-        If False, the order of of the atoms in the pdb file is kept in
-        its original order, as in the Compound sent to the writer.
-        If True, the order of the atoms is reordered based on their
-        residue names in the 'residues' list that was entered.
-    box_0 : Box
+    set_residue_pdb_occupancy_to_1: list  or None, default=None
+        Changes occcur in the pdb file only.
+        All the atoms in the residue are have their occupancy values in the PDB file set to 1.00;
+        Otherwise, they will be 0.00.
+        NOTE: In GOMC, This defines which atoms belong to which box for the GCMC and GEMC ensembles.
+        NOTE: In NAMD, This can be used for fixes which are manually set in the control file (please see NAMD manual).
+    box_0: Box
         The Box class that contains the attributes Lx, Ly, Lz for the length
         of the box 0 (units in nanometers (nm)). It also contains the xy, xz, and yz Tilt factors
         needed to displace an orthogonal box's xy face to its
         parallelepiped structure for box 0.
-    box_1 : Box
+    box_1: Box
         The Box class that contains the attributes Lx, Ly, Lz for the length
         of the box 1 (units in nanometers (nm)). It also contains the xy, xz, and yz Tilt factors
         needed to displace an orthogonal box's xy face to its
         parallelepiped structure for box 0.
-    box_0_vectors : numpy.ndarray, [[float, float, float], [float, float, float], [float, float, float]]
+    box_0_vectors: numpy.ndarray, [[float, float, float], [float, float, float], [float, float, float]]
         Three (3) sets vectors for box 0 each with 3 float values, which represent
         the vectors for the Charmm-style systems (units in Angstroms (Ang))
-    box_1_vectors : numpy.ndarray, [[float, float, float], [float, float, float], [float, float, float]]
+    box_1_vectors: numpy.ndarray, [[float, float, float], [float, float, float], [float, float, float]]
         Three (3) sets vectors for box 1 each with 3 float values, which represent
         the vectors for the Charmm-style systems (units in Angstroms (Ang))
-    topology_box_0_ff : gmso.Topology
+    topology_box_0_ff: gmso.Topology
         The box 0 topology (from structure_box_0) after all the provided
         force fields are applied.
-    topology_box_1_ff : gmso.Topology
+    topology_box_1_ff: gmso.Topology
         The box 1 topology (from structure_box_1) after all the provided
         force fields are applied. This only exists if the box 1 structure
         (structure_box_1) is provided.
-    residues_applied_list_box_0 : list
+    residues_applied_list_box_0: list
         The residues in box 0 that were found and had the force fields applied to them.
-    residues_applied_list_box_1 : list
+    residues_applied_list_box_1: list
         The residues in box 1 that were found and had the force fields applied to them.
         This only exists if the box 1 structure (structure_box_1) is provided.
-    boxes_for_simulation : int, [0, 1]
+    boxes_for_simulation: int, [0, 1]
         The number of boxes used when writing the Charmm object and force fielding
         the system. If only box 0 is provided, the value is 0. If box 0 and box 1
         are provided, the value is 1.
-    epsilon_kcal_per_mol_atom_type_dict : dict {str: float or int}
+    epsilon_kcal_per_mol_atom_type_dict: dict {str: float or int}
         The uniquely numbered atom type (key) and it's non-bonded epsilon coefficient in units
         of kcal/mol (value). The atom type is defined by the AtomClass_ResidueName
         (Example of a carbon atom in an ethane molecule, AtomClass_ResidueName --> CT_ETH).
-    sigma_angstrom_atom_type_dict : dict {str: float or int}
+    sigma_angstrom_atom_type_dict: dict {str: float or int}
         The uniquely numbered atom type (key) and it's non-bonded sigma coefficient in
         angstroms (value). The atom type is defined by the AtomClass_ResidueName
         (Example of a carbon atom in an ethane molecule, AtomClass_ResidueName --> CT_ETH).
-    nonbonded_1_4_dict : dict {str: float or int}
+    nonbonded_1_4_dict: dict {str: float or int}
         The uniquely numbered atom type (key) and it's non-bonded 1-4 scaling factor (value).
         The atom type is defined by the AtomClass_ResidueName
         (Example of a carbon atom in an ethane molecule, AtomClass_ResidueName --> CT_ETH).
 
-        NOTE: NAMD and GOMC can have  multiple values for the LJ 1-4 scalers, since they are
+        NOTE: NAMD and GOMC can have multiple values for the LJ 1-4 scalers, since they are
         provided as an individual input for each atom type in the force field (.inp) file.
-    electrostatic_1_4 : float or int
+    combined_1_4_nonbonded_dict_per_residue
+        The residue name/molecule (key) and it's non-bonded 1-4 coulombic scaling factor (value).
+
+        NOTE: NAMD and GOMC can have multiple values for the LJ 1-4 scalers, since they are
+        provided as an individual input for each atom type in the force field (.inp) file.
+    electrostatic_1_4: float or int
         The non-bonded 1-4 coulombic scaling factor, which is the same for all the
         residues/molecules, regardless if differenct force fields are utilized.  Note: if
         1-4 coulombic scaling factor is not the same for all molecules the Charmm object
         will fail with an error.
 
-        NOTE: NAMD and GOMC can have  multiple values for the LJ 1-4 scalers, since they are
-        provided as an individual input for each atom type in the force field (.inp) file.
-    combined_1_4_electrostatic_dict_per_residue : dict, {str: float or int}
+        NOTE: NAMD and GOMC can not have mulitple electrostatic 1-4 scalers, since it is
+        provided as a single input in their control files.
+    combined_1_4_electrostatic_dict_per_residue: dict, {str: float or int}
         The residue name/molecule (key) and it's non-bonded 1-4 coulombic scaling factor (value).
 
-        Note: NAMD and GOMC can have  multiple values for the LJ 1-4 scalers, since they are
-        provided as an individual input for each atom type in the force field (.inp) file.
-    combined_combining_rule_dict_per_residue : dict, {str: str}
-        The residue name/molecule (key) and it's combining or mixing rule (value).
-        The combining or mixing rule is a either 'geometric' or 'lorentz'.
-
-        NOTE: NAMD and GOMC can have  multiple values for the LJ 1-4 scalers, since they are
-        provided as an individual input for each atom type in the force field (.inp) file.
-    combining_rule : str ('geometric' or 'lorentz'"'),
-        The combining or mixing rule which is used. The possible mixing/combining  rules are
-        'geometric' or 'lorentz', which provide the  geometric and arithmetic mixing rule, respectively.
-
-        NOTE: NAMD and GOMC can have  multiple values for the LJ 1-4 scalers, since they are
-        provided as an individual input for each atom type in the force field (.inp) file.
-    forcefield_selection : str or dictionary, default = None
+        NOTE: NAMD and GOMC can not have mulitple electrostatic 1-4 scalers, since it is
+        provided as a single input in their control files.
+    combining_rule: str ('geometric' or 'lorentz'"'),
+        The possible mixing/combining  rules are 'geometric' or 'lorentz',
+        which provide the  geometric and arithmetic mixing rule, respectively.
+        NOTE: Arithmetic means the 'lorentz' combining or mixing rule.
+        NOTE: GMSO default to the 'lorentz' mixing rule if none is provided,
+        and this writers default is the GMSO default.
+        NOTE: NAMD and GOMC can not have multiple values for the combining_rule.
+    forcefield_selection: str or dictionary, default=None
         Apply a forcefield to the output file by selecting a force field XML file with
         its path or by using the standard force field name provided the `foyer` package.
         Note: to write the NAMD/GOMC force field, pdb, and psf files, the
@@ -846,44 +969,47 @@ class Charmm:
         dictionary.  If a dictionary is provided all residues must
         be specified to a force field.
 
-        * Example dict for FF file: {'ETH' : 'oplsaa.xml', 'OCT': 'path_to_file/trappe-ua.xml'}
+        * Example dict for FF file: {'ETH': 'oplsaa.xml', 'OCT': 'path_to_file/trappe-ua.xml'}
 
         * Example str for FF file: 'path_to file/trappe-ua.xml'
 
-        * Example dict for standard FF names : {'ETH' : 'oplsaa', 'OCT': 'trappe-ua'}
+        * Example dict for standard FF names: {'ETH': 'oplsaa', 'OCT': 'trappe-ua'}
 
         * Example str for standard FF names: 'trappe-ua'
 
-        * Example of a mixed dict with both : {'ETH' : 'oplsaa', 'OCT': 'path_to_file/'trappe-ua.xml'}
+        * Example of a mixed dict with both: {'ETH': 'oplsaa', 'OCT': 'path_to_file/'trappe-ua.xml'}
 
-    all_individual_atom_names_list : list
+    all_individual_atom_names_list: list
         A list of all the atom names for the combined structures
         (box 0 and box 1 (if supplied)), in order.
-    all_residue_names_list : list
+    all_residue_names_list: list
         A list of all the residue names for the combined structures
         (box 0 and box 1 (if supplied)), in order.
-    max_residue_no : int
+    max_residue_no: int
         The maximum number that the residue number will count to
         before restarting the counting back to 1, which is predetermined
         by the PDB format. This is a constant, which equals 9999
-    max_resname_char : int
+    max_resname_char: int
         The maximum number of characters allowed in the residue name,
         which is predetermined by the PDB format. This is a constant,
         which equals 4.
-    all_res_unique_atom_name_dict : dict, {str : set(str, ..., str)}
+    all_res_unique_atom_name_dict: dict, {str: set(str, ..., str)}
         A dictionary that provides the residue names (keys) and a set
         of the unique atom names in the residue (value), for the
         combined structures (box 0 and box 1 (if supplied)).
 
     Notes
     -----
-    Impropers, Urey-Bradleys, and NBFIX are not currenly supported.
+    Urey-Bradleys, and NBFIX are not currenly supported.
     Currently the NBFIX is not available but will be in the near future.
-    OPLS and CHARMM forcefield styles are supported (without impropers),
-    AMBER forcefield styles are NOT supported.
+    OPLS, AMBER, and CHARMM forcefield styles are supported (without harmonic dihedrals),
 
-    The atom typing is currently provided via a base 52 numbering (capital and lowercase lettering).
-    This base 52 numbering allows for (52)^4 unique atom types.
+    The atom typing is currently provided via a base 62 numbering (0 to 9, then capital and lowercase lettering A to Z).
+    This base 62 numbering allows for (62)^2 unique atom types. There are 4 characters allowed
+    for the atom type name and 2 for the base 62 addition making them unique if needed.  Otherwise,
+    if the GMSO general class is used for the atom typing, then the 6 characters is allowed,
+    because additional numbers are not required to make them unique.
+    This specifically avoids X because this represents any atom type in the CHARMM-style force field files.
 
     Unique atom names are provided if the system do not exceed 3844 atoms (62^2) of the same
     name/bead per residue (base 62 numbering). For all atom names/elements with 3 or less digits,
@@ -917,10 +1043,12 @@ class Charmm:
         gomc_fix_bonds=None,
         gomc_fix_angles=None,
         bead_to_atom_name_dict=None,
+        atom_type_naming_style='all_unique',
         fix_residue=None,
         fix_residue_in_box=None,
+        set_residue_pdb_occupancy_to_1=None,
         ff_filename=None,
-        reorder_res_in_pdb_psf=False,
+        gmso_match_ff_by="molecule"
     ):
 
         # set all input variables to the class
@@ -936,8 +1064,8 @@ class Charmm:
         self.bead_to_atom_name_dict = bead_to_atom_name_dict
         self.fix_residue = fix_residue
         self.fix_residue_in_box = fix_residue_in_box
+        self.set_residue_pdb_occupancy_to_1 = set_residue_pdb_occupancy_to_1
         self.ff_filename = ff_filename
-        self.reorder_res_in_pdb_psf = reorder_res_in_pdb_psf
         self.combining_rule = None
 
         # value to check for errors, with  self.input_error = True or False. Set to False initally
@@ -1073,7 +1201,7 @@ class Charmm:
                     'to a force field. -> String Ex: "path/trappe-ua.xml" or Ex: "trappe-ua" '
                     "Otherise provided a dictionary with all the residues specified "
                     "to a force field "
-                    '->Dictionary Ex: {"Water" : "oplsaa", "OCT": "path/trappe-ua.xml"}, '
+                    '->Dictionary Ex: {"Water": "oplsaa", "OCT": "path/trappe-ua.xml"}, '
                     "Note: the file path must be specified the force field file if "
                     "a standard foyer force field is not used."
                 )
@@ -1086,10 +1214,7 @@ class Charmm:
                     self.forcefield_selection.update(
                         {self.residues[i]: ff_name}
                     )
-                print(
-                    "FF forcefield_selection = "
-                    + str(self.forcefield_selection)
-                )
+                print(f"FF forcefield_selection = {self.forcefield_selection}")
 
         elif self.forcefield_selection is None:
             self.input_error = True
@@ -1151,6 +1276,25 @@ class Charmm:
                     )
                     raise ValueError(print_error_message)
 
+        if self.set_residue_pdb_occupancy_to_1 is not None and not isinstance(
+            self.set_residue_pdb_occupancy_to_1, list
+        ):
+            self.input_error = True
+            print_error_message = (
+                "ERROR: Please enter the set_residue_pdb_occupancy_to_1 in a list format."
+            )
+            raise TypeError(print_error_message)
+
+        if isinstance(self.set_residue_pdb_occupancy_to_1, list):
+            for set_residue_pdb_occupancy_to_1_q in self.set_residue_pdb_occupancy_to_1:
+                if set_residue_pdb_occupancy_to_1_q not in self.residues:
+                    self.input_error = True
+                    print_error_message = (
+                        "Error: Please ensure that all the residue names in the "
+                        "set_residue_pdb_occupancy_to_1 list are also in the residues list."
+                    )
+                    raise ValueError(print_error_message)
+
         if self.bead_to_atom_name_dict is not None and not isinstance(
             self.bead_to_atom_name_dict, dict
         ):
@@ -1176,6 +1320,24 @@ class Charmm:
         print("******************************")
         print("")
 
+        if not isinstance(atom_type_naming_style, str) \
+                or atom_type_naming_style not in ['general', 'all_unique']:
+            self.input_error = True
+            print_error_message = (
+                "ERROR: Please enter the atom_type_naming_style "
+                "as a string, either 'general' or 'all_unique'."
+            )
+            raise TypeError(print_error_message)
+
+        if not isinstance(gmso_match_ff_by, str) \
+                or gmso_match_ff_by not in ['molecule', 'group']:
+            self.input_error = True
+            print_error_message = (
+                "ERROR: Please enter the gmso_match_ff_by "
+                "as a string, either 'molecule', 'group'."
+            )
+            raise TypeError(print_error_message)
+
         if self.structure_box_1:
             self.boxes_for_simulation = 2
         else:
@@ -1184,7 +1346,6 @@ class Charmm:
         # write the Force fields
         self.combined_1_4_nonbonded_dict_per_residue = {}
         self.combined_1_4_electrostatic_dict_per_residue = {}
-        self.combined_combining_rule_dict_per_residue = {}
 
         self.atom_types_dict_per_residue = {}
         self.bond_types_dict_per_residue = {}
@@ -1211,8 +1372,8 @@ class Charmm:
             ] = specific_ff_to_residue(
                 self.structure_box_0,
                 forcefield_selection=self.forcefield_selection,
+                gmso_match_ff_by=gmso_match_ff_by,
                 residues=self.residues,
-                reorder_res_in_pdb_psf=self.reorder_res_in_pdb_psf,
                 boxes_for_simulation=self.boxes_for_simulation,
             )
 
@@ -1233,8 +1394,8 @@ class Charmm:
             ] = specific_ff_to_residue(
                 self.structure_box_1,
                 forcefield_selection=self.forcefield_selection,
+                gmso_match_ff_by=gmso_match_ff_by,
                 residues=self.residues,
-                reorder_res_in_pdb_psf=self.reorder_res_in_pdb_psf,
                 boxes_for_simulation=self.boxes_for_simulation,
             )
 
@@ -1253,10 +1414,18 @@ class Charmm:
                 self.topology_box_0_and_1_ff.add_connection(connection_i)
 
             # create/add to alot of the dictionaries
-            self.atom_types_dict_per_residue.update(self.atom_types_dict_box_0)
-            self.atom_types_dict_per_residue.update(self.atom_types_dict_box_1)
-            self.bond_types_dict_per_residue.update(self.bond_types_dict_box_0)
-            self.bond_types_dict_per_residue.update(self.bond_types_dict_box_1)
+            self.atom_types_dict_per_residue.update(
+                self.atom_types_dict_box_0
+            )
+            self.atom_types_dict_per_residue.update(
+                self.atom_types_dict_box_1
+            )
+            self.bond_types_dict_per_residue.update(
+                self.bond_types_dict_box_0
+            )
+            self.bond_types_dict_per_residue.update(
+                self.bond_types_dict_box_1
+            )
             self.angle_types_dict_per_residue.update(
                 self.angle_types_dict_box_0
             )
@@ -1287,17 +1456,25 @@ class Charmm:
             self.combined_1_4_electrostatic_dict_per_residue.update(
                 self.electrostatics14Scale_dict_box_1
             )
-            self.combined_combining_rule_dict_per_residue.update(
-                self.combining_rule_dict_box_0
-            )
-            self.combined_combining_rule_dict_per_residue.update(
-                self.combining_rule_dict_box_1
-            )
+            # check the combining rules for both boxes and merge them into 1 combining rule.
+            # Remove the empty box's None value, using the combining rule for the box with molecules.
+            if self.combining_rule_dict_box_0 == self.combining_rule_dict_box_1:
+                self.combining_rule = self.combining_rule_dict_box_0
+            elif self.combining_rule_dict_box_0 is None:
+                self.combining_rule = self.combining_rule_dict_box_1
+            elif self.combining_rule_dict_box_1 is None:
+                self.combining_rule = self.combining_rule_dict_box_0
+            else:
+                print_error_message = (
+                    f"ERROR: There are multiple combining or mixing rules "
+                    f"GOMC will only accept a singular input for the mixing rules. "
+                    f"The provided mixing rules are "
+                    f"{self.combining_rule_dict_box_0} and {self.combining_rule_dict_box_1} "
+                    f"for box 0 and 1, respectively"
+                )
+                raise ValueError(print_error_message)
 
-            self.residues_applied_list_box_0_and_1 = (
-                self.residues_applied_list_box_0
-            )
-
+            self.residues_applied_list_box_0_and_1 = self.residues_applied_list_box_0
             for res_iter in self.residues_applied_list_box_1:
                 if res_iter not in self.residues_applied_list_box_0:
                     self.residues_applied_list_box_0_and_1.append(res_iter)
@@ -1328,10 +1505,10 @@ class Charmm:
                     )
                     raise ValueError(print_error_message)
 
+
             # check that there are atoms in the system (checking box 0 and 1)
-            site_list_box_0_and_1 = [
-                site for site in self.topology_box_0_and_1_ff.sites
-            ]
+            site_list_box_0_and_1 = [site for site in self.topology_box_0_and_1_ff.sites
+                                     ]
             if len(site_list_box_0_and_1) == 0:
                 self.input_error = True
                 print_error_message = (
@@ -1341,15 +1518,13 @@ class Charmm:
                 raise ValueError(print_error_message)
 
             # Check if the box 0's charges sum to zero
-            charge_list_box_0 = [
-                site.atom_type.__dict__["charge_"].to("C") / u.elementary_charge
-                for site in self.topology_box_0_ff.sites
-            ]
+            charge_list_box_0 = [site.atom_type.__dict__['charge_'].to('C') / u.elementary_charge
+                                 for site in self.topology_box_0_ff.sites
+                                 ]
+
             if len(charge_list_box_0) != 0:
                 total_charge_box_0 = sum(charge_list_box_0)
-                total_charge_box_0 = total_charge_box_0.to_value(
-                    "(dimensionless)"
-                )
+                total_charge_box_0 = total_charge_box_0.to_value('(dimensionless)')
 
                 if round(total_charge_box_0, 6) != 0.0:
                     warn(
@@ -1358,15 +1533,12 @@ class Charmm:
                     )
 
             # Check if the box 1's charges sum to zero
-            charge_list_box_1 = [
-                site.atom_type.__dict__["charge_"].to("C") / u.elementary_charge
-                for site in self.topology_box_1_ff.sites
-            ]
+            charge_list_box_1 = [site.atom_type.__dict__['charge_'].to('C') / u.elementary_charge
+                                 for site in self.topology_box_1_ff.sites
+                                 ]
             if len(charge_list_box_1) != 0:
                 total_charge_box_1 = sum(charge_list_box_1)
-                total_charge_box_1 = total_charge_box_1.to_value(
-                    "(dimensionless)"
-                )
+                total_charge_box_1 = total_charge_box_1.to_value('(dimensionless)')
 
                 if round(total_charge_box_1, 6) != 0.0:
                     warn(
@@ -1375,13 +1547,10 @@ class Charmm:
                     )
 
             # Check if the box 0 and 1's charges sum to zero
-            charge_list_box_0_and_1 = [
-                site.atom_type.__dict__["charge_"].to("C") / u.elementary_charge
-                for site in self.topology_box_0_and_1_ff.sites
-            ]
-            total_charge_box_0_and_1 = sum(charge_list_box_0_and_1).to_value(
-                "(dimensionless)"
-            )
+            charge_list_box_0_and_1 = [site.atom_type.__dict__['charge_'].to('C') / u.elementary_charge
+                                       for site in self.topology_box_0_and_1_ff.sites
+                                       ]
+            total_charge_box_0_and_1 = sum(charge_list_box_0_and_1).to_value('(dimensionless)')
             if round(total_charge_box_0_and_1, 6) != 0.0:
                 warn(
                     "System is not charge neutral for structure_0_and_1. "
@@ -1406,13 +1575,17 @@ class Charmm:
             ] = specific_ff_to_residue(
                 self.structure_box_0,
                 forcefield_selection=self.forcefield_selection,
+                gmso_match_ff_by=gmso_match_ff_by,
                 residues=self.residues,
-                reorder_res_in_pdb_psf=self.reorder_res_in_pdb_psf,
                 boxes_for_simulation=self.boxes_for_simulation,
             )
 
-            self.atom_types_dict_per_residue.update(self.atom_types_dict_box_0)
-            self.bond_types_dict_per_residue.update(self.bond_types_dict_box_0)
+            self.atom_types_dict_per_residue.update(
+                self.atom_types_dict_box_0
+            )
+            self.bond_types_dict_per_residue.update(
+                self.bond_types_dict_box_0
+            )
             self.angle_types_dict_per_residue.update(
                 self.angle_types_dict_box_0
             )
@@ -1429,9 +1602,7 @@ class Charmm:
             self.combined_1_4_electrostatic_dict_per_residue.update(
                 self.electrostatics14Scale_dict_box_0
             )
-            self.combined_combining_rule_dict_per_residue.update(
-                self.combining_rule_dict_box_0
-            )
+            self.combining_rule = self.combining_rule_dict_box_0
 
             for res_iter_0 in self.residues_applied_list_box_0:
                 if res_iter_0 not in self.residues:
@@ -1460,7 +1631,8 @@ class Charmm:
                     raise ValueError(print_error_message)
 
             # check that there are atoms in the system (checking box 0 and 1)
-            site_list_box_0 = [site for site in self.topology_box_0_ff.sites]
+            site_list_box_0 = [site for site in self.topology_box_0_ff.sites
+                                     ]
             if len(site_list_box_0) == 0:
                 self.input_error = True
                 print_error_message = (
@@ -1470,15 +1642,12 @@ class Charmm:
                 raise ValueError(print_error_message)
 
             # Check if the box 0's charges sum to zero
-            charge_list_box_0 = [
-                site.atom_type.__dict__["charge_"].to("C") / u.elementary_charge
-                for site in self.topology_box_0_ff.sites
-            ]
+            charge_list_box_0 = [site.atom_type.__dict__['charge_'].to('C') / u.elementary_charge
+                                 for site in self.topology_box_0_ff.sites
+                                 ]
             if len(charge_list_box_0) != 0:
                 total_charge_box_0 = sum(charge_list_box_0)
-                total_charge_box_0 = total_charge_box_0.to_value(
-                    "(dimensionless)"
-                )
+                total_charge_box_0 = total_charge_box_0.to_value('(dimensionless)')
 
                 if round(total_charge_box_0, 6) != 0.0:
                     warn(
@@ -1486,17 +1655,9 @@ class Charmm:
                         "Total charge is {}.".format(total_charge_box_0)
                     )
 
-        print(
-            "forcefield type from compound = " + str(self.forcefield_selection)
-        )
-        print(
-            "coulomb14scale from compound = "
-            + str(self.combined_1_4_electrostatic_dict_per_residue)
-        )
-        print(
-            "nonbonded14scale from compound = "
-            + str(self.combined_1_4_nonbonded_dict_per_residue)
-        )
+        print(f"forcefield type from compound = {self.forcefield_selection}")
+        print(f"coulomb14scale from compound = {self.combined_1_4_electrostatic_dict_per_residue}")
+        print(f"nonbonded14scale from compound = {self.combined_1_4_nonbonded_dict_per_residue}")
 
         # select all atoms in the or both boxes
         if self.structure_box_1:
@@ -1509,87 +1670,158 @@ class Charmm:
         # 'definition': '[C;X4](C)(H)(H)H]', 'doi': 'doi.xxxx' }, ..., }
         self.atom_type_info_dict = {}
         for site in self.topology_selection.sites:
-            key_iter = (
-                f"{site.atom_type.__dict__['name_']}_"
-                f"{site.atom_type.__dict__['atomclass_']}_"
-                f"{site.__dict__['residue_label_']}"
-            )
+            key_iter = f"{site.__dict__['residue_name_']}_{site.atom_type.__dict__['name_']}"
             if key_iter not in self.atom_type_info_dict.keys():
-                charge_value = (
-                    site.atom_type.__dict__["charge_"].to("C")
-                    / u.elementary_charge
-                )
-                charge_value = charge_value.to_value("(dimensionless)")
+                charge_value = site.atom_type.__dict__['charge_'].to('C') / u.elementary_charge
+                charge_value = charge_value.to_value('(dimensionless)')
 
                 self.atom_type_info_dict.update(
-                    {
-                        key_iter: {
-                            #'tags': site.atom_type.__dict__['tags'],
-                            "potential_expression_": site.atom_type.__dict__[
-                                "potential_expression_"
-                            ],
-                            "mass_": site.atom_type.__dict__["mass_"].to("amu"),
-                            "charge_": charge_value,
-                            "atomclass_": site.atom_type.__dict__["atomclass_"],
-                            "doi_": site.atom_type.__dict__["doi_"],
-                            "overrides_": site.atom_type.__dict__["overrides_"],
-                            "definition_": site.atom_type.__dict__[
-                                "definition_"
-                            ],
-                            "description_": site.atom_type.__dict__[
-                                "description_"
-                            ],
-                            "residue_label_": site.__dict__["residue_label_"],
-                        }
+                    {key_iter: {
+                        'potential_expression_': site.atom_type.__dict__['potential_expression_'],
+                        'mass_': site.atom_type.__dict__['mass_'].to('amu'),
+                        'charge_': charge_value,
+                        'atomclass_': site.atom_type.__dict__['atomclass_'],
+                        'doi_': site.atom_type.__dict__['doi_'],
+                        'overrides_': site.atom_type.__dict__['overrides_'],
+                        'definition_': site.atom_type.__dict__['definition_'],
+                        'description_': site.atom_type.__dict__['description_'],
+                        'residue_name_': site.__dict__['residue_name_'],
+                        'element_': site.__dict__['name_'],
+                        'atom_type_': site.atom_type.__dict__['name_'],
+                    }
                     }
                 )
 
         # lock the atom_style and unit_style for GOMC. Can be inserted into variables
         # once more functionality is built in
 
-        # change 'residue_label_' to "residue_name_"
-        # change 'residue_index_' to "residue_number_"
+        # change 'residue_name_' to "residue_name_"
+        # change 'residue_number_' to "residue_number_"
+        self.residues_types_classes = []
+        for site in self.topology_selection.sites:
+            self.residues_types_classes.append(
+                (
+                str(site.__dict__['residue_name_']),
+                str(site.atom_type.__dict__['atomclass_']),
+                str(site.atom_type.__dict__['name_'])
+                )
+            )
+        self.unique_residues_types_classes = list(set(self.residues_types_classes))
+        self.unique_residues_types_classes.sort(key=lambda x: (x[0], x[1], x[2]))
+
         self.types = np.array(
             [
-                f"{site.atom_type.__dict__['name_']}_"
-                f"{site.atom_type.__dict__['atomclass_']}_"
-                f"{site.__dict__['residue_label_']}"
-                for site in self.topology_selection.sites
+                f"{site_res_type_i[0]}_{site_res_type_i[2]}"
+                for site_res_type_i in self.residues_types_classes
             ]
         )
-
         self.unique_types = list(set(self.types))
-        self.unique_types.sort(key=natural_sort)
-        print("self.unique_types = " + str(self.unique_types))
+        self.unique_types = np.array(
+            [
+                f"{site_res_type_i[0]}_{site_res_type_i[2]}"
+                for site_res_type_i in self.unique_residues_types_classes
+            ]
+        )
+        print('self.unique_types = ' +str(self.unique_types))
 
+        # get the unique atom types
         self.classes = np.array(
             [
-                f"{site.atom_type.__dict__['atomclass_']}_{site.__dict__['residue_label_']}"
-                for site in self.topology_selection.sites
+                f"{site_res_type_i[0]}_{site_res_type_i[1]}"
+                for site_res_type_i in self.residues_types_classes
+            ]
+        )
+        self.unique_classes = np.array(
+            [
+                f"{site_res_type_i[0]}_{site_res_type_i[1]}"
+                for site_res_type_i in self.unique_residues_types_classes
             ]
         )
 
-        self.unique_classes = list(set(self.classes))
-        self.unique_classes.sort(key=natural_sort)
-        print("self.unique_classes = " + str(self.unique_classes))
 
-        # added an index so the atom classes can be converted to numbers as the type name is to long for insertion into
-        # the pdb and psf files
-        self.atom_class_to_index_value_dict = {}
-        atom_class_numbering_iter = (
-            -1
-        )  # -1 means it will start at zero in the below for loop
-        for unique_atom_class_name_iter in self.unique_classes:
-            atom_class_numbering_iter += 1
-            self.atom_class_to_index_value_dict.update(
-                {unique_atom_class_name_iter: atom_class_numbering_iter}
+        # so the atom types can be converted the pdb and psf files
+        # The version to use will be determined by if the sigma, epsilons, mie n,
+        # non-boned, and bonded are the same for the general case
+        # set the CHARMM style atom type character limit (without addition of number/letters for uniqueness)
+        atom_type_char_limit = 6
+        self.mosdef_residue_atom_name_to_unique_charmm_atom_type_dict = {}
+        self.atom_name_to_all_unique_classes_added_alpha_nums = set()
+        self.atom_name_to_general_classes = set()
+        self.mosdef_residue_atom_name_to_general_charmm_atom_type_dict = {}
+        self.mosdef_residue_atom_name_to_unique_charmm_atom_type_dict = {}
+        self.mosdef_atom_name_to_general_charmm_atom_type_per_residue_dict = {}
+        self.mosdef_atom_name_to_unique_charmm_atom_type_per_residue_dict = {}
+
+        for unique_residues_types_classes_k in self.unique_residues_types_classes:
+            # if it is a bead use the x characters after the _ and if not use the first x
+
+            if unique_residues_types_classes_k[1][0] == '_':
+                mosdef_class_with_char_iter = unique_residues_types_classes_k[1][1:]
+
+            else:
+                mosdef_class_with_char_iter = unique_residues_types_classes_k[1][0:]
+
+            # check to see if the mosdef atom type/name or atom class has an X in or _X in it.
+            if (unique_residues_types_classes_k[1] or unique_residues_types_classes_k[2]) == 'X' \
+                    or (unique_residues_types_classes_k[1][1:] or unique_residues_types_classes_k[2][1:]) == 'X':
+                print_error = f"WARNING: The residue/molecule {unique_residues_types_classes_k[0]} has a" \
+                              f"mosdef atom type/name {unique_residues_types_classes_k[2]}  " \
+                              f"or atom class {unique_residues_types_classes_k[1]} with an X in it, " \
+                              f"which is not permitted in the gmso format.  If you want a wildcard " \
+                              f"type please use * instead of X."
+                raise ValueError(print_error)
+
+            self.mosdef_residue_atom_name_to_general_charmm_atom_type_dict.update(
+                {
+                    f"{unique_residues_types_classes_k[0]}_{unique_residues_types_classes_k[2]}"
+                       : mosdef_class_with_char_iter
+                 }
             )
+            try:
+                self.mosdef_atom_name_to_general_charmm_atom_type_per_residue_dict[
+                    unique_residues_types_classes_k[0]].update(
+                    {unique_residues_types_classes_k[2]: mosdef_class_with_char_iter}
+                )
+            except:
+                self.mosdef_atom_name_to_general_charmm_atom_type_per_residue_dict.update(
+                {
+                    unique_residues_types_classes_k[0]:
+                        {unique_residues_types_classes_k[2]: mosdef_class_with_char_iter}
+                }
+                )
 
-        self.masses = np.array(
-            [
-                site.atom_type.__dict__["mass_"].to_value("amu")
-                for site in self.topology_selection.sites
-            ]
+            for unique_class_number_k in range(0, 10**6):
+                unique_atom_name_and_classes_iter = f"{mosdef_class_with_char_iter}" \
+                                                    f"{base10_to_base62_alph_num(unique_class_number_k)}"
+
+                if unique_atom_name_and_classes_iter not in self.atom_name_to_all_unique_classes_added_alpha_nums \
+                        or str(unique_atom_name_and_classes_iter) == "*":
+                    self.atom_name_to_all_unique_classes_added_alpha_nums.add(unique_atom_name_and_classes_iter)
+                    
+                    self.mosdef_residue_atom_name_to_unique_charmm_atom_type_dict.update(
+                        {
+                            f"{unique_residues_types_classes_k[0]}_{unique_residues_types_classes_k[2]}"
+                               : unique_atom_name_and_classes_iter
+                        }
+                    )
+                    try:
+                        self.mosdef_atom_name_to_unique_charmm_atom_type_per_residue_dict[
+                            unique_residues_types_classes_k[0]].update(
+                            {unique_residues_types_classes_k[2]: unique_atom_name_and_classes_iter}
+                        )
+                    except:
+                        self.mosdef_atom_name_to_unique_charmm_atom_type_per_residue_dict.update(
+                            {
+                                unique_residues_types_classes_k[0]:
+                                    {unique_residues_types_classes_k[2]: unique_atom_name_and_classes_iter}
+                            }
+                        )
+
+                    break
+
+        self.masses = (
+            np.array([site.atom_type.__dict__['mass_'].to_value('amu')
+                      for site in self.topology_selection.sites])
         )
 
         self.mass_atom_type_dict = dict(
@@ -1598,7 +1830,6 @@ class Charmm:
                 for atom_type, mass in zip(self.types, self.masses)
             ]
         )
-
         self.mass_atom_class_dict = dict(
             [
                 (atom_class, mass)
@@ -1606,14 +1837,10 @@ class Charmm:
             ]
         )
 
-        self.charges = np.array(
-            [
-                (
-                    site.atom_type.__dict__["charge_"].to("C")
-                    / u.elementary_charge
-                ).to_value("(dimensionless)")
-                for site in self.topology_selection.sites
-            ]
+        self.charges = (
+            np.array([(site.atom_type.__dict__['charge_'].to('C') /
+                      u.elementary_charge).to_value('(dimensionless)')
+                      for site in self.topology_selection.sites])
         )
         self.charges_atom_type_dict = dict(
             [
@@ -1621,15 +1848,18 @@ class Charmm:
                 for atom_type, charge in zip(self.types, self.charges)
             ]
         )
+        self.charges_atom_class_dict = dict(
+            [
+                (atom_class, charge)
+                for atom_class, charge in zip(self.classes, self.charges)
+            ]
+        )
 
         # normalize by sigma
         self.box_0 = Box(
-            lengths=np.array(
-                [(0.1 * val) for val in self.topology_box_0_ff.box[0:3]]
-            ),
-            angles=self.topology_box_0_ff.box[3:6],
+            lengths=self.topology_box_0_ff.box.lengths,
+            angles=self.topology_box_0_ff.box.angles,
         )
-
         # create box 0 vector list and convert from nm to Ang and round to 6 decimals.
         # note mbuild standard lengths are in nm, so round to 6+1 = 7 then mutlipy by 10
         box_0_lengths_ang = (
@@ -1644,14 +1874,13 @@ class Charmm:
         # Internally use nm
         if self.structure_box_1:
             self.box_1 = Box(
-                lengths=np.array(
-                    [(0.1 * val) for val in self.topology_box_1_ff.box[0:3]]
-                ),
-                angles=self.topology_box_1_ff.box[3:6],
+                lengths=self.topology_box_1_ff.box.lengths,
+                angles=self.topology_box_1_ff.box.angles,
             )
 
             # create box 1 vector list and convert from nm to Ang and round to 6 decimals.
             # note mbuild standard lengths are in nm, so round to 6+1 = 7 then mutlipy by 10
+
             box_1_lengths_ang = (
                 self.box_1.lengths[0] * 10,
                 self.box_1.lengths[1] * 10,
@@ -1663,9 +1892,9 @@ class Charmm:
 
         # need to add only the residue name
         residues_all_list = [
-            site.__dict__["residue_label_"]
-            for site in self.topology_selection.sites
+            site.__dict__['residue_name_'] for site in self.topology_selection.sites
         ]
+
 
         # Non-Bonded forces
 
@@ -1692,109 +1921,72 @@ class Charmm:
 
         # Non-bonded potential energy (u).
 
-        self.atom_type_experssion_and_scalar_combined = (
-            get_atom_type_expressions_and_scalars(
-                self.atom_types_dict_per_residue
-            )
-        )
+        self.atom_type_experssion_and_scalar_combined = get_atom_type_expressions_and_scalars(
+            self.atom_types_dict_per_residue)
 
         # find non-bonded expression to use
         all_NB_expression_forms_set = set()
-        for atom_type_j in list(
-            self.atom_type_experssion_and_scalar_combined.keys()
-        ):
-            expression_form_iter = (
-                self.atom_type_experssion_and_scalar_combined[atom_type_j][
-                    "expression_form"
-                ]
-            )
+        for atom_type_j in list(self.atom_type_experssion_and_scalar_combined.keys()):
+            expression_form_iter = self.atom_type_experssion_and_scalar_combined[atom_type_j]['expression_form']
             all_NB_expression_forms_set.add(expression_form_iter)
 
         if len(all_NB_expression_forms_set) == 1:
-            if "LJ" in all_NB_expression_forms_set:
-                self.utilized_NB_expression = "LJ"
-            elif "Mie" in all_NB_expression_forms_set:
-                self.utilized_NB_expression = "Mie"
-            elif "Exp6" in all_NB_expression_forms_set:
-                self.utilized_NB_expression = "Exp6"
+            if 'LJ' in all_NB_expression_forms_set:
+                self.utilized_NB_expression = 'LJ'
+            elif 'Mie' in all_NB_expression_forms_set:
+                self.utilized_NB_expression = 'Mie'
+            elif 'Exp6' in all_NB_expression_forms_set:
+                self.utilized_NB_expression = 'Exp6'
             else:
-                raise ValueError(
-                    "ERROR: The non-bonded equation type is not the LJ, Mie or Exp6 "
-                    "potential, which are the only available non-bonded equation potentials."
-                )
+                raise ValueError("ERROR: The non-bonded equation type is not the LJ, Mie or Exp6 "
+                                 "potential, which are the only available non-bonded equation potentials.")
 
         elif len(all_NB_expression_forms_set) == 2:
-            if ("LJ" in all_NB_expression_forms_set) and (
-                "Mie" in all_NB_expression_forms_set
-            ):
-                self.utilized_NB_expression = "Mie"
+            if ('LJ' in all_NB_expression_forms_set) and ('Mie' in all_NB_expression_forms_set):
+                self.utilized_NB_expression = 'Mie'
 
-            elif "Exp6" in all_NB_expression_forms_set:
-                raise ValueError(
-                    "ERROR: The 'Exp6' non-bonded equation type can not be used with the "
-                    "LJ or Mie potentials."
-                )
+            elif 'Exp6' in all_NB_expression_forms_set:
+                raise ValueError("ERROR: The 'Exp6' non-bonded equation type can not be used with the "
+                                 "LJ or Mie potentials.")
 
         else:
-            raise ValueError(
-                "ERROR: Only 1 or 2 differnt non-bonded equation types are supported at a time. "
-                "Only 'LJ' and 'Mie' potential combinations are allowed, and they change the "
-                "equation to the Mie potential form (see the GOMC manual)."
-            )
+            raise ValueError("ERROR: Only 1 or 2 differnt non-bonded equation types are supported at a time. "
+                             "Only 'LJ' and 'Mie' potential combinations are allowed, and they change the "
+                             "equation to the Mie potential form (see the GOMC manual).")
 
-        epsilons_kcal_per_mol = np.array(
-            [
-                site.atom_type.parameters["epsilon"]
-                .to("kcal/mol", equivalence="thermal")
-                .to_value()
-                for site in self.topology_selection.sites
-            ]
+        epsilons_kcal_per_mol = (
+            np.array([site.atom_type.parameters['epsilon'].to('kcal/mol', equivalence='thermal').to_value()
+                      for site in self.topology_selection.sites])
         )
-        sigmas_angstrom = np.array(
-            [
-                site.atom_type.parameters["sigma"].to("angstrom").to_value()
-                for site in self.topology_selection.sites
-            ]
+        sigmas_angstrom = (
+            np.array([site.atom_type.parameters['sigma'].to('angstrom').to_value()
+                      for site in self.topology_selection.sites])
         )
 
-        if self.utilized_NB_expression == "Mie":
+        if self.utilized_NB_expression == 'Mie':
             mie_n = []
             # The Mie m-constant must be six (m=6) for GOMC, per the general GMSO format
             # Therefore, we check if m=6 for all, and if not this writer will fail
             self.mie_m_required_value = 6
 
             for site in self.topology_selection.sites:
-                atom_type_residue_iter = f"{site.atom_type.__dict__['name_']}_{site.__dict__['residue_label_']}"
-                nonbonded_expresseion_iter = (
-                    self.atom_type_experssion_and_scalar_combined[
-                        atom_type_residue_iter
-                    ]["expression_form"]
-                )
-                if nonbonded_expresseion_iter == "Mie":
+                atom_type_residue_iter = f"{site.__dict__['residue_name_']}_{site.atom_type.__dict__['name_']}"
+                nonbonded_expresseion_iter = self.atom_type_experssion_and_scalar_combined[
+                    atom_type_residue_iter]['expression_form']
+                if nonbonded_expresseion_iter == 'Mie':
                     # This set the n parameter of the FF Mie if the iteration has it
-                    mie_n_iter = (
-                        site.atom_type.parameters["n"]
-                        .to("dimensionless")
-                        .to_value()
-                    )
+                    mie_n_iter = site.atom_type.parameters['n'].to('dimensionless').to_value()
                     mie_n.append(mie_n_iter)
 
-                    # check if m = 6 for all, and if not this writer will fail
-                    if (
-                        site.atom_type.parameters["m"]
-                        .to("dimensionless")
-                        .to_value()
-                        != self.mie_m_required_value
-                    ):
-                        print_error = (
-                            f"ERROR: The Mie Potential atom class "
-                            f"{site.atom_type.__dict__['atomclass_']}_"
-                            f"{site.__dict__['residue_label_']} "
-                            f"does not have an m-constant of 6 in the force field XML, "
-                            f"which is required in GOMC and this file writer."
-                        )
+                    #check if m = 6 for all, and if not this writer will fail
+                    if site.atom_type.parameters['m'].to('dimensionless').to_value() != self.mie_m_required_value:
+                        print_error = f"ERROR: The Mie Potential atom class " \
+                                      f"{site.__dict__['residue_name_']}_" \
+                                      f"{site.atom_type.__dict__['atomclass_']} " \
+                                      f"does not have an m-constant of 6 in the force field XML, " \
+                                      f"which is required in GOMC and this file writer."
                         raise ValueError(print_error)
-                elif nonbonded_expresseion_iter == "LJ":
+                elif nonbonded_expresseion_iter == 'LJ':
                     # ONly adding LJ here as it is the only other FF that currently works with Mie
                     mie_n_iter = 12
                     mie_n.append(mie_n_iter)
@@ -1813,11 +2005,20 @@ class Charmm:
                     for atom_class, mie_n_iter in zip(self.classes, mie_n)
                 ]
             )
+        else:
+            self.mie_n_atom_type_dict = None
+            self.mie_n_atom_class_dict = None
 
         self.epsilon_kcal_per_mol_atom_type_dict = dict(
             [
                 (atom_type, epsilon)
                 for atom_type, epsilon in zip(self.types, epsilons_kcal_per_mol)
+            ]
+        )
+        self.epsilon_kcal_per_mol_atom_class_dict = dict(
+            [
+                (atom_class, epsilon)
+                for atom_class, epsilon in zip(self.classes, epsilons_kcal_per_mol)
             ]
         )
         self.sigma_angstrom_atom_type_dict = dict(
@@ -1827,113 +2028,231 @@ class Charmm:
             ]
         )
 
-        self.epsilon_kcal_per_mol_atom_class_dict = dict(
-            [
-                (atom_class, epsilon)
-                for atom_class, epsilon in zip(
-                    self.classes, epsilons_kcal_per_mol
-                )
-            ]
-        )
-        self.sigmas_angstrom_atom_class_dict = dict(
+        self.sigma_angstrom_atom_class_dict = dict(
             [
                 (atom_class, sigma)
                 for atom_class, sigma in zip(self.classes, sigmas_angstrom)
             ]
         )
 
-        # check to ensure all epsilons, sigmas, and masses with atom types in an atom class are the same
-        for atom_type_k_iter in list(self.atom_type_info_dict.keys()):
-            atom_class_k_iter = self.atom_type_info_dict[atom_type_k_iter][
-                "atomclass_"
-            ]
+        # Determine if we can use MOSDEF (foyer/gmso) atom classes or traditional CHARMM atom types,
+        # instead of using MOSDEF (foyer/gmso) atom names.  MOSDEF (foyer/gmso) atom names usages for the
+        # FF is designed for OPLS FF where the sigmas and epsilons are not always the same for the
+        # atom types (atom class).  This means even for a different charge, there is a different
+        # atom type (atom class), which we will avoid if at all possible.
+        # For other FFs, where the sigma and epsilons are always the same for a given atom types (atom class),
+        # allow the usage of the general atom types (atom class) to be written.  This means that as long
+        # as the sigmas/epsilons and the non-bonded and bonded interactions match across the used FFs,
+        # we can use the more general type of atom types (atom class).
+        self.general_atom_type_class_style = True
 
-            # atom type values
-            atom_type_residue_k_iter = atom_type_k_iter
-            atom_type_epsilon_kcal_per_mol_k_iter = (
-                self.epsilon_kcal_per_mol_atom_type_dict[
-                    atom_type_residue_k_iter
-                ]
-            )
-            atom_type_sigmas_angstrom_k_iter = (
-                self.sigma_angstrom_atom_type_dict[atom_type_residue_k_iter]
-            )
-            atom_type_mass_amu_k_iter = self.mass_atom_type_dict[
-                atom_type_residue_k_iter
-            ]
+        residues_for_all_fixed_bonds_angles = []
+        if self.gomc_fix_bonds_angles is not None:
+            for fixed_bond_angles_m in self.gomc_fix_bonds_angles:
+                residues_for_all_fixed_bonds_angles.append(fixed_bond_angles_m)
+        if gomc_fix_bonds is not None:
+            for fixed_bond_angles_m in self.gomc_fix_bonds:
+                residues_for_all_fixed_bonds_angles.append(fixed_bond_angles_m)
+        if gomc_fix_angles is not None:
+            for fixed_bond_angles_m in self.gomc_fix_angles:
+                residues_for_all_fixed_bonds_angles.append(fixed_bond_angles_m)
+        residues_for_all_fixed_bonds_angles = set(residues_for_all_fixed_bonds_angles)
+
+        # check atom types to ensure all epsilons, sigmas, and masses with atom types in an atom class are the same
+        print(f"self.epsilon_kcal_per_mol_atom_class_dict = {self.epsilon_kcal_per_mol_atom_class_dict}")
+        print(f"self.sigma_angstrom_atom_type_dict = {self.sigma_angstrom_atom_type_dict}")
+        print(f"self.mass_atom_type_dict = {self.mass_atom_type_dict}")
+        atom_type_in_fixed_bond_angle_per_residue_dict = {}
+        atom_class_in_fixed_bond_angle_per_residues_dict = {}
+        atom_class_only_epsilon_dict = {}
+        atom_class_only_sigma_dict = {}
+        atom_class_only_mass_dict = {}
+        atom_class_only_mie_n_dict = {}
+        for atom_type_key_iter in list(self.atom_type_info_dict.keys()):
+            atom_class_j_iter = self.atom_type_info_dict[atom_type_key_iter]['atomclass_']
+            atom_residue_j_iter = self.atom_type_info_dict[atom_type_key_iter]['residue_name_']
+            atom_class_residue_j_iter =  f"{atom_residue_j_iter}_{atom_class_j_iter}"
 
             # atom class values
-            atom_class_k_iter = self.atom_type_info_dict[atom_type_k_iter][
-                "atomclass_"
-            ]
-            atom_class_residue_k_iter = (
-                f"{atom_class_k_iter}_"
-                f"{self.atom_type_info_dict[atom_type_k_iter]['residue_label_']}"
-            )
-            atom_class_number_k_iter = self.atom_class_to_index_value_dict[
-                atom_class_residue_k_iter
-            ]
-            atom_class_epsilon_kcal_per_mol_k_iter = (
-                self.epsilon_kcal_per_mol_atom_class_dict[
-                    atom_class_residue_k_iter
-                ]
-            )
-            atom_class_sigmas_angstrom_k_iter = (
-                self.sigmas_angstrom_atom_class_dict[atom_class_residue_k_iter]
-            )
-            atom_class_mass_amu_k_iter = self.mass_atom_class_dict[
-                atom_class_residue_k_iter
-            ]
+            atom_class_epsilon_kcal_per_mol_j_iter = \
+                self.epsilon_kcal_per_mol_atom_class_dict[atom_class_residue_j_iter]
+            atom_class_sigmas_angstrom_j_iter = self.sigma_angstrom_atom_class_dict[atom_class_residue_j_iter]
+            atom_class_mass_amu_j_iter = self.mass_atom_class_dict[atom_class_residue_j_iter]
 
-            if (
-                atom_class_epsilon_kcal_per_mol_k_iter
-                != atom_type_epsilon_kcal_per_mol_k_iter
-            ):
-                print_error = (
-                    f"ERROR: Only the same epsilon values are permitted for an atom class. "
-                    f"The {atom_type_residue_k_iter} atom type has different epsilon values"
-                )
-                raise ValueError(print_error)
-            if (
-                atom_class_sigmas_angstrom_k_iter
-                != atom_type_sigmas_angstrom_k_iter
-            ):
-                print_error = (
-                    f"ERROR: Only the same sigma values are permitted for an atom class. "
-                    f"The {atom_type_residue_k_iter} atom class has different sigma values"
-                )
-                raise ValueError(print_error)
-            if atom_class_mass_amu_k_iter != atom_type_mass_amu_k_iter:
-                print_error = (
-                    f"ERROR: Only the same atom mass values are permitted for an atom class. "
-                    f"The {atom_type_residue_k_iter} atom class has different atom mass values"
-                )
-                raise ValueError(print_error)
-            if self.utilized_NB_expression == "Mie":
-                atom_type_mie_n_k_iter = self.mie_n_atom_type_dict[
-                    atom_type_residue_k_iter
-                ]
-                atom_class_mie_n_k_iter = self.mie_n_atom_class_dict[
-                    atom_class_residue_k_iter
-                ]
 
-                if atom_class_mie_n_k_iter != atom_type_mie_n_k_iter:
-                    print_error = (
-                        f"ERROR: Only the same Mie n values are permitted for an atom class. "
-                        f"The {atom_class_residue_k_iter} atom class has different n values"
-                    )
-                    raise ValueError(print_error)
+            atom_class_conficts_str = ''
+            try:
+                if atom_class_epsilon_kcal_per_mol_j_iter != atom_class_only_epsilon_dict[atom_class_j_iter]:
+                    if atom_class_conficts_str == '':
+                        atom_class_conficts_str = f"{'epsilon'}"
+                    else:
+                        atom_class_conficts_str = f"{atom_class_conficts_str}, {'epsilon'}"
+            except:
+                atom_class_only_epsilon_dict.update({atom_class_j_iter: atom_class_epsilon_kcal_per_mol_j_iter})
+
+            try:
+                if atom_class_sigmas_angstrom_j_iter != atom_class_only_sigma_dict[atom_class_j_iter]:
+                    if atom_class_conficts_str == '':
+                        atom_class_conficts_str = f"{'sigma'}"
+                    else:
+                        atom_class_conficts_str = f"{atom_class_conficts_str}, {'sigma'}"
+            except:
+                atom_class_only_sigma_dict.update({atom_class_j_iter: atom_class_sigmas_angstrom_j_iter})
+
+            try:
+                if atom_class_mass_amu_j_iter != atom_class_only_mass_dict[atom_class_j_iter]:
+                    if atom_class_conficts_str == '':
+                        atom_class_conficts_str = f"{'atom mass'}"
+                    else:
+                        atom_class_conficts_str = f"{atom_class_conficts_str}, {'atom mass'}"
+            except:
+                atom_class_only_mass_dict.update({atom_class_j_iter: atom_class_mass_amu_j_iter})
+
+            if self.utilized_NB_expression == 'Mie':
+                atom_class_mie_n_iter = self.mie_n_atom_class_dict[atom_class_residue_j_iter]
+                try:
+                    if atom_class_mie_n_iter != atom_class_only_mie_n_dict[atom_class_j_iter]:
+                        if atom_class_conficts_str == '':
+                            atom_class_conficts_str = f"{'mie_nn'}"
+                        else:
+                            atom_class_conficts_str = f"{atom_class_conficts_str}, {'mie_n'}"
+
+                        print_error = f"ERROR: Only the same Mie n values are permitted for an atom class. " \
+                                      f"The {atom_residue_class_n_iter} atom class has different n values"
+                        raise ValueError(print_error)
+
+                except:
+                    atom_class_only_mie_n_dict.update({atom_class_j_iter: atom_class_mie_n_iter})
+
+            if atom_class_conficts_str != '':
+                print_warning = f"WARNING: The {atom_class_residue_j_iter} CHARMM atom type (Foyer atom class) " \
+                                f"has different {atom_class_conficts_str} values." \
+                                f"Only the same {atom_class_conficts_str} values are permitted to use the " \
+                                f"MoSDeF atom class as the CHARMM style atom type. " \
+                                f"Therefore the Foyer atom names are being used as " \
+                                f"the CHARMM style atom type, meaning atom_type_naming_style='all_unique'."
+                warn(print_warning)
+                self.general_atom_type_class_style = False
+
+
+            if atom_residue_j_iter in residues_for_all_fixed_bonds_angles:
+                try:
+                    atom_class_in_fixed_bond_angle_per_residues_dict[atom_residue_j_iter].add(atom_class_j_iter)
+                except:
+                    atom_class_in_fixed_bond_angle_per_residues_dict[atom_residue_j_iter] = set([atom_class_j_iter])
+
+
+        print(f"atom_class_conficts_str = {atom_class_conficts_str}")
+
+        # check if any atom classes are in the residue other than the fixed one
+        # get all atom classes that are fixed
+        all_fixed_atom_class_set = set()
+        for residue_p, all_fixed_class_set_p in atom_class_in_fixed_bond_angle_per_residues_dict.items():
+            for all_fixed_class_p in all_fixed_class_set_p:
+                all_fixed_atom_class_set.add(all_fixed_class_p)
+        for residue_q, dict_q in self.mosdef_atom_name_to_general_charmm_atom_type_per_residue_dict.items():
+            if residue_q not in residues_for_all_fixed_bonds_angles:
+                for atom_class_fixed_iter in dict_q.values():
+                    if atom_class_fixed_iter in all_fixed_atom_class_set:
+                        self.general_atom_type_class_style = False
+
+        # *********************
+        # need a flag from gmso sorting to say we have only atom
+        # classes or atom types in the FF params.
+        # if any at types, need to use member_types not classes for the writeout (start)
+        # *********************
+
+
+        # determine if the general atom class is used or the atom type is needed
+        self.combinded_residue_bond_types = []
+        for res_x in self.bond_types_dict_per_residue.keys():
+            if self.bond_types_dict_per_residue[res_x] is not None:
+                for bond_type_x in self.bond_types_dict_per_residue[res_x]['bond_types']:
+                    self.combinded_residue_bond_types.append(bond_type_x)
+
+        self.combinded_residue_angle_types = []
+        for res_x in self.angle_types_dict_per_residue.keys():
+            if self.angle_types_dict_per_residue[res_x] is not None:
+                for angle_type_x in self.angle_types_dict_per_residue[res_x]['angle_types']:
+                    self.combinded_residue_angle_types.append(angle_type_x)
+
+        self.combinded_residue_dihedral_types = []
+        for res_x in self.dihedral_types_dict_per_residue.keys():
+            if self.dihedral_types_dict_per_residue[res_x] is not None:
+                for dihedral_type_x in self.dihedral_types_dict_per_residue[res_x]['dihedral_types']:
+                    self.combinded_residue_dihedral_types.append(dihedral_type_x)
+
+        self.combinded_residue_improper_types = []
+        for res_x in self.improper_types_dict_per_residue.keys():
+            if self.improper_types_dict_per_residue[res_x] is not None:
+                for improper_type_x in self.improper_types_dict_per_residue[res_x]['improper_types']:
+                    self.combinded_residue_improper_types.append(improper_type_x)
+
+        # ********************************************************************************
+        # **************************     ADD THIS HERE (START)      **********************
+        # ********************************************************************************
+        # if any of the bond, angle, dih, imp return a atom type specifed bonded param ,
+        # return self.general_atom_type_class_style= False
+        # ********************************************************************************
+        # **************************     ADD THIS HERE (END)      **********************
+        # ********************************************************************************
+
+
+        # *********************
+        # need a flag from gmso sorting to say we have only atom
+        # classes or atom types in the FF params.
+        # if any at types, need to use member_types not classes for the writeout (start)
+        # *********************
+
+        # determine if the general atom class is used or the atom type is needed
+        if self.general_atom_type_class_style and atom_type_naming_style == 'general':
+            self.mosdef_atom_name_to_atom_type_dict = \
+                self.mosdef_residue_atom_name_to_general_charmm_atom_type_dict
+            atom_type_class_style_naming_str = "MoSDeF_atom_class"
+
+            warn(f"WARNING: atom_type_naming_style = 'general'\n"
+                 f"WARNING: The 'general' convention is UNSAFE, and the EXPERT user SHOULD USE AT THEIR OWN RISK, "
+                 f"making SURE ALL THE BONDED PARAMETERS HAVE THE SAME VALUES IN THE UTILIZED "
+                 f"FORCE FIELD XMLs.  Also, this DOES NOT ENSURE that THERE ARE NO specific "
+                 f"Foyer XML ATOM TYPE BONDED CONNECTIONS in the Foyer FORCE FIELD XMLs, instead of the Foyer "
+                 f"atom class type bonded connections, which could RESULT IN AN INCORRECT FORCE FIELD "
+                 f"PARAMETERIZATION.  This is UNSAFE to use even with the same force field XML file, so the "
+                 f"EXPERT user SHOULD USE AT THEIR OWN RISK.\n"
+                 f"The 'general' convention only tests if the sigma, epsilons, mass, and Mie-n values are "
+                 f"identical between the different molecules (residues in this context) and their applied "
+                 f"force fields and DOES NOT check that any or all of the bonded parameters have the same "
+                 f"or conflicting values. "
+                 )
+
+        else:
+            self.mosdef_atom_name_to_atom_type_dict = \
+                self.mosdef_residue_atom_name_to_unique_charmm_atom_type_dict
+            atom_type_class_style_naming_str = "MoSDeF_atom_type_or_name"
+
+        print(f"mosdef_atom_name_to_atom_type_dict = {self.mosdef_atom_name_to_atom_type_dict}")
+        # determine if the charmm atom types are longer than 6 characters
+        for key_name_j, value_name_j in self.mosdef_atom_name_to_atom_type_dict.items():
+            if len(value_name_j) > atom_type_char_limit:
+                print_error = f"ERROR: The {key_name_j} residue and mosdef atom name using the " \
+                              f"{atom_type_class_style_naming_str} methodology exceeds the " \
+                              f"character limit of {atom_type_char_limit}, which is required for " \
+                              f"the CHARMM style atom types. Please format the force field " \
+                              f"xml files to get them under these 6 characters by allowing the " \
+                              f"general {'MoSDeF_atom_class'} to be used or otherwise " \
+                              f"shortening the atom {'MoSDeF_atom_class'} names. " \
+                              f"NOTE: The {'MoSDeF_atom_class'} must allow for additional " \
+                              f"alphanumberic additions at the end of it, making unique CHARMM atom " \
+                              f"types (MoSDeF_atom_classes); typically this would allow for 4" \
+                              f"characters in the MoSDeF_atom_classes."
+                raise ValueError(print_error)
 
         self.nonbonded_1_4_dict = dict(
             [
-                (
-                    atom_class,
-                    self.combined_1_4_nonbonded_dict_per_residue[
-                        residues_all_list
-                    ],
+                (atom_type,
+                 self.combined_1_4_nonbonded_dict_per_residue[residues_all_list],
                 )
-                for atom_class, residues_all_list in zip(
-                    self.classes, residues_all_list
+                for atom_type, residues_all_list in zip(
+                    self.types, residues_all_list
                 )
             ]
         )
@@ -1941,25 +2260,16 @@ class Charmm:
         # ensure all 1,4-coulombic or electrostatic scaling factors are the same,
         # and if not set to the same if None is provided
         electrostatic_1_4_set = set()
-        for (
-            residue_p
-        ) in self.combined_1_4_electrostatic_dict_per_residue.keys():
-            if (
-                self.combined_1_4_electrostatic_dict_per_residue[residue_p]
-                is None
-            ):
-                warn(
-                    "WARNING: The 1,4-electrostatic scaling factor for the {} residue "
-                    "that was provided as None. This may mean that force field file "
-                    "does not need the 1,4-electrostatic scaling factor, because it does not have 4 connected "
-                    "atoms in the 1-4 configuration, or there may be an error in the "
-                    "force field file. "
-                    "".format(residue_p)
-                )
+        for residue_p in self.combined_1_4_electrostatic_dict_per_residue.keys():
+            if self.combined_1_4_electrostatic_dict_per_residue[residue_p] is None:
+                warn("WARNING: The 1,4-electrostatic scaling factor for the {} residue "
+                     "that was provided as None. This may mean that force field file "
+                     "does not need the 1,4-electrostatic scaling factor, because it does not have 4 connected "
+                     "atoms in the 1-4 configuration, or there may be an error in the "
+                     "force field file. "
+                     "".format(residue_p))
             else:
-                electrostatic_1_4_set.add(
-                    self.combined_1_4_electrostatic_dict_per_residue[residue_p]
-                )
+                electrostatic_1_4_set.add(self.combined_1_4_electrostatic_dict_per_residue[residue_p])
         if len(electrostatic_1_4_set) > 1:
             self.input_error = True
             print_error_message = (
@@ -1982,50 +2292,25 @@ class Charmm:
         # and if None is provided, it is set to 0 with a warning.
         for residue_r in self.combined_1_4_nonbonded_dict_per_residue.keys():
             if self.combined_1_4_nonbonded_dict_per_residue[residue_r] is None:
-                warn(
-                    "WARNING: The 1,4-nonbonded scaling factor for the {} residue "
-                    "that was provided as None. This may mean that force field file "
-                    "does not need the 1,4-nonbonded scaling factor, because it does not have 4 connected "
-                    "atoms in the 1-4 configuration, or there may be an error in the force field file. "
-                    "Since the {} residue provided None for the 1,4-nonbonded scaling factor, it "
-                    "is being set to 0. "
-                    "".format(residue_r, residue_r)
-                )
+                warn("WARNING: The 1,4-nonbonded scaling factor for the {} residue "
+                     "that was provided as None. This may mean that force field file "
+                     "does not need the 1,4-nonbonded scaling factor, because it does not have 4 connected "
+                     "atoms in the 1-4 configuration, or there may be an error in the force field file. "
+                     "Since the {} residue provided None for the 1,4-nonbonded scaling factor, it "
+                     "is being set to 0. "
+                     "".format(residue_r, residue_r)
+                     )
                 self.combined_1_4_nonbonded_dict_per_residue[residue_r] = 0
 
-        # ensure all the provided combining rules match,
-        # and if None is provided, it is set to the only other matching rule with a warning.
-        combining_rule_set = set()
-        for residue_q in self.combined_combining_rule_dict_per_residue.keys():
-            if self.combined_combining_rule_dict_per_residue[residue_q] is None:
-                warn(
-                    "WARNING: The combining or mixing rule for the {} residue "
-                    "that was provided as None. This may mean that force field file "
-                    "can use any combining or mixing rule, or there may be an error in the force field file. "
-                    "Since the {} residue provided None for the combining or mixing rule, it "
-                    "is being set to the same as all the other values. "
-                    "".format(residue_q, residue_q)
-                )
-            else:
-                combining_rule_set.add(
-                    self.combined_combining_rule_dict_per_residue[residue_q]
-                )
-        if len(combining_rule_set) > 1:
+        if self.combining_rule not in ['lorentz', 'geometric']:
             self.input_error = True
-            print_error_message = (
-                "ERROR: There are multiple combining or mixing rules "
-                "GOMC will only accept a singular input for the mixing rules. "
-            )
-            raise ValueError(print_error_message)
-        elif len(combining_rule_set) == 1:
-            self.combining_rule = list(combining_rule_set)[0]
-        else:
             print_warning_message = (
-                "WARNING: No combining or mixing rules were provided, so "
-                "it is being set to 'lorentz' or arithmetic by default."
+                f"Error: The {self.combining_rule} combining or mixing rules were provided, but "
+                f"only the 'lorentz' or 'geometric' mixing rules are allowed. "
+                f"NOTE: Arithmetic means the 'lorentz' combining or mixing rule."
             )
             warn(print_warning_message)
-            self.combining_rule = "lorentz"
+
 
         # get all the unique atom name to check for the MEMC move in the gomc_conf_writer
         self.all_individual_atom_names_list = []
@@ -2040,31 +2325,43 @@ class Charmm:
             list_of_topologies = [self.topology_box_0_ff]
             stuct_only = [self.topology_box_0_ff]
 
+        # this sets the residues chain length to a max limit
+        self.max_residue_no = 9999
+        self.max_resname_char = 4
+
         for q_i in range(0, len(list_of_topologies)):
             stuct_only_iteration = stuct_only[q_i]
 
             # caluculate the atom name and unique atom names
             residue_names_list = []
             residue_id_list = []
+            res_no_chain_iter_corrected_list = []
+            segment_id_list = []
+            segment_id_iter = 0  # starts at 0 as it adds 1 the first iter (being 0 -> A for 1st iteration)
             for site in stuct_only_iteration.sites:
-                residue_id_list.append(site.__dict__["residue_index_"])
-                residue_names_list.append(site.__dict__["residue_label_"])
+                residue_names_list.append(site.__dict__['residue_name_'])
 
-            # this sets the residues chain length to a max limit
-            self.max_residue_no = 9999
-            self.max_resname_char = 4
+                residue_id_list_iter = site.__dict__['residue_number_']
+                residue_id_list.append(residue_id_list_iter)
 
-            res_no_chain_iter_corrected = []
-            for residue_id_int in residue_id_list:
                 res_id_adder = int(
-                    (residue_id_int % self.max_residue_no) % self.max_residue_no
+                    (residue_id_list_iter % self.max_residue_no) % self.max_residue_no
                 )
                 if int(res_id_adder) == 0:
-                    res_no_iteration_corrected = int(self.max_residue_no)
+                    res_no_iteration_q = int(self.max_residue_no)
                 else:
-                    res_no_iteration_corrected = res_id_adder
+                    res_no_iteration_q = res_id_adder
 
-                res_no_chain_iter_corrected.append(res_no_iteration_corrected)
+                if (
+                        len(res_no_chain_iter_corrected_list) > 0
+                        and res_no_chain_iter_corrected_list[-1] == self.max_residue_no
+                        and res_no_iteration_q == 1
+                ):
+                    segment_id_iter += 1
+
+                res_no_chain_iter_corrected_list.append(res_no_iteration_q)
+                segment_id_list.append(base10_to_base52_alph(segment_id_iter))
+
 
             # This converts the atom name in the GOMC psf and pdb files to unique atom names
             [
@@ -2084,6 +2381,12 @@ class Charmm:
                 )
 
                 self.all_residue_names_list = residue_names_list
+
+                self.residue_names_list_box_0 = residue_names_list
+                self.residue_id_list_box_0 = residue_id_list
+                self.res_no_chain_iter_corrected_list_box_0 = res_no_chain_iter_corrected_list
+                self.segment_id_list_box_0 = segment_id_list
+
             else:
 
                 self.all_individual_atom_names_list = (
@@ -2094,6 +2397,11 @@ class Charmm:
                 self.all_residue_names_list = (
                     self.all_residue_names_list + residue_names_list
                 )
+
+                self.residue_names_list_box_1 = residue_names_list
+                self.residue_id_list_box_1 = residue_id_list
+                self.res_no_chain_iter_corrected_list_box_1 = res_no_chain_iter_corrected_list
+                self.segment_id_list_box_1 = segment_id_list
 
         # put the self.all_individual_atom_names_list and self.all_residue_names_list in a list to match
         # the the atom name with a residue and find the unique matches
@@ -2113,9 +2421,8 @@ class Charmm:
         else:
             self.all_res_unique_atom_name_dict = {}
             for res_i in range(0, len(self.all_individual_atom_names_list)):
-                if self.all_res_unique_atom_name_dict in list(
-                    self.all_res_unique_atom_name_dict.keys()
-                ):
+                if self.all_res_unique_atom_name_dict \
+                     in list(self.all_res_unique_atom_name_dict.keys()):
                     self.all_res_unique_atom_name_dict.setdefault(
                         self.all_residue_names_list[res_i], set()
                     ).add(self.all_individual_atom_names_list[res_i])
@@ -2130,6 +2437,10 @@ class Charmm:
                 self.all_res_unique_atom_name_dict
             )
         )
+
+
+
+
 
     def write_inp(self):
         """This write_inp function writes the Charmm style parameter (force field) file, which can be utilized
@@ -2167,21 +2478,24 @@ class Charmm:
 
             if self.structure_box_1:
                 for k, site in enumerate(self.topology_box_0_ff.sites):
-                    residue_id_list.append(site.__dict__["residue_index_"])
-                    residue_names_list.append(site.__dict__["residue_label_"])
+                    residue_id_list.append(site.__dict__['residue_number_'])
+                    residue_names_list.append(site.__dict__['residue_name_'])
 
                 for k, site in enumerate(self.topology_box_1_ff.sites):
-                    residue_id_list.append(site.__dict__["residue_index_"])
-                    residue_names_list.append(site.__dict__["residue_label_"])
+                    residue_id_list.append(site.__dict__['residue_number_'])
+                    residue_names_list.append(site.__dict__['residue_name_'])
 
             else:
                 for k, site in enumerate(self.topology_box_0_ff.sites):
-                    residue_id_list.append(site.__dict__["residue_index_"])
-                    residue_names_list.append(site.__dict__["residue_label_"])
+                    residue_id_list.append(site.__dict__['residue_number_'])
+                    residue_names_list.append(site.__dict__['residue_name_'])
 
             for n in range(0, len(residue_names_list)):
                 if residue_names_list[n] not in self.residues:
-                    print("residue_names_list = " + str(residue_names_list))
+                    print(
+                        "residue_names_list = "
+                        + str(residue_names_list)
+                    )
                     self.input_error = True
                     print_error_message = "ERROR: Please specifiy all residues (residues) in a list"
                     raise ValueError(print_error_message)
@@ -2206,82 +2520,39 @@ class Charmm:
                 data.write(
                     f"*  1-4 electrostatic scaling = {self.combined_1_4_electrostatic_dict_per_residue} "
                     f", and 1-4 non-bonded scaling = {self.combined_1_4_nonbonded_dict_per_residue}"
-                    f", and non-bonded mixing rule = {self.combined_combining_rule_dict_per_residue}\n\n"
+                    f", and non-bonded mixing rule = {self.combining_rule}\n\n"
                 )
                 data.write(
                     "* {:15d} atoms\n".format(self.topology_selection.n_sites)
                 )
 
+                data.write("* {:15d} bonds\n".format(self.topology_selection.n_bonds))
+                data.write("* {:15d} angles\n".format(self.topology_selection.n_angles))
                 data.write(
-                    "* {:15d} bonds\n".format(self.topology_selection.n_bonds)
+                    "* {:15d} dihedrals\n".format(self.topology_selection.n_dihedrals)
                 )
                 data.write(
-                    "* {:15d} angles\n".format(self.topology_selection.n_angles)
+                    "* {:15d} impropers\n\n".format(self.topology_selection.n_impropers)
                 )
-                data.write(
-                    "* {:15d} dihedrals\n".format(
-                        self.topology_selection.n_dihedrals
-                    )
-                )
-                data.write(
-                    "* {:15d} impropers\n\n".format(
-                        self.topology_selection.n_impropers
-                    )
-                )
-
-                data.write(
-                    "* {:15d} atom types\n".format(
-                        len(self.topology_selection.atom_types)
-                    )
-                )
-
-                data.write(
-                    "* {:15d} bond types\n".format(
-                        len(self.topology_selection.bond_types)
-                    )
-                )
-                data.write(
-                    "* {:15d} angle types\n".format(
-                        len(self.topology_selection.angle_types)
-                    )
-                )
-                data.write(
-                    "* {:15d} dihedral types\n".format(
-                        len(self.topology_selection.dihedral_types)
-                    )
-                )
-                data.write(
-                    "* {:15d} improper types\n".format(
-                        len(self.topology_selection.improper_types)
-                    )
-                )
-                data.write("\n")
 
                 data.write("\n* masses\n\n")
-                data.write(
-                    "! {:15s} {:15s} ! {}\n".format(
-                        "atom_types",
-                        "mass",
-                        "atomClass_ResidueName",
-                    )
+                data.write("! {:15s} {:15s} ! {}\n".format(
+                    'atom_types',
+                    'mass',
+                    'atomClass_ResidueName',
                 )
-
+                )
                 atom_mass_decimals_round = 4
-                for atom_class, mass in self.mass_atom_class_dict.items():
+                for atom_type, mass in self.mass_atom_type_dict.items():
                     mass_format = "* {:15s} {:15s} ! {:25s}\n"
                     data.write(
                         mass_format.format(
-                            base10_to_base52_alph(
-                                self.atom_class_to_index_value_dict[atom_class]
-                            ),
-                            str(
-                                np.round(
-                                    mass, decimals=atom_mass_decimals_round
-                                )
-                            ),
-                            atom_class,
+                            self.mosdef_atom_name_to_atom_type_dict[atom_type],
+                            str(np.round(mass, decimals=atom_mass_decimals_round)),
+                            atom_type,
                         )
                     )
+
 
                 # Bond coefficients
                 if len(self.topology_selection.bond_types) > 0:
@@ -2290,9 +2561,7 @@ class Charmm:
                     data.write("! \n")
                     data.write("! V(bond) = Kb(b - b0)**2\n")
                     data.write("! \n")
-                    data.write(
-                        "! Kb: kcal/mol/A**2 (LJ) and  K/A**2 (Mie and Exp6)\n"
-                    )
+                    data.write("! Kb: kcal/mol/A**2 (LJ) and  K/A**2 (Mie and Exp6)\n")
                     data.write("! b0: A\n")
                     data.write(
                         "! Kb (kcal/mol) = Kb_K (K) * Boltz. const.; (9999999999 if no stretching)\n"
@@ -2305,7 +2574,7 @@ class Charmm:
                             "Kb",
                             "b0",
                             "extended_type_1",
-                            "extended_type_2",
+                            "extended_type_2"
                         )
                     )
 
@@ -2313,174 +2582,96 @@ class Charmm:
                     bond_k_Kelvin_round_decimals = 4
                     bond_distance_round_decimals = 6
 
-                    for res_x in self.bond_types_dict_per_residue.keys():
-                        if self.bond_types_dict_per_residue[res_x] is not None:
-                            for bond_type_x in self.bond_types_dict_per_residue[
-                                res_x
-                            ]["bond_types"]:
-                                if bond_type_x.member_classes is not None:
-                                    bond_members_iter = (
-                                        bond_type_x.member_classes
-                                    )
-                                elif bond_type_x.member_types is not None:
-                                    bond_members_iter = bond_type_x.member_types
-                                    raise TypeError(
-                                        f"ERROR: The {res_x} residue has a least one bond member_types "
-                                        f"that is not None. "
-                                        f"Currently, the Charmm writer only supports the member_class "
-                                        f"designations for bonds."
-                                    )
-                                else:
-                                    raise TypeError(
-                                        f"ERROR: The {res_x} residue has a least one bond member_types "
-                                        f"and member_classes that is not None. "
-                                        f"There may be an issue with the XML file."
-                                    )
+                    for bond_type_x in self.combinded_residue_bond_types:
+                        res_x = bond_type_x.__dict__['tags_']['resname']
+                        bond_members_iter = bond_type_x.member_types
 
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # need to set eqn back to "1 * k * (r-r_eq)**2", as it is wrong not to fix the
-                                # bug which the foyer to GMSO conversion does not include the 1/2 constant
-                                # (start)
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # ***************************
+                        gomc_bond_form_with_scalar = "1 * k * (r-r_eq)**2"
 
-                                gomc_bond_form_with_scalar = (
-                                    "2 * k * (r-r_eq)**2"
+                        [bond_type_str_iter, bond_eqn_scalar_iter] = \
+                            evaluate_harmonic_bond_format_with_scaler(
+                            bond_type_x.expression,
+                            gomc_bond_form_with_scalar
+                        )
+                        if bond_type_str_iter != 'HarmonicBondPotential':
+                            raise TypeError(f"ERROR: The {res_x} residue's "
+                                            f"bond types or classes does not have a "
+                                            f"{'HarmonicBondPotential'} bond potential, which "
+                                            f"is the only supported bond potential.")
+
+                        # the bond energy value is dependant of the non-bonded form
+                        bond_energy_value_LJ_units_iter = _check_convert_bond_k_constant_units(
+                            str(bond_members_iter),
+                            bond_eqn_scalar_iter * bond_type_x.parameters['k'],
+                            'kcal/mol/angstrom**2',
+                        ).to_value('kcal/mol/angstrom**2')
+
+                        if self.utilized_NB_expression == 'LJ':
+                            bond_energy_value_iter = np.round(bond_energy_value_LJ_units_iter,
+                                                              decimals=bond_k_kcal_per_mol_round_decimals
+                                                              )
+                        elif self.utilized_NB_expression in ['Mie', 'Exp6']:
+                            bond_energy_value_Mie_Exp6_units_iter = _check_convert_bond_k_constant_units(
+                                str(bond_members_iter),
+                                bond_eqn_scalar_iter * bond_type_x.parameters['k'],
+                                'K/angstrom**2',
+                            ).to_value('K/angstrom**2')
+                            bond_energy_value_iter = np.round(bond_energy_value_Mie_Exp6_units_iter,
+                                                              decimals=bond_k_Kelvin_round_decimals
+                                                              )
+
+                        bond_format = "{:10s} {:10s} {:15s} {:15s} ! {:20s} {:20s}\n"
+
+                        if (
+                                (self.gomc_fix_bonds_angles is not None)
+                                and (
+                                        str(res_x)
+                                        in self.gomc_fix_bonds_angles
                                 )
-
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # need to set eqn back to "1 * k * (r-r_eq)**2", as it is wrong not to fix the
-                                # bug which the foyer to GMSO conversion does not include the 1/2 constant
-                                # (end)
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # ***************************
-
-                                [
-                                    bond_type_str_iter,
-                                    bond_eqn_scalar_iter,
-                                ] = evaluate_harmonic_bond_format_with_scaler(
-                                    bond_type_x.expression,
-                                    gomc_bond_form_with_scalar,
-                                )
-
-                                if (
-                                    bond_type_str_iter
-                                    != "HarmonicBondPotential"
-                                ):
-                                    raise TypeError(
-                                        f"ERROR: The {res_x} residue does not have a "
-                                        f"{'HarmonicBondPotential'} bond potential, which "
-                                        f"is the only supported bond potential."
-                                    )
-
-                                # the bond energy value is dependant of the non-bonded form
-                                bond_energy_value_LJ_units_iter = (
-                                    _check_convert_bond_k_constant_units(
-                                        str(bond_type_x.member_classes),
-                                        bond_eqn_scalar_iter
-                                        * bond_type_x.parameters["k"],
-                                        "kcal/mol/angstrom**2",
-                                    ).to_value("kcal/mol/angstrom**2")
-                                )
-
-                                if self.utilized_NB_expression == "LJ":
-                                    bond_energy_value_iter = np.round(
-                                        bond_energy_value_LJ_units_iter,
-                                        decimals=bond_k_kcal_per_mol_round_decimals,
-                                    )
-                                elif self.utilized_NB_expression in [
-                                    "Mie",
-                                    "Exp6",
-                                ]:
-                                    bond_energy_value_Mie_Exp6_units_iter = (
-                                        _check_convert_bond_k_constant_units(
-                                            str(bond_type_x.member_classes),
-                                            bond_eqn_scalar_iter
-                                            * bond_type_x.parameters["k"],
-                                            "K/angstrom**2",
-                                        ).to_value("K/angstrom**2")
-                                    )
-                                    bond_energy_value_iter = np.round(
-                                        bond_energy_value_Mie_Exp6_units_iter,
-                                        decimals=bond_k_Kelvin_round_decimals,
-                                    )
-
-                                bond_format = "{:10s} {:10s} {:15s} {:15s} ! {:20s} {:20s}\n"
-
-                                if (
-                                    (self.gomc_fix_bonds_angles is not None)
-                                    and (
-                                        str(res_x) in self.gomc_fix_bonds_angles
-                                    )
-                                ) or (
-                                    (
+                        ) or (
+                                (
                                         (self.gomc_fix_bonds is not None)
-                                        and (str(res_x) in self.gomc_fix_bonds)
-                                    )
-                                ):
-                                    fix_bond_k_value = "999999999999"
-                                    data.write(
-                                        bond_format.format(
-                                            base10_to_base52_alph(
-                                                self.atom_class_to_index_value_dict[
-                                                    f"{bond_members_iter[0]}_{res_x}"
-                                                ]
-                                            ),
-                                            base10_to_base52_alph(
-                                                self.atom_class_to_index_value_dict[
-                                                    f"{bond_members_iter[1]}_{res_x}"
-                                                ]
-                                            ),
-                                            str(fix_bond_k_value),
-                                            str(
-                                                np.round(
-                                                    bond_type_x.parameters[
-                                                        "r_eq"
-                                                    ].to_value("angstrom"),
-                                                    decimals=bond_distance_round_decimals,
-                                                )
-                                            ),
-                                            f"{bond_members_iter[0]}_{res_x}",
-                                            f"{bond_members_iter[1]}_{res_x}",
+                                        and (
+                                                str(res_x)
+                                                in self.gomc_fix_bonds
                                         )
-                                    )
+                                )
+                        ):
+                            fix_bond_k_value = "999999999999"
+                            data.write(
+                                bond_format.format(
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                            f"{res_x}_{bond_members_iter[0]}"
+                                        ],
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                            f"{res_x}_{bond_members_iter[1]}"
+                                        ],
+                                    str(fix_bond_k_value),
+                                    str(np.round(bond_type_x.parameters['r_eq'].to_value('angstrom'),
+                                                 decimals=bond_distance_round_decimals)
+                                        ),
+                                    f"{res_x}_{bond_members_iter[0]}",
+                                    f"{res_x}_{bond_members_iter[1]}",
+                                )
+                            )
 
-                                else:
-                                    data.write(
-                                        bond_format.format(
-                                            base10_to_base52_alph(
-                                                self.atom_class_to_index_value_dict[
-                                                    f"{bond_members_iter[0]}_{res_x}"
-                                                ]
-                                            ),
-                                            base10_to_base52_alph(
-                                                self.atom_class_to_index_value_dict[
-                                                    f"{bond_members_iter[1]}_{res_x}"
-                                                ]
-                                            ),
-                                            str(bond_energy_value_iter),
-                                            str(
-                                                np.round(
-                                                    bond_type_x.parameters[
-                                                        "r_eq"
-                                                    ].to_value("angstrom"),
-                                                    decimals=bond_distance_round_decimals,
-                                                )
-                                            ),
-                                            f"{bond_members_iter[0]}_{res_x}",
-                                            f"{bond_members_iter[1]}_{res_x}",
-                                        )
-                                    )
+                        else:
+                            data.write(
+                                bond_format.format(
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                            f"{res_x}_{bond_members_iter[0]}"
+                                        ],
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                            f"{res_x}_{bond_members_iter[1]}"
+                                        ],
+                                    str(bond_energy_value_iter),
+                                    str(np.round(bond_type_x.parameters['r_eq'].to_value('angstrom'),
+                                                 decimals=bond_distance_round_decimals)
+                                        ),
+                                    f"{res_x}_{bond_members_iter[0]}",
+                                    f"{res_x}_{bond_members_iter[1]}",
+                                )
+                            )
 
                 # Angle coefficients
                 if len(self.topology_selection.angle_types):
@@ -2488,9 +2679,7 @@ class Charmm:
                     data.write("! \n")
                     data.write("! V(angle) = Ktheta(Theta - Theta0)**2\n")
                     data.write("! \n")
-                    data.write(
-                        "! Ktheta: kcal/mol/rad**2 (LJ) and  K/rad**2 (Mie and Exp6)\n"
-                    )
+                    data.write("! Ktheta: kcal/mol/rad**2 (LJ) and  K/rad**2 (Mie and Exp6)\n")
                     data.write("! Theta0: degrees\n")
                     data.write("! \n")
                     data.write("!  Boltzmann = 0.0019872041 kcal / (mol * K)\n")
@@ -2508,7 +2697,7 @@ class Charmm:
                             "Theta0",
                             "extended_type_1",
                             "extended_type_2",
-                            "extended_type_3",
+                            "extended_type_3"
                         )
                     )
 
@@ -2516,190 +2705,108 @@ class Charmm:
                     angle_k_Kelvin_round_decimals = 4
                     angle_degree_round_decimals = 6
 
-                    for res_x in self.angle_types_dict_per_residue.keys():
-                        if self.angle_types_dict_per_residue[res_x] is not None:
-                            for (
-                                angle_type_x
-                            ) in self.angle_types_dict_per_residue[res_x][
-                                "angle_types"
-                            ]:
-                                if angle_type_x.member_classes is not None:
-                                    angle_members_iter = (
-                                        angle_type_x.member_classes
-                                    )
-                                elif angle_type_x.member_types is not None:
-                                    angle_members_iter = (
-                                        angle_type_x.member_types
-                                    )
-                                    raise TypeError(
-                                        f"ERROR: The {res_x} residue has a least one angle member_types "
-                                        f"that is not None. "
-                                        f"Currently, the Charmm writer only supports the member_class "
-                                        f"designations for angles."
-                                    )
-                                else:
-                                    raise TypeError(
-                                        f"ERROR: The {res_x} residue has a least one angle member_types "
-                                        f"and member_classes that is not None. "
-                                        f"There may be an issue with the XML file."
-                                    )
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # need to set eqn back to "1 * k * (theta - theta_eq)**2", as it is wrong not to fix the
-                                # bug which the foyer to GMSO conversion does not include the 1/2 constant
-                                # (start)
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # ***************************
+                    for angle_type_x in self.combinded_residue_angle_types:
+                        res_x = angle_type_x.__dict__['tags_']['resname']
+                        angle_members_iter = angle_type_x.member_types
 
-                                gomc_angle_form_with_scalar = (
-                                    "2 * k * (theta - theta_eq)**2"
+                        gomc_angle_form_with_scalar = "1 * k * (theta - theta_eq)**2"
+
+                        [angle_type_str_iter, angle_eqn_scalar_iter] = \
+                            evaluate_harmonic_angle_format_with_scaler(
+                            angle_type_x.expression,
+                            gomc_angle_form_with_scalar
+                        )
+
+                        if angle_type_str_iter != 'HarmonicAnglePotential':
+                            raise TypeError(f"ERROR: The {res_x} residue's "
+                                            f"angle types or classes does not have a "
+                                            f"{'HarmonicAnglePotential'} angle potential, which "
+                                            f"is the only supported angle potential."
+                                            )
+
+                        # the angle energy value is dependant of the non-bonded form
+                        angle_energy_value_LJ_units_iter = _check_convert_angle_k_constant_units(
+                            str(angle_members_iter),
+                            angle_eqn_scalar_iter * angle_type_x.parameters['k'],
+                            'kcal/mol/rad**2',
+                        ).to_value('kcal/mol/rad**2')
+
+                        if self.utilized_NB_expression == 'LJ':
+                            angle_energy_value_iter = np.round(angle_energy_value_LJ_units_iter,
+                                                          decimals=angle_k_kcal_per_mol_round_decimals
+                                                          )
+                        elif self.utilized_NB_expression in ['Mie', 'Exp6']:
+                            angle_energy_value_Mie_Exp6_units_iter = _check_convert_angle_k_constant_units(
+                                str(angle_members_iter),
+                                angle_eqn_scalar_iter * angle_type_x.parameters['k'],
+                                'K/rad**2',
+                            ).to_value('K/rad**2')
+
+                            angle_energy_value_iter = np.round(angle_energy_value_Mie_Exp6_units_iter,
+                                                               decimals=angle_k_Kelvin_round_decimals
+                                                               )
+
+                        angle_format = "{:10s} {:10s} {:10s} {:15s} {:15s} ! {:20s} {:20s} {:20s}\n"
+
+                        if (
+                                (self.gomc_fix_bonds_angles is not None)
+                                and (
+                                        str(res_x)
+                                        in self.gomc_fix_bonds_angles
                                 )
-
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # need to set eqn back to "1 * k * (theta - theta_eq)**2", as it is wrong not to fix the
-                                # bug which the foyer to GMSO conversion does not include the 1/2 constant
-                                # (end)
-                                # ***************************
-                                # ***************************
-                                # ***************************
-                                # ***************************
-
-                                [
-                                    angle_type_str_iter,
-                                    angle_eqn_scalar_iter,
-                                ] = evaluate_harmonic_angle_format_with_scaler(
-                                    angle_type_x.expression,
-                                    gomc_angle_form_with_scalar,
-                                )
-
-                                if (
-                                    angle_type_str_iter
-                                    != "HarmonicAnglePotential"
-                                ):
-                                    raise TypeError(
-                                        f"ERROR: The {res_x} residue does not have a "
-                                        f"{'HarmonicAnglePotential'} angle potential, which "
-                                        f"is the only supported angle potential."
-                                    )
-
-                                # the angle energy value is dependant of the non-bonded form
-                                angle_energy_value_LJ_units_iter = (
-                                    _check_convert_angle_k_constant_units(
-                                        str(angle_type_x.member_classes),
-                                        angle_eqn_scalar_iter
-                                        * angle_type_x.parameters["k"],
-                                        "kcal/mol/rad**2",
-                                    ).to_value("kcal/mol/rad**2")
-                                )
-
-                                if self.utilized_NB_expression == "LJ":
-                                    angle_energy_value_iter = np.round(
-                                        angle_energy_value_LJ_units_iter,
-                                        decimals=angle_k_kcal_per_mol_round_decimals,
-                                    )
-                                elif self.utilized_NB_expression in [
-                                    "Mie",
-                                    "Exp6",
-                                ]:
-                                    angle_energy_value_Mie_Exp6_units_iter = (
-                                        _check_convert_angle_k_constant_units(
-                                            str(angle_type_x.member_classes),
-                                            angle_eqn_scalar_iter
-                                            * angle_type_x.parameters["k"],
-                                            "K/rad**2",
-                                        ).to_value("K/rad**2")
-                                    )
-
-                                    angle_energy_value_iter = np.round(
-                                        angle_energy_value_Mie_Exp6_units_iter,
-                                        decimals=angle_k_Kelvin_round_decimals,
-                                    )
-
-                                angle_format = "{:10s} {:10s} {:10s} {:15s} {:15s} ! {:20s} {:20s} {:20s}\n"
-
-                                if (
-                                    (self.gomc_fix_bonds_angles is not None)
-                                    and (
-                                        str(res_x) in self.gomc_fix_bonds_angles
-                                    )
-                                ) or (
-                                    (
+                        ) or (
+                                (
                                         (self.gomc_fix_angles is not None)
-                                        and (str(res_x) in self.gomc_fix_angles)
-                                    )
-                                ):
-                                    fix_angle_k_value = "999999999999"
-                                    data.write(
-                                        angle_format.format(
-                                            base10_to_base52_alph(
-                                                self.atom_class_to_index_value_dict[
-                                                    f"{angle_members_iter[0]}_{res_x}"
-                                                ]
-                                            ),
-                                            base10_to_base52_alph(
-                                                self.atom_class_to_index_value_dict[
-                                                    f"{angle_members_iter[1]}_{res_x}"
-                                                ]
-                                            ),
-                                            base10_to_base52_alph(
-                                                self.atom_class_to_index_value_dict[
-                                                    f"{angle_members_iter[2]}_{res_x}"
-                                                ]
-                                            ),
-                                            str(fix_angle_k_value),
-                                            str(
-                                                np.round(
-                                                    angle_type_x.parameters[
-                                                        "theta_eq"
-                                                    ].to_value("degree"),
-                                                    decimals=angle_degree_round_decimals,
-                                                )
-                                            ),
-                                            f"{angle_members_iter[0]}_{res_x}",
-                                            f"{angle_members_iter[1]}_{res_x}",
-                                            f"{angle_members_iter[2]}_{res_x}",
+                                        and (
+                                                str(res_x)
+                                                in self.gomc_fix_angles
                                         )
-                                    )
+                                )
+                        ):
+                            fix_angle_k_value = "999999999999"
+                            data.write(
+                                angle_format.format(
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                            f"{res_x}_{angle_members_iter[0]}"
+                                        ],
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                            f"{res_x}_{angle_members_iter[1]}"
+                                        ],
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                            f"{res_x}_{angle_members_iter[2]}"
+                                        ],
+                                    str(fix_angle_k_value),
+                                    str(np.round(angle_type_x.parameters['theta_eq'].to_value('degree'),
+                                                 decimals=angle_degree_round_decimals)
+                                        ),
+                                    f"{angle_members_iter[0]}_{res_x}",
+                                    f"{angle_members_iter[1]}_{res_x}",
+                                    f"{angle_members_iter[2]}_{res_x}",
+                                )
+                            )
 
-                                else:
-                                    data.write(
-                                        angle_format.format(
-                                            base10_to_base52_alph(
-                                                self.atom_class_to_index_value_dict[
-                                                    f"{angle_members_iter[0]}_{res_x}"
-                                                ]
-                                            ),
-                                            base10_to_base52_alph(
-                                                self.atom_class_to_index_value_dict[
-                                                    f"{angle_members_iter[1]}_{res_x}"
-                                                ]
-                                            ),
-                                            base10_to_base52_alph(
-                                                self.atom_class_to_index_value_dict[
-                                                    f"{angle_members_iter[2]}_{res_x}"
-                                                ]
-                                            ),
-                                            str(angle_energy_value_iter),
-                                            str(
-                                                np.round(
-                                                    angle_type_x.parameters[
-                                                        "theta_eq"
-                                                    ].to_value("degree"),
-                                                    decimals=angle_degree_round_decimals,
-                                                )
-                                            ),
-                                            f"{angle_members_iter[0]}_{res_x}",
-                                            f"{angle_members_iter[1]}_{res_x}",
-                                            f"{angle_members_iter[2]}_{res_x}",
-                                        )
-                                    )
+                        else:
+                            data.write(
+                                angle_format.format(
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                            f"{res_x}_{angle_members_iter[0]}"
+                                        ],
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                            f"{res_x}_{angle_members_iter[1]}"
+                                        ],
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                            f"{res_x}_{angle_members_iter[2]}"
+                                        ],
+                                    str(angle_energy_value_iter),
+                                    str(np.round(angle_type_x.parameters['theta_eq'].to_value('degree'),
+                                                 decimals=angle_degree_round_decimals)
+                                        ),
+                                    f"{res_x}_{angle_members_iter[0]}",
+                                    f"{res_x}_{angle_members_iter[1]}",
+                                    f"{res_x}_{angle_members_iter[2]}",
+                                )
+                            )
+
 
                 # Dihedral coefficients
                 if len(self.topology_selection.dihedral_types):
@@ -2711,21 +2818,24 @@ class Charmm:
                     list_if_abs_max_values_for_dihedral_overall = []
                     list_dihedral_atoms_all_dihedral_overall = []
 
-                    data.write("\nDIHEDRALS * CHARMM\n")
+                    if self.utilized_NB_expression in ['LJ']:
+                        data.write("\nDIHEDRALS * CHARMM\n")
+                    elif self.utilized_NB_expression in ['Mie']:
+                        data.write("\nDIHEDRALS * Mie\n")
+                    elif self.utilized_NB_expression in ['Exp6']:
+                        data.write("\nDIHEDRALS * Exp6\n")
                     data.write("! \n")
                     data.write(
-                        "! V(dihedral) = Kchi(1 + cos(n(chi) - delta))\n"
+                        "! V(dihedral) = Kchi(1 + cos(n(chi) - delta)), where delta also called chi0 \n"
                     )
+                    data.write("! NOTE: For the CHARMM FF n=0 is a harmonic dihedral, which is not supported. "
+                               "CHARMM FF where n=0 -->  V(dihedral) = Kchi(chi - chi0)**2) \n")
                     data.write("! \n")
-                    data.write(
-                        "! Kchi: kcal/mol (LJ) and K/mol (Mie and Exp6)\n"
-                    )
+                    data.write("! Kchi: kcal/mol (LJ) and K (Mie and Exp6)\n")
                     data.write("! n: multiplicity\n")
                     data.write("! delta: degrees\n")
                     data.write("! \n")
-                    data.write(
-                        "! Kchi (kcal/mol) = Kchi_K (K) * Boltz. const.\n"
-                    )
+                    data.write("! Kchi (kcal/mol) = Kchi_K (K) * Boltz. const.\n")
                     data.write("! Boltzmann = 0.0019872041 kcal / (mol * K)\n")
                     data.write("! \n")
                     data.write(
@@ -2740,7 +2850,7 @@ class Charmm:
                             "extended_type_1",
                             "extended_type_2",
                             "extended_type_3",
-                            "extended_type_4",
+                            "extended_type_4"
                         )
                     )
 
@@ -2751,757 +2861,509 @@ class Charmm:
                 no_pi = np.pi
                 dihedral_steps = 5 * 10 ** (-3)
                 dihedral_range = 2 * no_pi
-                dihedral_no_steps = int(dihedral_range / dihedral_steps) + 1
+                dihedral_no_steps = (
+                        int(dihedral_range / dihedral_steps) + 1
+                )
 
-                for res_x in self.dihedral_types_dict_per_residue.keys():
-                    if self.dihedral_types_dict_per_residue[res_x] is not None:
-                        for (
-                            dihedral_type_x
-                        ) in self.dihedral_types_dict_per_residue[res_x][
-                            "dihedral_types"
-                        ]:
-                            if dihedral_type_x.member_classes is not None:
-                                dihedral_members_iter = (
-                                    dihedral_type_x.member_classes
-                                )
-                            elif dihedral_type_x.member_types is not None:
-                                dihedral_members_iter = (
-                                    dihedral_type_x.member_types
-                                )
-                                raise TypeError(
-                                    f"ERROR: The {res_x} residue has a least one dihedral member_types "
-                                    f"that is not None. "
-                                    f"Currently, the Charmm writer only supports the member_class "
-                                    f"designations for dihedrals."
-                                )
+                for dihedral_type_x in self.combinded_residue_dihedral_types:
+                    res_x = dihedral_type_x.__dict__['tags_']['resname']
+                    dihedral_members_iter = dihedral_type_x.member_types
+
+                    dihedral_type_str_iter = None
+                    dihedral_eqn_scalar_iter = None
+                    if dihedral_type_str_iter is None and dihedral_eqn_scalar_iter is None:
+                        # Check if OPLSTorsionPotential
+                        OPLSTorsionPotential_form_with_scalar = "0.5 * k0 + " \
+                                                                "0.5 * k1 * (1 + cos(phi)) + " \
+                                                                "0.5 * k2 * (1 - cos(2*phi)) + " \
+                                                                "0.5 * k3 * (1 + cos(3*phi)) + " \
+                                                                "0.5 * k4 * (1 - cos(4*phi))"
+                        [dihedral_type_str_iter, dihedral_eqn_scalar_iter] = \
+                            evaluate_OPLS_torsion_format_with_scaler(
+                                dihedral_type_x.expression,
+                                OPLSTorsionPotential_form_with_scalar
+                            )
+
+                    if dihedral_type_str_iter is None and dihedral_eqn_scalar_iter is None:
+                        # Check if RyckaertBellemansTorsionPotential
+                        RyckaertBellemansTorsionPotential_form_with_scalar = "c0 * cos(phi)**0 + " \
+                                                                             "c1 * cos(phi)**1 + " \
+                                                                             "c2 * cos(phi)**2 + " \
+                                                                             "c3 * cos(phi)**3 + " \
+                                                                             "c4 * cos(phi)**4 + " \
+                                                                             "c5 * cos(phi)**5"
+                        [dihedral_type_str_iter, dihedral_eqn_scalar_iter] = \
+                            evaluate_RB_torsion_format_with_scaler(
+                                dihedral_type_x.expression,
+                                RyckaertBellemansTorsionPotential_form_with_scalar
+                            )
+
+                    if dihedral_type_str_iter is None and dihedral_eqn_scalar_iter is None:
+                        # Check if PeriodicTorsionPotential
+                        PeriodicTorsionPotential_form_with_scalar = "k * (1 + cos(n * phi - phi_eq))"
+                        [dihedral_type_str_iter, dihedral_eqn_scalar_iter] = \
+                            evaluate_periodic_torsion_format_with_scaler(
+                                dihedral_type_x.expression,
+                                PeriodicTorsionPotential_form_with_scalar
+                            )
+
+                    if dihedral_type_str_iter is None and dihedral_eqn_scalar_iter is None:
+                        # Check if HarmonicTorsionPotential
+                        HarmonicTorsionPotential_form_with_scalar = "0.5 * k * (phi - phi_eq)**2"
+                        [dihedral_type_str_iter, dihedral_eqn_scalar_iter] = \
+                            evaluate_harmonic_torsion_format_with_scaler(
+                                dihedral_type_x.expression,
+                                HarmonicTorsionPotential_form_with_scalar
+                            )
+
+                    if dihedral_type_str_iter == 'HarmonicTorsionPotential':
+                        raise TypeError(f"ERROR: The {res_x} residue has a "
+                                        f"{'HarmonicTorsionPotential'} torsion potential, which "
+                                        f"is not currently supported in this writer."
+                                        )
+                    elif dihedral_type_str_iter is None and dihedral_eqn_scalar_iter is None:
+                        raise TypeError(f"ERROR: The {res_x} residue and associated force field "
+                                        f"has at least one unsupported dihdedral. "
+                                        f"The only supported dihedrals are "
+                                        f"{'OPLSTorsionPotential'}, {'PeriodicTorsionPotential'}, and "
+                                        f"{'RyckaertBellemansTorsionPotential'}."
+                                        )
+
+                    # convert dihedral to Periodic style
+                    if dihedral_type_str_iter == 'OPLSTorsionPotential':
+                        f0 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'k0'].to_value('kcal/mol', equivalence='thermal')
+                        f1 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'k1'].to_value('kcal/mol', equivalence='thermal')
+                        f2 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'k2'].to_value('kcal/mol', equivalence='thermal')
+                        f3 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'k3'].to_value('kcal/mol', equivalence='thermal')
+                        f4 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'k4'].to_value('kcal/mol', equivalence='thermal')
+
+                        [[K0, n0, d0],
+                         [K1, n1, d1],
+                         [K2, n2, d2],
+                         [K3, n3, d3],
+                         [K4, n4, d4],
+                         [K5, n5, d5]] = OPLS_to_periodic(f0, f1, f2, f3, f4)
+
+                    elif dihedral_type_str_iter == 'RyckaertBellemansTorsionPotential':
+                        c0 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'c0'].to_value('kcal/mol', equivalence='thermal')
+                        c1 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'c1'].to_value('kcal/mol', equivalence='thermal')
+                        c2 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'c2'].to_value('kcal/mol', equivalence='thermal')
+                        c3 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'c3'].to_value('kcal/mol', equivalence='thermal')
+                        c4 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'c4'].to_value('kcal/mol', equivalence='thermal')
+                        c5 = dihedral_eqn_scalar_iter * dihedral_type_x.parameters[
+                            'c5'].to_value('kcal/mol', equivalence='thermal')
+
+                        [[K0, n0, d0],
+                         [K1, n1, d1],
+                         [K2, n2, d2],
+                         [K3, n3, d3],
+                         [K4, n4, d4],
+                         [K5, n5, d5]] = RB_to_periodic(c0, c1, c2, c3, c4, c5)
+
+                    elif dihedral_type_str_iter == 'PeriodicTorsionPotential':
+                        # get the number of periodic dihedral
+                        dihedral_kx_ph_eqx_x_variables_set_iter = {'k', 'n', 'phi_eq'}
+
+                        # get k values
+                        if isinstance(dihedral_type_x.parameters['k'], u.array.unyt_quantity):
+                            periodic_dihedrals_k_values = u.unyt_array(
+                                [dihedral_type_x.parameters['k'].to_value('kcal/mol', equivalence='thermal')],
+                                'kcal/mol'
+                            )
+                        else:
+                            periodic_dihedrals_k_values = dihedral_type_x.parameters['k']
+
+                        periodic_dihedrals_k_values_len = len(periodic_dihedrals_k_values)
+
+                        # get n values
+                        if isinstance(dihedral_type_x.parameters['n'], u.array.unyt_quantity):
+                            periodic_dihedrals_n_values = u.unyt_array(
+                                [dihedral_type_x.parameters['n'].to_value('(dimensionless)')],
+                                '(dimensionless)'
+                            )
+                        else:
+                            periodic_dihedrals_n_values =dihedral_type_x.parameters['n']
+
+                        periodic_dihedrals_n_values_len = len(periodic_dihedrals_n_values)
+
+                        # get phi_eq values
+                        if isinstance(dihedral_type_x.parameters['phi_eq'], u.array.unyt_quantity):
+                            periodic_dihedrals_phi_eq_values = u.unyt_array(
+                                [dihedral_type_x.parameters['phi_eq'].to_value('degree')],
+                                'degree'
+                            )
+                        else:
+                            periodic_dihedrals_phi_eq_values = dihedral_type_x.parameters['phi_eq']
+
+                        periodic_dihedrals_phi_eq_values_len = len(periodic_dihedrals_phi_eq_values)
+
+                        if periodic_dihedrals_k_values_len == \
+                                periodic_dihedrals_n_values_len == \
+                                periodic_dihedrals_phi_eq_values_len:
+                            number_of_periodic_dihedrals_int = periodic_dihedrals_k_values_len
+
+                        else:
+                            print_error = f'ERROR: The periodic dihedral values ' \
+                                          f'{dihedral_kx_ph_eqx_x_variables_set_iter} ' \
+                                          f'do not have all the values for each set.'
+                            raise ValueError(print_error)
+
+                        # scale the Kx, nx, and phi_eqx to the kcal/mol values
+                        Kx_dihedral = dihedral_eqn_scalar_iter * \
+                                      periodic_dihedrals_k_values.to_value('kcal/mol', equivalence='thermal')
+                        nx_dihedral = periodic_dihedrals_n_values.to_value('(dimensionless)')
+                        phi_eqx_dihedral = periodic_dihedrals_phi_eq_values.to_value('degree')
+
+
+                        # sort the Kx, nx, and phi_eq values and put them in the
+                        # K0-K5, n0-n5, and phi_eq0-phi_eq5 form
+                        # set all the values initially to zero
+                        [
+                            [K0, n0, d0],
+                            [K1, n1, d1],
+                            [K2, n2, d2],
+                            [K3, n3, d3],
+                            [K4, n4, d4],
+                            [K5, n5, d5]
+                        ] = [
+                            [0, 0, 90],
+                            [0, 1, 0],
+                            [0, 2, 0],
+                            [0, 3, 0],
+                            [0, 4, 0],
+                            [0, 5, 0]
+                        ]
+
+
+                        # test if all n values unique
+                        unique_n_values_iter = []
+                        for periodic_j in range(0, number_of_periodic_dihedrals_int):
+                            Kx_dihedral_iter = Kx_dihedral[periodic_j]
+                            nx_dihedral_iter = nx_dihedral[periodic_j]
+                            phi_eqx_dihedral_iter = phi_eqx_dihedral[periodic_j]
+
+                            #for nx_dihedral_j in nx_dihedral_iter:
+                            if nx_dihedral_iter in unique_n_values_iter:
+                                print_error = f"ERROR: mulitple PeriodicTorsionPotential " \
+                                              f"n values of {nx_dihedral_iter} " \
+                                              f"were found for the same torsion. Only 1 of each " \
+                                              f"n values are allowed per PeriodicTorsionPotential."
+                                raise ValueError(print_error)
                             else:
-                                raise TypeError(
-                                    f"ERROR: The {res_x} residue has a least one dihderal member_types "
-                                    f"and member_classes that is not None. "
-                                    f"There may be an issue with the XML file."
-                                )
+                                unique_n_values_iter.append(nx_dihedral_iter)
 
-                            dihedral_type_str_iter = None
-                            dihedral_eqn_scalar_iter = None
-                            if (
-                                dihedral_type_str_iter is None
-                                and dihedral_eqn_scalar_iter is None
-                            ):
-                                # Check if OPLSTorsionPotential
-                                OPLSTorsionPotential_form_with_scalar = (
-                                    "0.5 * k0 + "
-                                    "0.5 * k1 * (1 + cos(phi)) + "
-                                    "0.5 * k2 * (1 - cos(2*phi)) + "
-                                    "0.5 * k3 * (1 + cos(3*phi)) + "
-                                    "0.5 * k4 * (1 - cos(4*phi))"
-                                )
-                                [
-                                    dihedral_type_str_iter,
-                                    dihedral_eqn_scalar_iter,
-                                ] = evaluate_OPLS_torsion_format_with_scaler(
-                                    dihedral_type_x.expression,
-                                    OPLSTorsionPotential_form_with_scalar,
-                                )
+                            # test if all n values are between 0 and 5
+                            if nx_dihedral_iter not in [0, 1, 2, 3, 4, 5]:
+                                print_value_error = "ERROR: The " \
+                                                     f"{dihedral_members_iter[0]}-" \
+                                                     f"{dihedral_members_iter[1]}-" \
+                                                     f"{dihedral_members_iter[2]}-" \
+                                                     f"{dihedral_members_iter[3]} " \
+                                                     f"dihedral " \
+                                                    f"{'PeriodicTorsionPotential'} " \
+                                                    "does not have n values from 0 to 5."
+                                raise ValueError(print_value_error)
 
-                            if (
-                                dihedral_type_str_iter is None
-                                and dihedral_eqn_scalar_iter is None
-                            ):
-                                # Check if OPLSTorsionPotential
-                                RyckaertBellemansTorsionPotential_form_with_scalar = (
-                                    "c0 * cos(phi)**0 + "
-                                    "c1 * cos(phi)**1 + "
-                                    "c2 * cos(phi)**2 + "
-                                    "c3 * cos(phi)**3 + "
-                                    "c4 * cos(phi)**4 + "
-                                    "c5 * cos(phi)**5"
-                                )
-                                [
-                                    dihedral_type_str_iter,
-                                    dihedral_eqn_scalar_iter,
-                                ] = evaluate_RB_torsion_format_with_scaler(
-                                    dihedral_type_x.expression,
-                                    RyckaertBellemansTorsionPotential_form_with_scalar,
-                                )
+                            # change the Kx, nx, and dx values to non-zero if they exist
+                            if  nx_dihedral_iter == 0:
+                                K0 = Kx_dihedral_iter * (1 + np.cos(- phi_eqx_dihedral_iter * np.pi / 180))
+                                n0 = nx_dihedral_iter
+                                d0 = phi_eqx_dihedral_iter
 
-                            if (
-                                dihedral_type_str_iter is None
-                                and dihedral_eqn_scalar_iter is None
-                            ):
-                                # Check if OPLSTorsionPotential
-                                PeriodicTorsionPotential_form_with_scalar = (
-                                    "k0 + "
-                                    "k1 * (1 + cos(1 * phi - phi_eq1)) + "
-                                    "k2 * (1 + cos(2 * phi - phi_eq2)) + "
-                                    "k3 * (1 + cos(3 * phi - phi_eq3)) + "
-                                    "k4 * (1 + cos(4 * phi - phi_eq4)) + "
-                                    "k5 * (1 + cos(5 * phi - phi_eq5))"
-                                )
-                                [
-                                    dihedral_type_str_iter,
-                                    dihedral_eqn_scalar_iter,
-                                ] = evaluate_periodic_torsion_format_with_scaler(
-                                    dihedral_type_x.expression,
-                                    PeriodicTorsionPotential_form_with_scalar,
-                                )
+                            elif nx_dihedral_iter == 1:
+                                K1 = Kx_dihedral_iter
+                                n1 = nx_dihedral_iter
+                                d1 = phi_eqx_dihedral_iter
 
-                            if (
-                                dihedral_type_str_iter is None
-                                and dihedral_eqn_scalar_iter is None
-                            ):
-                                # Check if HarmonicTorsionPotential
-                                HarmonicTorsionPotential_form_with_scalar = (
-                                    "0.5 * k * (phi - phi_eq)**2"
-                                )
-                                [
-                                    dihedral_type_str_iter,
-                                    dihedral_eqn_scalar_iter,
-                                ] = evaluate_harmonic_torsion_format_with_scaler(
-                                    dihedral_type_x.expression,
-                                    HarmonicTorsionPotential_form_with_scalar,
-                                )
+                            elif nx_dihedral_iter == 2:
+                                K2 = Kx_dihedral_iter
+                                n2 = nx_dihedral_iter
+                                d2 = phi_eqx_dihedral_iter
 
-                            if (
-                                dihedral_type_str_iter
-                                == "HarmonicTorsionPotential"
-                            ):
-                                raise TypeError(
-                                    f"ERROR: The {res_x} residue has a "
-                                    f"{'HarmonicTorsionPotential'} torsion potential, which "
-                                    f"is not currently supported in this writer."
-                                )
-                            elif (
-                                dihedral_type_str_iter is None
-                                and dihedral_eqn_scalar_iter is None
-                            ):
-                                raise TypeError(
-                                    f"ERROR: The {res_x} residue and associated force field "
-                                    f"has at least one unsupported dihdedral. "
-                                    f"The only supported dihedrals are {'HarmonicTorsionPotential'}, "
-                                    f"{'OPLSTorsionPotential'}, {'PeriodicTorsionPotential'}, and "
-                                    f"{'RyckaertBellemansTorsionPotential'}."
-                                )
+                            elif nx_dihedral_iter == 3:
+                                K3 = Kx_dihedral_iter
+                                n3 = nx_dihedral_iter
+                                d3 = phi_eqx_dihedral_iter
 
-                            # convert dihedral to CHARMM style
-                            if dihedral_type_str_iter == "OPLSTorsionPotential":
-                                f0 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k0"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                f1 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k1"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                f2 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k2"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                f3 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k3"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                f4 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k4"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
+                            elif nx_dihedral_iter == 4:
+                                K4 = Kx_dihedral_iter
+                                n4 = nx_dihedral_iter
+                                d4 = phi_eqx_dihedral_iter
 
-                                [
-                                    [K0, n0, d0],
-                                    [K1, n1, d1],
-                                    [K2, n2, d2],
-                                    [K3, n3, d3],
-                                    [K4, n4, d4],
-                                    [K5, n5, d5],
-                                ] = OPLS_to_CHARMM(f0, f1, f2, f3, f4)
+                            elif nx_dihedral_iter == 5:
+                                K5 = Kx_dihedral_iter
+                                n5 = nx_dihedral_iter
+                                d5 = phi_eqx_dihedral_iter
 
-                            elif (
-                                dihedral_type_str_iter
-                                == "RyckaertBellemansTorsionPotential"
-                            ):
-                                c0 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["c0"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                c1 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["c1"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                c2 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["c2"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                c3 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["c3"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                c4 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["c4"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                c5 = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["c5"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
 
-                                [
-                                    [K0, n0, d0],
-                                    [K1, n1, d1],
-                                    [K2, n2, d2],
-                                    [K3, n3, d3],
-                                    [K4, n4, d4],
-                                    [K5, n5, d5],
-                                ] = RB_to_CHARMM(c0, c1, c2, c3, c4, c5)
+                    # test dihedral conversion for errors
+                    input_dihedral_to_periodic_abs_diff = []
+                    for i in range(0, dihedral_no_steps + 1):
+                        phi = i * dihedral_steps
+                        psi = phi - no_pi
 
-                            elif (
-                                dihedral_type_str_iter
-                                == "PeriodicTorsionPotential"
-                            ):
-                                K0_input = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k0"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
+                        # calulate the periodic dihedral (PeriodicTorsionPotential)
+                        periodic_dihedral_calc = (
+                           K0 * (1 + np.cos(n0 * phi - d0 * no_pi / 180)) +
+                           K1 * (1 + np.cos(n1 * phi - d1 * no_pi / 180)) +
+                           K2 * (1 + np.cos(n2 * phi - d2 * no_pi / 180)) +
+                           K3 * (1 + np.cos(n3 * phi - d3 * no_pi / 180)) +
+                           K4 * (1 + np.cos(n4 * phi - d4 * no_pi / 180)) +
+                           K5 * (1 + np.cos(n5 * phi - d5 * no_pi / 180))
+                        )
 
-                                K1_input = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k1"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                d1_input = dihedral_type_x.parameters[
-                                    "phi_eq1"
-                                ].to_value("degree")
+                        if dihedral_type_str_iter == 'OPLSTorsionPotential':
+                            input_dihedral_calc = (
+                                    f0 / 2 +
+                                    f1 / 2 * (1 + np.cos(1 * phi)) +
+                                    f2 / 2 * (1 - np.cos(2 * phi)) +
+                                    f3 / 2 * (1 + np.cos(3 * phi)) +
+                                    f4 / 2 * (1 - np.cos(4 * phi))
 
-                                K2_input = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k2"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                d2_input = dihedral_type_x.parameters[
-                                    "phi_eq2"
-                                ].to_value("degree")
-
-                                K3_input = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k3"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                d3_input = dihedral_type_x.parameters[
-                                    "phi_eq3"
-                                ].to_value("degree")
-
-                                K4_input = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k4"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                d4_input = dihedral_type_x.parameters[
-                                    "phi_eq4"
-                                ].to_value("degree")
-
-                                K5_input = (
-                                    dihedral_eqn_scalar_iter
-                                    * dihedral_type_x.parameters["k5"].to_value(
-                                        "kcal/mol", equivalence="thermal"
-                                    )
-                                )
-                                d5_input = dihedral_type_x.parameters[
-                                    "phi_eq5"
-                                ].to_value("degree")
-
-                                K0 = K0_input
-                                n0 = 0
-                                d0 = 90.0
-
-                                K1 = K1_input
-                                n1 = 1
-                                d1 = d1_input
-
-                                K2 = K2_input
-                                n2 = 2
-                                d2 = d2_input
-
-                                K3 = K3_input
-                                n3 = 3
-                                d3 = d3_input
-
-                                K4 = K4_input
-                                n4 = 4
-                                d4 = d4_input
-
-                                K5 = K5_input
-                                n5 = 5
-                                d5 = d5_input
-
-                            # test dihedral conversion for errors
-                            input_dihedral_to_charmm_abs_diff = []
-                            for i in range(0, dihedral_no_steps + 1):
-                                phi = i * dihedral_steps
-                                psi = phi - no_pi
-
-                                # calulate the charmm dihedral (PeriodicTorsionPotential)
-                                charmm_dihedral_calc = (
-                                    K0
-                                    * (1 + np.cos(n0 * phi - d0 * no_pi / 180))
-                                    + K1
-                                    * (1 + np.cos(n1 * phi - d1 * no_pi / 180))
-                                    + K2
-                                    * (1 + np.cos(n2 * phi - d2 * no_pi / 180))
-                                    + K3
-                                    * (1 + np.cos(n3 * phi - d3 * no_pi / 180))
-                                    + K4
-                                    * (1 + np.cos(n4 * phi - d4 * no_pi / 180))
-                                    + K5
-                                    * (1 + np.cos(n5 * phi - d5 * no_pi / 180))
-                                )
-
-                                if (
-                                    dihedral_type_str_iter
-                                    == "OPLSTorsionPotential"
-                                ):
-                                    input_dihedral_calc = (
-                                        f0 / 2
-                                        + f1 / 2 * (1 + np.cos(1 * phi))
-                                        + f2 / 2 * (1 - np.cos(2 * phi))
-                                        + f3 / 2 * (1 + np.cos(3 * phi))
-                                        + f4 / 2 * (1 - np.cos(4 * phi))
-                                    )
-
-                                elif (
-                                    dihedral_type_str_iter
-                                    == "RyckaertBellemansTorsionPotential"
-                                ):
-                                    input_dihedral_calc = (
-                                        c0
-                                        + c1 * np.cos(psi) ** 1
-                                        + c2 * np.cos(psi) ** 2
-                                        + c3 * np.cos(psi) ** 3
-                                        + c4 * np.cos(psi) ** 4
-                                        + c5 * np.cos(psi) ** 5
-                                    )
-
-                                elif (
-                                    dihedral_type_str_iter
-                                    == "PeriodicTorsionPotential"
-                                ):
-                                    input_dihedral_calc = (
-                                        K0_input
-                                        + K1_input
-                                        * (
-                                            1
-                                            + np.cos(
-                                                1 * phi - d1_input * no_pi / 180
-                                            )
-                                        )
-                                        + K2_input
-                                        * (
-                                            1
-                                            + np.cos(
-                                                2 * phi - d2_input * no_pi / 180
-                                            )
-                                        )
-                                        + K3_input
-                                        * (
-                                            1
-                                            + np.cos(
-                                                3 * phi - d3_input * no_pi / 180
-                                            )
-                                        )
-                                        + K4_input
-                                        * (
-                                            1
-                                            + np.cos(
-                                                4 * phi - d4_input * no_pi / 180
-                                            )
-                                        )
-                                        + K5_input
-                                        * (
-                                            1
-                                            + np.cos(
-                                                5 * phi - d5_input * no_pi / 180
-                                            )
-                                        )
-                                    )
-
-                                input_to_charmm_absolute_difference = (
-                                    np.absolute(
-                                        input_dihedral_calc
-                                        - charmm_dihedral_calc
-                                    )
-                                )
-
-                                input_dihedral_to_charmm_abs_diff.append(
-                                    input_to_charmm_absolute_difference
-                                )
-                                list_if_large_error_dihedral_iteration = []
-                                list_abs_max_dihedral_iteration = []
-
-                                if max(
-                                    input_dihedral_to_charmm_abs_diff
-                                ) > 10 ** (-10):
-                                    list_if_large_error_dihedral_iteration.append(
-                                        1
-                                    )
-                                    list_abs_max_dihedral_iteration.append(
-                                        max(input_dihedral_to_charmm_abs_diff)
-                                    )
-
-                                    list_if_large_error_dihedral_overall.append(
-                                        1
-                                    )
-                                    list_if_largest_error_abs_values_for_dihedral_overall.append(
-                                        max(input_dihedral_to_charmm_abs_diff)
-                                    )
-
-                                    list_dihedral_overall_error.append(
-                                        f"{dihedral_members_iter[0]}_{res_x}, "
-                                        f"{dihedral_members_iter[1]}_{res_x}, "
-                                        f"{dihedral_members_iter[2]}_{res_x}, "
-                                        f"{dihedral_members_iter[3]}_{res_x}, "
-                                    )
-
-                                else:
-                                    list_if_large_error_dihedral_iteration.append(
-                                        0
-                                    )
-                                    list_if_abs_max_values_for_dihedral_overall.append(
-                                        max(input_dihedral_to_charmm_abs_diff)
-                                    )
-                                    list_dihedral_atoms_all_dihedral_overall.append(
-                                        f"{dihedral_members_iter[0]}_{res_x}, "
-                                        f"{dihedral_members_iter[1]}_{res_x}, "
-                                        f"{dihedral_members_iter[2]}_{res_x}, "
-                                        f"{dihedral_members_iter[3]}_{res_x}, "
-                                    )
-
-                            if self.utilized_NB_expression == "LJ":
-                                K0_output_energy_iter = np.round(
-                                    K0,
-                                    decimals=dihedral_k_kcal_per_mol_round_decimals,
-                                )
-                                K1_output_energy_iter = np.round(
-                                    K1,
-                                    decimals=dihedral_k_kcal_per_mol_round_decimals,
-                                )
-                                K2_output_energy_iter = np.round(
-                                    K2,
-                                    decimals=dihedral_k_kcal_per_mol_round_decimals,
-                                )
-                                K3_output_energy_iter = np.round(
-                                    K3,
-                                    decimals=dihedral_k_kcal_per_mol_round_decimals,
-                                )
-                                K4_output_energy_iter = np.round(
-                                    K4,
-                                    decimals=dihedral_k_kcal_per_mol_round_decimals,
-                                )
-                                K5_output_energy_iter = np.round(
-                                    K5,
-                                    decimals=dihedral_k_kcal_per_mol_round_decimals,
-                                )
-
-                            elif self.utilized_NB_expression in ["Mie", "Exp6"]:
-                                K0_output_energy_iter = np.round(
-                                    u.unyt_quantity(K0, "kcal/mol").to_value(
-                                        "K", equivalence="thermal"
-                                    ),
-                                    decimals=dihedral_k_Kelvin_round_decimals,
-                                )
-                                K1_output_energy_iter = np.round(
-                                    u.unyt_quantity(K1, "kcal/mol").to_value(
-                                        "K", equivalence="thermal"
-                                    ),
-                                    decimals=dihedral_k_Kelvin_round_decimals,
-                                )
-                                K2_output_energy_iter = np.round(
-                                    u.unyt_quantity(K2, "kcal/mol").to_value(
-                                        "K", equivalence="thermal"
-                                    ),
-                                    decimals=dihedral_k_Kelvin_round_decimals,
-                                )
-                                K3_output_energy_iter = np.round(
-                                    u.unyt_quantity(K3, "kcal/mol").to_value(
-                                        "K", equivalence="thermal"
-                                    ),
-                                    decimals=dihedral_k_Kelvin_round_decimals,
-                                )
-                                K4_output_energy_iter = np.round(
-                                    u.unyt_quantity(K4, "kcal/mol").to_value(
-                                        "K", equivalence="thermal"
-                                    ),
-                                    decimals=dihedral_k_Kelvin_round_decimals,
-                                )
-                                K5_output_energy_iter = np.round(
-                                    u.unyt_quantity(K5, "kcal/mol").to_value(
-                                        "K", equivalence="thermal"
-                                    ),
-                                    decimals=dihedral_k_Kelvin_round_decimals,
-                                )
-
-                            # **************************************
-                            # check the error between the convertions of RB_tortions to CHARMM DIHEDRALS (end)
-                            # **************************************
-                            dihedral_format = (
-                                "{:10s} {:10s} {:10s} {:10s} {:15s} {:10s} {:15s} "
-                                "! {:20s} {:20s} {:20s} {:20s}\n"
                             )
 
-                            # write charmm dihedral K0 (zero order dihedral --- a constant) if Mie or Exp6,
-                            # but not written for CHARMM as the K0 constant is defined as a
-                            # harmonic function in CHARMM.
-                            if self.utilized_NB_expression in ["Mie", "Exp6"]:
-                                data.write(
-                                    dihedral_format.format(
-                                        base10_to_base52_alph(
-                                            self.atom_class_to_index_value_dict[
-                                                f"{dihedral_members_iter[0]}_{res_x}"
-                                            ]
-                                        ),
-                                        base10_to_base52_alph(
-                                            self.atom_class_to_index_value_dict[
-                                                f"{dihedral_members_iter[1]}_{res_x}"
-                                            ]
-                                        ),
-                                        base10_to_base52_alph(
-                                            self.atom_class_to_index_value_dict[
-                                                f"{dihedral_members_iter[2]}_{res_x}"
-                                            ]
-                                        ),
-                                        base10_to_base52_alph(
-                                            self.atom_class_to_index_value_dict[
-                                                f"{dihedral_members_iter[3]}_{res_x}"
-                                            ]
-                                        ),
-                                        str(K0_output_energy_iter),
-                                        str(int(n0)),
-                                        str(
-                                            np.round(
-                                                d0,
-                                                decimals=dihedral_phase_degree_round_decimals,
-                                            )
-                                        ),
-                                        f"{dihedral_members_iter[0]}_{res_x}",
-                                        f"{dihedral_members_iter[1]}_{res_x}",
-                                        f"{dihedral_members_iter[2]}_{res_x}",
-                                        f"{dihedral_members_iter[3]}_{res_x}",
-                                    )
-                                )
+                        elif dihedral_type_str_iter == 'RyckaertBellemansTorsionPotential':
+                            input_dihedral_calc = (
+                                    c0 +
+                                    c1 * np.cos(psi)**1 +
+                                    c2 * np.cos(psi)**2 +
+                                    c3 * np.cos(psi)**3 +
+                                    c4 * np.cos(psi)**4 +
+                                    c5 * np.cos(psi)**5
+                            )
 
-                            # write charmm dihedral K1 (first order dihedral)
+                        elif dihedral_type_str_iter == 'PeriodicTorsionPotential':
+                            input_dihedral_calc = (
+                                    K0 * (1 + np.cos(0 * phi - d0 * no_pi / 180)) +
+                                    K1 * (1 + np.cos(1 * phi - d1 * no_pi / 180)) +
+                                    K2 * (1 + np.cos(2 * phi - d2 * no_pi / 180)) +
+                                    K3 * (1 + np.cos(3 * phi - d3 * no_pi / 180)) +
+                                    K4 * (1 + np.cos(4 * phi - d4 * no_pi / 180)) +
+                                    K5 * (1 + np.cos(5 * phi - d5 * no_pi / 180))
+                            )
+
+                        input_to_periodic_absolute_difference = np.absolute(
+                                    input_dihedral_calc - periodic_dihedral_calc
+                        )
+
+                        input_dihedral_to_periodic_abs_diff.append(input_to_periodic_absolute_difference)
+                        list_if_large_error_dihedral_iteration = []
+                        list_abs_max_dihedral_iteration = []
+
+                        if max(input_dihedral_to_periodic_abs_diff) > 10 ** (-10):
+                            list_if_large_error_dihedral_iteration.append(1)
+                            list_abs_max_dihedral_iteration.append(
+                                max(input_dihedral_to_periodic_abs_diff)
+                            )
+
+                            list_if_large_error_dihedral_overall.append(1)
+                            list_if_largest_error_abs_values_for_dihedral_overall.append(
+                                max(input_dihedral_to_periodic_abs_diff))
+
+                            list_dihedral_overall_error.append(
+                                f"{res_x}_{dihedral_members_iter[0]}, "
+                                f"{res_x}_{dihedral_members_iter[1]}, "
+                                f"{res_x}_{dihedral_members_iter[2]}, "
+                                f"{res_x}_{dihedral_members_iter[3]}, "
+                            )
+
+                        else:
+                            list_if_large_error_dihedral_iteration.append(0)
+                            list_if_abs_max_values_for_dihedral_overall.append(
+                                max(input_dihedral_to_periodic_abs_diff))
+                            list_dihedral_atoms_all_dihedral_overall.append(
+                                f"{res_x}_{dihedral_members_iter[0]}, "
+                                f"{res_x}_{dihedral_members_iter[1]}, "
+                                f"{res_x}_{dihedral_members_iter[2]}, "
+                                f"{res_x}_{dihedral_members_iter[3]}, "
+                            )
+
+
+                    if self.utilized_NB_expression == 'LJ':
+                        # K0_output_energy_iter in LJ CHARMM format is only a harmonic dihedral,
+                        # which is not included yet because GOMC currently only treats K0 as a constant,
+                        # not a harmonic dihedral.
+                        K1_output_energy_iter = np.round(K1, decimals=dihedral_k_kcal_per_mol_round_decimals)
+                        K2_output_energy_iter = np.round(K2, decimals=dihedral_k_kcal_per_mol_round_decimals)
+                        K3_output_energy_iter = np.round(K3, decimals=dihedral_k_kcal_per_mol_round_decimals)
+                        K4_output_energy_iter = np.round(K4, decimals=dihedral_k_kcal_per_mol_round_decimals)
+                        K5_output_energy_iter = np.round(K5, decimals=dihedral_k_kcal_per_mol_round_decimals)
+
+                    elif self.utilized_NB_expression in ['Mie', 'Exp6']:
+                        K0_output_energy_iter = np.round(
+                            u.unyt_quantity(K0, 'kcal/mol').to_value('K', equivalence='thermal'),
+                            decimals=dihedral_k_Kelvin_round_decimals
+                        )
+                        K1_output_energy_iter = np.round(
+                            u.unyt_quantity(K1, 'kcal/mol').to_value('K', equivalence='thermal'),
+                            decimals=dihedral_k_Kelvin_round_decimals
+                        )
+                        K2_output_energy_iter = np.round(
+                            u.unyt_quantity(K2, 'kcal/mol').to_value('K', equivalence='thermal'),
+                            decimals=dihedral_k_Kelvin_round_decimals
+                        )
+                        K3_output_energy_iter = np.round(
+                            u.unyt_quantity(K3, 'kcal/mol').to_value('K', equivalence='thermal'),
+                            decimals=dihedral_k_Kelvin_round_decimals
+                        )
+                        K4_output_energy_iter = np.round(
+                            u.unyt_quantity(K4, 'kcal/mol').to_value('K', equivalence='thermal'),
+                            decimals=dihedral_k_Kelvin_round_decimals
+                        )
+                        K5_output_energy_iter = np.round(
+                            u.unyt_quantity(K5, 'kcal/mol').to_value('K', equivalence='thermal'),
+                            decimals=dihedral_k_Kelvin_round_decimals
+                        )
+
+
+                    # **************************************
+                    # check the error between the convertions of RB_tortions to Periodic DIHEDRALS (end)
+                    # **************************************
+                    dihedral_format = "{:10s} {:10s} {:10s} {:10s} {:15s} {:10s} {:15s} " \
+                                      "! {:20s} {:20s} {:20s} {:20s}\n"
+
+                    # get the dihedral atoms
+                    dihedral_atom_0 = self.mosdef_atom_name_to_atom_type_dict[
+                        f"{res_x}_{dihedral_members_iter[0]}"
+                    ]
+                    dihedral_atom_1 = self.mosdef_atom_name_to_atom_type_dict[
+                        f"{res_x}_{dihedral_members_iter[1]}"
+                    ]
+                    dihedral_atom_2 = self.mosdef_atom_name_to_atom_type_dict[
+                        f"{res_x}_{dihedral_members_iter[2]}"
+                    ]
+                    dihedral_atom_3 = self.mosdef_atom_name_to_atom_type_dict[
+                        f"{res_x}_{dihedral_members_iter[3]}"
+                    ]
+
+                    # write charmm dihedral K0 (zero order dihedral --- a constant) if Mie or Exp6,
+                    # but not written for periodic as the K0 constant is defined as a
+                    # harmonic potential function in periodic.
+                    if self.utilized_NB_expression in ['Mie', 'Exp6']:
+                        # write charmm dihedral K0 (harmonic dihedral)
+                        if K0_output_energy_iter != 0:
                             data.write(
                                 dihedral_format.format(
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[0]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[1]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[2]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[3]}_{res_x}"
-                                        ]
-                                    ),
-                                    str(K1_output_energy_iter),
-                                    str(int(n1)),
-                                    str(
-                                        np.round(
-                                            d1,
-                                            decimals=dihedral_phase_degree_round_decimals,
-                                        )
-                                    ),
-                                    f"{dihedral_members_iter[0]}_{res_x}",
-                                    f"{dihedral_members_iter[1]}_{res_x}",
-                                    f"{dihedral_members_iter[2]}_{res_x}",
-                                    f"{dihedral_members_iter[3]}_{res_x}",
+                                    dihedral_atom_0,
+                                    dihedral_atom_1,
+                                    dihedral_atom_2,
+                                    dihedral_atom_3,
+                                    str(K0_output_energy_iter),
+                                    str(int(n0)),
+                                    str(np.round(d0, decimals=dihedral_phase_degree_round_decimals)),
+                                    f"{res_x}_{dihedral_members_iter[0]}",
+                                    f"{res_x}_{dihedral_members_iter[1]}",
+                                    f"{res_x}_{dihedral_members_iter[2]}",
+                                    f"{res_x}_{dihedral_members_iter[3]}",
                                 )
                             )
 
-                            # write charmm dihedral K2 (second order dihedral)
-                            data.write(
-                                dihedral_format.format(
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[0]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[1]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[2]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[3]}_{res_x}"
-                                        ]
-                                    ),
-                                    str(K2_output_energy_iter),
-                                    str(int(n2)),
-                                    str(
-                                        np.round(
-                                            d2,
-                                            decimals=dihedral_phase_degree_round_decimals,
-                                        )
-                                    ),
-                                    f"{dihedral_members_iter[0]}_{res_x}",
-                                    f"{dihedral_members_iter[1]}_{res_x}",
-                                    f"{dihedral_members_iter[2]}_{res_x}",
-                                    f"{dihedral_members_iter[3]}_{res_x}",
-                                )
+                    # write charmm dihedral K1 (first order periodic dihedral)
+                    if (K1_output_energy_iter == 0 \
+                            and K2_output_energy_iter == 0 \
+                            and K3_output_energy_iter == 0 \
+                            and K4_output_energy_iter == 0 \
+                            and K5_output_energy_iter == 0
+                    ) \
+                            or (K1_output_energy_iter != 0):
+                        data.write(
+                            dihedral_format.format(
+                                dihedral_atom_0,
+                                dihedral_atom_1,
+                                dihedral_atom_2,
+                                dihedral_atom_3,
+                                str(K1_output_energy_iter),
+                                str(int(n1)),
+                                str(np.round(d1, decimals=dihedral_phase_degree_round_decimals)),
+                                f"{res_x}_{dihedral_members_iter[0]}",
+                                f"{res_x}_{dihedral_members_iter[1]}",
+                                f"{res_x}_{dihedral_members_iter[2]}",
+                                f"{res_x}_{dihedral_members_iter[3]}",
                             )
+                        )
 
-                            # write charmm dihedral K3 (third order dihedral)
-                            data.write(
-                                dihedral_format.format(
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[0]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[1]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[2]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[3]}_{res_x}"
-                                        ]
-                                    ),
-                                    str(K3_output_energy_iter),
-                                    str(int(n3)),
-                                    str(
-                                        np.round(
-                                            d3,
-                                            decimals=dihedral_phase_degree_round_decimals,
-                                        )
-                                    ),
-                                    f"{dihedral_members_iter[0]}_{res_x}",
-                                    f"{dihedral_members_iter[1]}_{res_x}",
-                                    f"{dihedral_members_iter[2]}_{res_x}",
-                                    f"{dihedral_members_iter[3]}_{res_x}",
-                                )
+                    # write charmm dihedral K2 (second order periodic dihedral)
+                    if K2_output_energy_iter != 0:
+                        data.write(
+                            dihedral_format.format(
+                                dihedral_atom_0,
+                                dihedral_atom_1,
+                                dihedral_atom_2,
+                                dihedral_atom_3,
+                                str(K2_output_energy_iter),
+                                str(int(n2)),
+                                str(np.round(d2, decimals=dihedral_phase_degree_round_decimals)),
+                                f"{res_x}_{dihedral_members_iter[0]}",
+                                f"{res_x}_{dihedral_members_iter[1]}",
+                                f"{res_x}_{dihedral_members_iter[2]}",
+                                f"{res_x}_{dihedral_members_iter[3]}",
                             )
+                        )
 
-                            # write charmm dihedral K4 (first order dihedral)
-                            data.write(
-                                dihedral_format.format(
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[0]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[1]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[2]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[3]}_{res_x}"
-                                        ]
-                                    ),
-                                    str(K4_output_energy_iter),
-                                    str(int(n4)),
-                                    str(
-                                        np.round(
-                                            d4,
-                                            decimals=dihedral_phase_degree_round_decimals,
-                                        )
-                                    ),
-                                    f"{dihedral_members_iter[0]}_{res_x}",
-                                    f"{dihedral_members_iter[1]}_{res_x}",
-                                    f"{dihedral_members_iter[2]}_{res_x}",
-                                    f"{dihedral_members_iter[3]}_{res_x}",
-                                )
+                    # write charmm dihedral K3 (third order periodic dihedral)
+                    if K3_output_energy_iter != 0:
+                        data.write(
+                            dihedral_format.format(
+                                dihedral_atom_0,
+                                dihedral_atom_1,
+                                dihedral_atom_2,
+                                dihedral_atom_3,
+                                str(K3_output_energy_iter),
+                                str(int(n3)),
+                                str(np.round(d3, decimals=dihedral_phase_degree_round_decimals)),
+                                f"{res_x}_{dihedral_members_iter[0]}",
+                                f"{res_x}_{dihedral_members_iter[1]}",
+                                f"{res_x}_{dihedral_members_iter[2]}",
+                                f"{res_x}_{dihedral_members_iter[3]}",
                             )
+                        )
 
-                            # write charmm dihedral K5 (fifth order dihedral)
-                            data.write(
-                                dihedral_format.format(
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[0]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[1]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[2]}_{res_x}"
-                                        ]
-                                    ),
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            f"{dihedral_members_iter[3]}_{res_x}"
-                                        ]
-                                    ),
-                                    str(K5_output_energy_iter),
-                                    str(int(n5)),
-                                    str(
-                                        np.round(
-                                            d5,
-                                            decimals=dihedral_phase_degree_round_decimals,
-                                        )
-                                    ),
-                                    f"{dihedral_members_iter[0]}_{res_x}",
-                                    f"{dihedral_members_iter[1]}_{res_x}",
-                                    f"{dihedral_members_iter[2]}_{res_x}",
-                                    f"{dihedral_members_iter[3]}_{res_x}",
-                                )
+                    # write charmm dihedral K4 (fourth order periodic dihedral)
+                    if K4_output_energy_iter != 0:
+                        data.write(
+                            dihedral_format.format(
+                                dihedral_atom_0,
+                                dihedral_atom_1,
+                                dihedral_atom_2,
+                                dihedral_atom_3,
+                                str(K4_output_energy_iter),
+                                str(int(n4)),
+                                str(np.round(d4, decimals=dihedral_phase_degree_round_decimals)),
+                                f"{res_x}_{dihedral_members_iter[0]}",
+                                f"{res_x}_{dihedral_members_iter[1]}",
+                                f"{res_x}_{dihedral_members_iter[2]}",
+                                f"{res_x}_{dihedral_members_iter[3]}",
                             )
+                        )
+
+                    # write charmm dihedral K5 (fifth order periodic dihedral)
+                    if K5_output_energy_iter != 0:
+                        data.write(
+                            dihedral_format.format(
+                                dihedral_atom_0,
+                                dihedral_atom_1,
+                                dihedral_atom_2,
+                                dihedral_atom_3,
+                                str(K5_output_energy_iter),
+                                str(int(n5)),
+                                str(np.round(d5, decimals=dihedral_phase_degree_round_decimals)),
+                                f"{res_x}_{dihedral_members_iter[0]}",
+                                f"{res_x}_{dihedral_members_iter[1]}",
+                                f"{res_x}_{dihedral_members_iter[2]}",
+                                f"{res_x}_{dihedral_members_iter[3]}",
+                            )
+                        )
+
 
                 if len(self.topology_selection.dihedral_types):
                     if sum(list_if_large_error_dihedral_overall) > 0:
@@ -3509,81 +3371,403 @@ class Charmm:
                             list_if_largest_error_abs_values_for_dihedral_overall
                         )
                         info_if_dihedral_error_too_large = (
-                            f"! WARNING: The input dihedral type(s) to "
-                            f"CHARMM dihedral conversion error"
-                            f" is to large [error > 10^(-10)] \n"
-                            f"! WARNING: Maximum( "
-                            f"|(input dihedral calc)-(CHARMM dihedral calc)| ) =  "
-                            f"{list_max_error_abs_dihedral_overall}\n"
+                                f"! WARNING: The input dihedral type(s) to "
+                                f"periodic dihedral conversion error"
+                                f" is to large [error > 10^(-10)] \n"
+                                f"! WARNING: Maximum( "
+                                f"|(input dihedral calc)-(periodic dihedral calc)| ) =  "
+                                f"{list_max_error_abs_dihedral_overall}\n"
                         )
-                        warn(info_if_dihedral_error_too_large)
+                        warn(info_if_dihedral_error_too_large
+                        )
                         data.write(info_if_dihedral_error_too_large)
                         print(info_if_dihedral_error_too_large)
                     else:
-                        list_if_abs_max_values_for_dihedral_overall_max = max(
-                            list_if_abs_max_values_for_dihedral_overall
+                        list_if_abs_max_values_for_dihedral_overall_max = (
+                            max(list_if_abs_max_values_for_dihedral_overall)
                         )
                         info_if_dihedral_error_ok = (
-                            f"! The input dihedral to CHARMM dihedral conversion error is OK "
-                            f"[error <= 10^(-10)]\n"
-                            f"! Maximum( |(input dihedral calc)-(CHARMM dihedral calc)| ) =  "
-                            f"{list_if_abs_max_values_for_dihedral_overall_max}\n"
+                                f"! The input dihedral to periodic dihedral conversion error is OK "
+                                f"[error <= 10^(-10)]\n"
+                                f"! Maximum( |(input dihedral calc)-(periodic dihedral calc)| ) =  "
+                                f"{list_if_abs_max_values_for_dihedral_overall_max}\n"
                         )
                         data.write(info_if_dihedral_error_ok)
                         print(info_if_dihedral_error_ok)
 
+
                 # Improper coefficients
                 if len(self.topology_selection.improper_types):
+                    if self.utilized_NB_expression in ['Mie', 'Exp6']:
+                        print_error = f"ERROR: Currently, the Mie and Exp6 potentials do not support impropers."
+                        raise ValueError(print_error)
+
+                    if self.utilized_NB_expression in ['LJ']:
+                        data.write("\nIMPROPER * CHARMM\n")
+                    elif self.utilized_NB_expression in ['Mie']:
+                        data.write("\nIMPROPER * Mie\n")
+                    elif self.utilized_NB_expression in ['Exp6']:
+                        data.write("\nIMPROPER * Exp6\n")
+                    data.write("! \n")
                     data.write(
-                        "! ERROR: Impropers were found, however, "
-                        "this writer currently does not support impropers. "
-                        "Also, GOMC is not currently able to use improper in its calculations."
+                        "! V(dihedral) = Kw(1 + cos(n(w) - w0))\n"
                     )
+                    data.write("! NOTE: For the CHARMM FF n=0 is a harmonic improper. "
+                               "CHARMM FF where n=0 -->  V(improper) = Kw(w - w0)**2) \n")
+                    data.write("! \n")
+                    data.write("! Kw: kcal/mol (LJ) and K (Mie and Exp6)\n")
+                    data.write("! n: multiplicity\n")
+                    data.write("! delta: degrees\n")
+                    data.write("! \n")
+                    data.write("! Kw (kcal/mol) = Kw_K (K) * Boltz. const.\n")
+                    data.write("! Boltzmann = 0.0019872041 kcal / (mol * K)\n")
+                    data.write("! \n")
+                    data.write(
+                        "! {:8s} {:10s} {:10s} {:10s} {:15s} {:10s} {:15s} ! {:20s} {:20s} {:20s} {:20s}\n".format(
+                            "type_1",
+                            "type_2",
+                            "type_3",
+                            "type_4",
+                            "Kw",
+                            "n",
+                            "w0",
+                            "extended_type_1",
+                            "extended_type_2",
+                            "extended_type_3",
+                            "extended_type_4"
+                        )
+                    )
+
+                improper_k_kcal_per_mol_round_decimals = 6
+                improper_k_Kelvin_round_decimals = 4
+                improper_phase_degree_round_decimals = 6
+
+                for improper_type_x in self.combinded_residue_improper_types:
+                    res_x = improper_type_x.__dict__['tags_']['resname']
+                    improper_members_iter = improper_type_x.member_types
+
+                    improper_type_str_iter = None
+                    improper_eqn_scalar_iter = None
+                    if improper_type_str_iter is None and improper_eqn_scalar_iter is None:
+                        # Check if HarmonicImproperPotential
+                        HarmonicImproperPotential_form_with_scalar = "k * (phi - phi_eq)**2"
+
+                        [improper_type_str_iter, improper_eqn_scalar_iter] = \
+                            evaluate_harmonic_improper_format_with_scaler(
+                                improper_type_x.expression,
+                                HarmonicImproperPotential_form_with_scalar
+                            )
+
+                    if improper_type_str_iter is None and improper_eqn_scalar_iter is None:
+                        # Check if PeriodicImproperPotential
+                        PeriodicImproperPotential_form_with_scalar = "k * (1 + cos(n * phi - phi_eq))"
+
+                        [improper_type_str_iter, improper_eqn_scalar_iter] = \
+                            evaluate_periodic_improper_format_with_scaler(
+                                improper_type_x.expression,
+                                PeriodicImproperPotential_form_with_scalar
+                            )
+
+                    elif improper_type_str_iter is None and improper_eqn_scalar_iter is None:
+                        raise TypeError(f"ERROR: The {res_x} residue and associated force field "
+                                        f"has at least one unsupported dihdedral. "
+                                        f"The only supported impropers is the "
+                                        f" {'PeriodicImproperPotential'}."
+                                        )
+
+                    # determine the allowable variables per the improper types
+                    improper_type_x_parameters_keys_list = list(improper_type_x.parameters.keys())
+                    if improper_type_str_iter == 'HarmonicImproperPotential':
+                        raise TypeError(f"ERROR: The {res_x} residue has a "
+                                        f"{'HarmonicImproperPotential'} torsion potential, which "
+                                        f"is not currently supported in this writer."
+                                        )
+                        '''
+                        
+                        # KEEP THIS FOR LATER
+                        # this section of code is not currently will but will work when GMSO
+                        # is able to support both harmonic and periodic improper together
+                                                
+                        improper_k0_phi_eq0_n0_variables_set_iter = {'k', 'phi_eq'} # no n variables here
+                        #improper_all_k_n_phi_eq_variables_set_iter = set()
+                        improper_all_k_n_phi_eq_variables_set_iter = sorted(
+                                set.union(
+                                    improper_k0_phi_eq0_n0_variables_set_iter,
+                                )
+                        )
+                        '''
+
+                    elif improper_type_str_iter == 'PeriodicImproperPotential':
+                        improper_kx_ph_eqx_x_variables_set_iter = {'k', 'n', 'phi_eq'}
+                        improper_all_k_n_phi_eq_variables_set_iter = set()
+                        improper_all_k_n_phi_eq_variables_set_iter = sorted(
+                            set.union(
+                                improper_kx_ph_eqx_x_variables_set_iter,
+                            )
+                        )
+
+                    # see of the improper variables are of the correct type
+                    for improper_type_x_parameters_key_i in improper_type_x_parameters_keys_list:
+                        if improper_type_x_parameters_key_i not in improper_all_k_n_phi_eq_variables_set_iter:
+                            print_error = f"ERROR: In molecule or residue {res_x}, " \
+                                          f"the {improper_type_str_iter} " \
+                                          f"types variables for the improper " \
+                                          f"{improper_members_iter[0]}-" \
+                                          f"{improper_members_iter[1]}-"\
+                                          f"{improper_members_iter[2]}-"\
+                                          f"{improper_members_iter[3]} " \
+                                          f"are {improper_type_x_parameters_keys_list}, "\
+                                          f"not the required types " \
+                                          f"{improper_all_k_n_phi_eq_variables_set_iter}."
+                            raise ValueError(print_error)
+
+                    # get the improper values in k = kcal/mol, n= integer and phi_eq = degrees
+                    if improper_type_str_iter == 'HarmonicImproperPotential':
+
+                        '''
+                        # KEEP THIS FOR LATER
+                        # this section of code is not currently will but will work when GMSO
+                        # is able to support both harmonic and periodic improper together
+                        
+                        for improper_iter_i in improper_k0_phi_eq0_n0_variables_set_iter:
+                            if improper_iter_i not in improper_type_x_parameters_keys_list:
+                                print_error = f"ERROR: In molecule or residue {res_x}, " \
+                                              f"the {'HarmonicImproperPotential'} "\
+                                              f"types variables for the improper "\
+                                              f"{improper_members_iter[0]}-"\
+                                              f"{improper_members_iter[1]}-"\
+                                              f"{improper_members_iter[2]}-"\
+                                              f"{improper_members_iter[3]} "\
+                                              f"are {improper_type_x_parameters_keys_list}, " \
+                                              f"not the required types" \
+                                              f"{improper_k0_phi_eq0_n0_variables_set_iter}."
+                                raise ValueError(print_error)
+
+                        K0_improper = dihedral_eqn_scalar_iter * improper_type_x.parameters[
+                            'k'].to_value('kcal/mol', equivalence='thermal')
+                        n0_improper = 0
+                        phi_eq0_improper = improper_type_x.parameters['phi_eq'].to_value('degree')
+                        '''
+
+                    elif improper_type_str_iter == 'PeriodicImproperPotential':
+                        # get the number of periodic impropers
+                        #for improper_iter_i in improper_kx_ph_eqx_x_variables_set_iter:
+
+                        # get k values
+                        if isinstance(improper_type_x.parameters['k'], u.array.unyt_quantity):
+                            periodic_impropers_k_values = u.unyt_array(
+                                [improper_type_x.parameters['k'].to_value('kcal/mol', equivalence='thermal')],
+                                'kcal/mol'
+                            )
+                        else:
+                            periodic_impropers_k_values = improper_type_x.parameters['k']
+
+                        periodic_impropers_k_values_len = len(periodic_impropers_k_values)
+
+                        # get n values
+                        if isinstance(improper_type_x.parameters['n'], u.array.unyt_quantity):
+                            periodic_impropers_n_values = u.unyt_array(
+                                [improper_type_x.parameters['n'].to_value('(dimensionless)')],
+                                '(dimensionless)'
+                            )
+                        else:
+                            periodic_impropers_n_values = improper_type_x.parameters['n']
+
+                        periodic_improper_n_values_len = len(periodic_impropers_n_values)
+
+                        # get phi_eq values
+                        if isinstance(improper_type_x.parameters['phi_eq'], u.array.unyt_quantity):
+                            periodic_impropers_phi_eq_values = u.unyt_array(
+                                [improper_type_x.parameters['phi_eq'].to_value('degree')],
+                                'degree'
+                            )
+                        else:
+                            periodic_impropers_phi_eq_values = improper_type_x.parameters['phi_eq']
+
+                        periodic_improper_phi_eq_values_len = len(periodic_impropers_phi_eq_values)
+
+                        """
+                        periodic_impropers_k_values = len(
+                            improper_type_x.parameters['k']
+                        )
+                        periodic_impropers_n_values = len(
+                             improper_type_x.parameters['n']
+                        )
+                        periodic_impropers_phi_eq_values = len(
+                            improper_type_x.parameters['phi_eq']
+                        )
+                        """
+
+                        if periodic_impropers_k_values_len == \
+                                periodic_improper_n_values_len == \
+                                periodic_improper_phi_eq_values_len:
+                            number_of_periodic_impropers_int = periodic_impropers_k_values_len
+
+                        else:
+                            print_error = f'ERROR: The periodic improper values ' \
+                                          f'{improper_kx_ph_eqx_x_variables_set_iter} ' \
+                                          f'do not have all the values for each set.'
+                            raise ValueError(print_error)
+
+                        # scale the Kx, nx, and phi_eqx to the kcal/mol values
+                        Kx_improper = improper_eqn_scalar_iter * \
+                                      periodic_impropers_k_values.to_value('kcal/mol', equivalence='thermal')
+                        nx_improper = periodic_impropers_n_values.to_value('(dimensionless)')
+                        phi_eqx_improper = periodic_impropers_phi_eq_values.to_value('degree')
+
+                        # test if all n values unique and Check if the any of the impropers is zero
+                        unique_n_values_improper_iter = []
+                        for periodic_j in range(0, number_of_periodic_impropers_int):
+                            nx_improper_iter = nx_improper[periodic_j]
+
+                            # for nx_improper_j in nx_dihedral_iter:
+                            if nx_improper_iter in unique_n_values_improper_iter:
+                                print_error = f"ERROR: mulitple PeriodicImproperPotential " \
+                                              f"n values of {nx_improper_iter} " \
+                                              f"were found for the same improper. Only 1 of each " \
+                                              f"n values are allowed per PeriodicImproperPotential."
+                                raise ValueError(print_error)
+                            else:
+                                unique_n_values_improper_iter.append(nx_improper_iter)
+
+                            nx_improper_iter = nx_improper[periodic_j]
+                            if nx_improper_iter not in [1, 2, 3, 4, 5]:
+                                print_value_error = "ERROR: The " \
+                                                    f"{improper_members_iter[0]}-" \
+                                                    f"{improper_members_iter[1]}-" \
+                                                    f"{improper_members_iter[2]}-" \
+                                                    f"{improper_members_iter[3]} " \
+                                                    f"improper " \
+                                                    f"{'PeriodicImproperPotential'} " \
+                                                    "does not have n values from 1 to 5."
+                                raise ValueError(print_value_error)
+
+
+                    improper_format = "{:10s} {:10s} {:10s} {:10s} {:15s} {:10s} {:15s} " \
+                                      "! {:20s} {:20s} {:20s} {:20s}\n"
+
+                    # get the improper atom values
+                    improper_atom_0 = self.mosdef_atom_name_to_atom_type_dict[
+                        f"{res_x}_{improper_members_iter[0]}"
+                    ]
+                    improper_atom_1 = self.mosdef_atom_name_to_atom_type_dict[
+                        f"{res_x}_{improper_members_iter[1]}"
+                    ]
+                    improper_atom_2 = self.mosdef_atom_name_to_atom_type_dict[
+                        f"{res_x}_{improper_members_iter[2]}"
+                    ]
+                    improper_atom_3 = self.mosdef_atom_name_to_atom_type_dict[
+                        f"{res_x}_{improper_members_iter[3]}"
+                        ]
+
+
+                    # The CHARMM as the K0 improper constant (harmonic) is defined as a
+                    # get the improper values in k = kcal/mol, n= integer and phi_eq = degrees
+                    if improper_type_str_iter == 'HarmonicImproperPotential':
+                        '''
+                        # KEEP THIS FOR LATER
+                        # this section of code is not currently will but will work when GMSO
+                        # is able to support both harmonic and periodic improper together
+                        
+                        # not sure need: if K0_improper_output_energy_iter != 0:
+                        if self.utilized_NB_expression == 'LJ':
+                            K0_improper_output_energy_iter = np.round(
+                                K0_improper, decimals=improper_k_kcal_per_mol_round_decimals)
+
+                        elif self.utilized_NB_expression in ['Mie', 'Exp6']:
+                            print_error = "ERROR: The {'HarmonicImproperPotential'} is not supported " \
+                                          "for the {'Mie'} or {'Exp6'} potentials."
+                            raise ValueError(print_error)
+
+                        data.write(
+                            improper_format.format(
+                                improper_atom_0,
+                                improper_atom_1,
+                                improper_atom_2,
+                                improper_atom_3,
+                                str(K0_improper_output_energy_iter),
+                                str(int(n0_improper)),
+                                str(np.round(phi_eq0_improper, decimals=improper_phase_degree_round_decimals)),
+                                f"{res_x}_{improper_members_iter[0]}",
+                                f"{res_x}_{improper_members_iter[1]}",
+                                f"{res_x}_{improper_members_iter[2]}",
+                                f"{res_x}_{improper_members_iter[3]}",
+                            )
+                        )
+                        '''
+
+                    elif improper_type_str_iter == 'PeriodicImproperPotential':
+                        # write charmm improper Kx (x order periodic improper)
+                        for periodic_impropers_no_j in range(0, number_of_periodic_impropers_int):
+                            if self.utilized_NB_expression == 'LJ':
+                                Kx_improper_output_energy_iter = np.round(
+                                    Kx_improper[periodic_impropers_no_j],
+                                    decimals=improper_k_kcal_per_mol_round_decimals)
+
+                            elif self.utilized_NB_expression in ['Mie', 'Exp6']:
+                                Kx_improper_output_energy_iter = np.round(
+                                    u.unyt_quantity(Kx_improper[periodic_impropers_no_j], 'kcal/mol').to_value(
+                                        'K', equivalence='thermal'),
+                                    decimals=improper_k_Kelvin_round_decimals
+                                )
+
+                            nx_improper_output_iter =  nx_improper[periodic_impropers_no_j]
+                            phi_eqx_improper_output_iter = phi_eqx_improper[periodic_impropers_no_j]
+
+                            data.write(
+                                improper_format.format(
+                                    improper_atom_0,
+                                    improper_atom_1,
+                                    improper_atom_2,
+                                    improper_atom_3,
+                                    str(Kx_improper_output_energy_iter),
+                                    str(int(nx_improper_output_iter)),
+                                    str(np.round(phi_eqx_improper_output_iter,
+                                                 decimals=improper_phase_degree_round_decimals)),
+                                    f"{res_x}_{improper_members_iter[0]}",
+                                    f"{res_x}_{improper_members_iter[1]}",
+                                    f"{res_x}_{improper_members_iter[2]}",
+                                    f"{res_x}_{improper_members_iter[3]}",
+                                )
+                            )
+
 
                 # Pair coefficients
                 print(
-                    "NBFIX_Mixing not used or no mixing used for the non-bonded potentials out"
+                    "NBFIX_Mixing not used."
                 )
-                print(
-                    "self.utilized_NB_expression = "
-                    + str(self.utilized_NB_expression)
-                )
+                print("self.utilized_NB_expression = " + str(self.utilized_NB_expression))
 
                 epsilon_kcal_per_mol_round_decimals = 10
                 epsilon_Kelvin_round_decimals = 6
                 sigma_round_decimals = 10
                 mie_n_round_decimals = 8
 
-                if self.utilized_NB_expression == "LJ":
+                if self.utilized_NB_expression == 'LJ':
                     data.write("\n")
                     data.write("NONBONDED\n")
                     data.write("! \n")
                     data.write(
                         "! V(Lennard-Jones) = Epsilon,i,j[(Rmin,i,j/ri,j)**12 - 2(Rmin,i,j/ri,j)**6]\n"
-                        "                                    or"
+                        "!                                    or\n"
                         "! V(Lennard-Jones) = 4 * Epsilon,i,j[(Sigma,i,j/ri,j)**12 - (Sigma,i,j/ri,j)**6]\n"
                     )
                     data.write("! \n")
 
-                    data.write(
-                        "! {:8s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
-                        "".format(
-                            "type_1",
-                            "ignored",
-                            "epsilon",
-                            "Rmin/2",
-                            "ignored",
-                            "epsilon,1-4",
-                            "Rmin/2,1-4",
-                            "extended_type_1",
-                            "extended_type_2",
-                        )
-                    )
+                    data.write("! {:8s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
+                               "".format("type_1",
+                                         "ignored",
+                                         "epsilon",
+                                         "Rmin/2",
+                                         "ignored",
+                                         "epsilon,1-4",
+                                         "Rmin/2,1-4",
+                                         "extended_type_1",
+                                         "extended_type_2",
+                                         )
+                               )
 
-                    for (
-                        class_x,
-                        epsilon_kcal_per_mol,
-                    ) in self.epsilon_kcal_per_mol_atom_class_dict.items():
+                    for class_x, epsilon_kcal_per_mol in self.epsilon_kcal_per_mol_atom_type_dict.items():
                         nb_format = "{:10s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
 
                         # if the 1-4 non-bonded scalar is used.
@@ -3592,66 +3776,34 @@ class Charmm:
                         # via another scalar.
                         if float(self.nonbonded_1_4_dict[class_x]) == 0:
                             scalar_used_binary = 0
-                            scalar_sign_change = -1
                         else:
                             scalar_used_binary = 1
-                            scalar_sign_change = 1
 
                         data.write(
                             nb_format.format(
-                                str(
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            class_x
-                                        ]
-                                    )
-                                ),
+                                str(self.mosdef_atom_name_to_atom_type_dict[class_x]),
                                 str(0.0),
-                                str(
-                                    np.round(
-                                        -epsilon_kcal_per_mol,
-                                        decimals=epsilon_kcal_per_mol_round_decimals,
-                                    )
-                                ),
-                                str(
-                                    np.round(
-                                        _LJ_sigma_to_r_min_div_2(
-                                            self.sigmas_angstrom_atom_class_dict[
-                                                class_x
-                                            ]
-                                        ),
-                                        decimals=sigma_round_decimals,
-                                    )
-                                ),
+                                str(np.round(-epsilon_kcal_per_mol,
+                                             decimals=epsilon_kcal_per_mol_round_decimals)
+                                    ),
+                                str(np.round(_LJ_sigma_to_r_min_div_2(self.sigma_angstrom_atom_type_dict[class_x]),
+                                              decimals=sigma_round_decimals)
+                                     ),
                                 str(0.0),
-                                str(
-                                    np.round(
-                                        scalar_used_binary
-                                        * float(
-                                            self.nonbonded_1_4_dict[class_x]
-                                        )
-                                        * (-epsilon_kcal_per_mol)
-                                        * scalar_sign_change,
-                                        decimals=epsilon_kcal_per_mol_round_decimals,
-                                    )
-                                ),
-                                str(
-                                    np.round(
-                                        _LJ_sigma_to_r_min_div_2(
-                                            scalar_used_binary
-                                            * self.sigmas_angstrom_atom_class_dict[
-                                                class_x
-                                            ]
-                                        ),
-                                        decimals=sigma_round_decimals,
-                                    )
-                                ),
+                                str(-np.round(scalar_used_binary *
+                                             float(self.nonbonded_1_4_dict[class_x])
+                                             * epsilon_kcal_per_mol,
+                                             decimals=epsilon_kcal_per_mol_round_decimals)),
+                                str(np.round(_LJ_sigma_to_r_min_div_2(
+                                    self.sigma_angstrom_atom_type_dict[class_x]),
+                                              decimals=sigma_round_decimals)
+                                     ),
                                 str(class_x),
                                 str(class_x),
                             )
                         )
 
-                elif self.utilized_NB_expression == "Mie":
+                elif self.utilized_NB_expression == 'Mie':
                     data.write("\n")
                     data.write("NONBONDED_MIE\n")
                     data.write("! \n")
@@ -3660,116 +3812,79 @@ class Charmm:
                     )
                     data.write("! \n")
 
-                    data.write(
-                        "! {:8s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
-                        "".format(
-                            "type_1",
-                            "epsilon",
-                            "sigma",
-                            "n",
-                            "epsilon,1-4",
-                            "sigma,1-4",
-                            "n,1-4",
-                            "extended_type_1",
-                            "extended_type_2",
-                        )
-                    )
+                    data.write("! {:8s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
+                               "".format("type_1",
+                                         "epsilon",
+                                         "sigma",
+                                         "n",
+                                         "epsilon,1-4",
+                                         "sigma,1-4",
+                                         "n,1-4",
+                                         "extended_type_1",
+                                         "extended_type_2",
+                                         )
+                               )
 
-                    for (
-                        class_x,
-                        epsilon_kcal_per_mol,
-                    ) in self.epsilon_kcal_per_mol_atom_class_dict.items():
+                    for class_x, epsilon_kcal_per_mol in self.epsilon_kcal_per_mol_atom_type_dict.items():
                         nb_format = "{:10s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
 
                         # if the 1-4 non-bonded scalar is used.
                         # If 1-4 non-bonded scalar = 0, all 1-4 non-bonded values are set to zero (0).
                         # If 1-4 non-bonded scalar = 1, only the epsilon 1-4 non-bonded interaction is scaled
                         # via another scalar.
+                        for res_nb_14, scaler_nb_14 in self.nonbonded_1_4_dict.items():
+                            if scaler_nb_14 is None:
+                                print_error = f"ERROR: The {res_nb_14} residue is provided a value of " \
+                                              f"{scaler_nb_14}, and a value from 0 to 1 needs to be provided. " \
+                                              f"Please check the force file xml file."
+                                raise ValueError(print_error)
                         if float(self.nonbonded_1_4_dict[class_x]) == 0:
                             scalar_used_binary = 0
                         else:
                             scalar_used_binary = 1
 
                         epsilon_Kelvin = u.unyt_quantity(
-                            epsilon_kcal_per_mol, "kcal/mol"
-                        ).to_value("K", equivalence="thermal")
+                            epsilon_kcal_per_mol, 'kcal/mol').to_value('K', equivalence='thermal')
 
                         data.write(
                             nb_format.format(
-                                str(
-                                    base10_to_base52_alph(
-                                        self.atom_class_to_index_value_dict[
-                                            class_x
-                                        ]
-                                    )
-                                ),
-                                str(
-                                    np.round(
-                                        epsilon_Kelvin,
-                                        decimals=epsilon_Kelvin_round_decimals,
-                                    )
-                                ),
-                                str(
-                                    np.round(
-                                        self.sigmas_angstrom_atom_class_dict[
-                                            class_x
-                                        ],
-                                        decimals=sigma_round_decimals,
-                                    )
-                                ),
-                                str(
-                                    np.round(
-                                        self.mie_n_atom_class_dict[class_x],
-                                        decimals=mie_n_round_decimals,
-                                    )
-                                ),
-                                str(
-                                    np.round(
-                                        scalar_used_binary
-                                        * float(
-                                            self.nonbonded_1_4_dict[class_x]
-                                        )
-                                        * (epsilon_Kelvin),
-                                        decimals=epsilon_Kelvin_round_decimals,
-                                    )
-                                ),
-                                str(
-                                    np.round(
-                                        scalar_used_binary
-                                        * self.sigmas_angstrom_atom_class_dict[
-                                            class_x
-                                        ],
-                                        decimals=sigma_round_decimals,
-                                    )
-                                ),
-                                str(
-                                    np.round(
-                                        scalar_used_binary
-                                        * self.mie_n_atom_class_dict[class_x],
-                                        decimals=mie_n_round_decimals,
-                                    )
-                                ),
+                                str(self.mosdef_atom_name_to_atom_type_dict[class_x]),
+                                str(np.round(epsilon_Kelvin,
+                                             decimals=epsilon_Kelvin_round_decimals)
+                                    ),
+                                str(np.round(self.sigma_angstrom_atom_type_dict[class_x],
+                                             decimals=sigma_round_decimals)
+                                    ),
+                                str(np.round(self.mie_n_atom_type_dict[class_x],
+                                             decimals=mie_n_round_decimals)
+                                    ),
+                                str(np.round(scalar_used_binary *
+                                             float(self.nonbonded_1_4_dict[class_x]) * (epsilon_Kelvin),
+                                             decimals=epsilon_Kelvin_round_decimals)
+                                    ),
+                                str(np.round(self.sigma_angstrom_atom_type_dict[class_x],
+                                             decimals=sigma_round_decimals)
+                                    ),
+                                str(np.round(self.mie_n_atom_type_dict[class_x],
+                                             decimals=mie_n_round_decimals)
+                                    ),
                                 str(class_x),
                                 str(class_x),
                             )
                         )
 
-                elif self.utilized_NB_expression == "Exp6":
-                    printed_output = (
-                        "ERROR: Currently the 'Exp6' potential (self.utilized_NB_expression) "
-                        "is not supported in this MoSDeF GOMC parameter writer\n"
-                    )
+                elif self.utilized_NB_expression == 'Exp6':
+                    printed_output = "ERROR: Currently the 'Exp6' potential (self.utilized_NB_expression) " \
+                                     "is not supported in this MoSDeF GOMC parameter writer\n"
                     data.write(printed_output)
-                    print_error_message = printed_output
+                    print_error_message = (printed_output)
                     raise ValueError(print_error_message)
 
                 else:
-                    printed_output = (
-                        f"ERROR: Currently this potential ({self.utilized_NB_expression}) "
-                        f"is not supported in this MoSDeF GOMC parameter writer\n"
-                    )
+                    printed_output = f"ERROR: Currently this potential ({self.utilized_NB_expression}) " \
+                                     f"is not supported in this MoSDeF GOMC parameter writer\n"
                     data.write(printed_output)
-                    print_error_message = printed_output
+                    print_error_message = (printed_output)
                     raise ValueError(print_error_message)
 
                 # writing end in file
@@ -3793,7 +3908,7 @@ class Charmm:
         print("******************************")
         print("")
         print(
-            "The charmm X-plor format psf writer (the write_psf function) is running"
+            "The psf writer (the write_psf function) is running"
         )
 
         date_time = datetime.datetime.today()
@@ -3806,6 +3921,8 @@ class Charmm:
 
         print("******************************")
         print("")
+
+        # calculate the atom name and  (instead of: atom.occupancy)
 
         if self.structure_box_1:
             list_of_topologies = [
@@ -3839,30 +3956,23 @@ class Charmm:
 
             # psf printing (start)
 
-            residue_names_list = []
-            residue_id_list = []
-            for site in stuct_only_iteration.sites:
-                residue_id_list.append(site.__dict__["residue_index_"])
-                residue_names_list.append(site.__dict__["residue_label_"])
+            if q == 0:
+                residue_names_list_psf = self.residue_names_list_box_0
+                residue_id_list_psf  = self.residue_id_list_box_0
+                res_no_chain_iter_corrected_list_psf  = self.res_no_chain_iter_corrected_list_box_0
+                segment_id_list_psf  = self.segment_id_list_box_0
 
-            # this sets the residues chain length to a max limit
-            res_no_chain_iter_corrected = []
-            for residue_id_int in residue_id_list:
-                res_id_adder = int(
-                    (residue_id_int % self.max_residue_no) % self.max_residue_no
-                )
-                if int(res_id_adder) == 0:
-                    res_no_iteration_corrected = int(self.max_residue_no)
-                else:
-                    res_no_iteration_corrected = res_id_adder
-
-                res_no_chain_iter_corrected.append(res_no_iteration_corrected)
+            else:
+                residue_names_list_psf  = self.residue_names_list_box_1
+                residue_id_list_psf  = self.residue_id_list_box_1
+                res_no_chain_iter_corrected_list_psf  = self.res_no_chain_iter_corrected_list_box_1
+                segment_id_list_psf  = self.segment_id_list_box_1
 
             output_write = open(output, "w")
 
             first_indent = "%8s"
             psf_formating = (
-                "%8s %-4s %-4s %-4s %-4s %4s %10.6f %13.4f" + 11 * " "
+                "%8s %-4s %-4s %-4s %-4s %-6s %10.6f %13.4f" + 11 * " "
             )
 
             output_write.write("PSF ")
@@ -3871,34 +3981,29 @@ class Charmm:
             no_of_remarks = 3
             output_write.write(first_indent % no_of_remarks + " !NTITLE\n")
             output_write.write(
-                " REMARKS this file "
-                + file_name_iteration
-                + " - created by mBuild/foyer/gmso using the"
-                + "\n"
+                f" REMARKS this file "
+                f"{file_name_iteration} "
+                f"- created by mBuild/foyer/gmso using MoSDeF-GOMC\n"
             )
             output_write.write(
-                " REMARKS parameters from the "
-                + str(self.forcefield_selection)
-                + " force field via MoSDef\n"
+                f" REMARKS parameters from the "\
+                f"{self.forcefield_selection} "\
+                f"force field via MoSDef\n"
             )
             output_write.write(
-                " REMARKS created on " + str(date_time) + "\n\n\n"
+                f" REMARKS created on {date_time}\n\n\n"
             )
 
             # This converts the atom name in the GOMC psf and pdb files to unique atom names
-            print(
-                "bead_to_atom_name_dict = {}".format(
-                    self.bead_to_atom_name_dict
-                )
-            )
+            print(f"bead_to_atom_name_dict = {self.bead_to_atom_name_dict}")
             [
                 unique_individual_atom_names_dict,
                 individual_atom_names_list,
                 missing_bead_to_atom_name,
             ] = unique_atom_naming(
                 stuct_only_iteration,
-                residue_id_list,
-                residue_names_list,
+                residue_id_list_psf,
+                residue_names_list_psf,
                 bead_to_atom_name_dict=self.bead_to_atom_name_dict,
             )
 
@@ -3915,41 +4020,30 @@ class Charmm:
                 )
                 raise ValueError(print_error_message)
 
+
             # ATOMS: Calculate the atom data
-            # psf_formating is conducted for the for CHARMM format (i.e., atom types are base 52, letters only)
+            # psf_formating is conducted for the for CHARMM format (i.e., atom types are base 44, letters only)
             output_write.write(first_indent % no_atoms + " !NATOM\n")
             for i_atom, PSF_atom_iteration_1 in enumerate(
                 stuct_iteration.sites
             ):
-                segment_id = "SYS"  # can also use residue segid for CHARMM
 
-                charge_iter = (
-                    PSF_atom_iteration_1.atom_type.__dict__["charge_"].to("C")
-                    / u.elementary_charge
-                )
-                charge_iter = charge_iter.to_value("(dimensionless)")
-                mass_iter = PSF_atom_iteration_1.atom_type.__dict__[
-                    "mass_"
-                ].to_value("amu")
-                # atom_ff_type_iter = PSF_atom_iteration_1.atom_type.__dict__['name_']
-                residue_name_iter = PSF_atom_iteration_1.__dict__[
-                    "residue_label_"
-                ]
-                atomclass_name_iter = PSF_atom_iteration_1.atom_type.__dict__[
-                    "atomclass_"
-                ]
+                charge_iter = PSF_atom_iteration_1.atom_type.__dict__['charge_'].to('C') / u.elementary_charge
+                charge_iter = charge_iter.to_value('(dimensionless)')
+                mass_iter = PSF_atom_iteration_1.atom_type.__dict__['mass_'].to_value('amu')
+                residue_name_iter = PSF_atom_iteration_1.__dict__['residue_name_']
+                atom_class_name_iter = PSF_atom_iteration_1.atom_type.__dict__['atomclass_']
+                atom_type_name_iter = PSF_atom_iteration_1.atom_type.__dict__['name_']
 
-                atom_type_iter = base10_to_base52_alph(
-                    self.atom_class_to_index_value_dict[
-                        f"{atomclass_name_iter}_{residue_name_iter}"
-                    ]
-                )
+                atom_type_iter = self.mosdef_atom_name_to_atom_type_dict[
+                        f"{residue_name_iter}_{atom_type_name_iter}"
+                ]
 
                 atom_lines_iteration = psf_formating % (
                     i_atom + 1,
-                    segment_id,
-                    res_no_chain_iter_corrected[i_atom],
-                    str(residue_names_list[i_atom])[: self.max_resname_char],
+                    segment_id_list_psf[i_atom],
+                    res_no_chain_iter_corrected_list_psf[i_atom],
+                    str(residue_names_list_psf[i_atom])[: self.max_resname_char],
                     individual_atom_names_list[i_atom],
                     atom_type_iter,
                     charge_iter,
@@ -3962,12 +4056,14 @@ class Charmm:
 
             # BONDS: Calculate the bonding data
             output_write.write(first_indent % no_bonds + " !NBOND: bonds\n")
-            for i_bond, bond_iteration in enumerate(stuct_iteration.bonds):
+            for i_bond, bond_iteration in enumerate(
+                stuct_iteration.bonds
+            ):
                 output_write.write(
                     (first_indent * 2)
                     % (
-                        bond_iteration.connection_members[0].label + 1,
-                        bond_iteration.connection_members[1].label + 1,
+                        stuct_iteration.get_index(bond_iteration.connection_members[0]) + 1,
+                        stuct_iteration.get_index(bond_iteration.connection_members[1]) + 1,
                     )
                 )
 
@@ -3989,9 +4085,9 @@ class Charmm:
                 output_write.write(
                     (first_indent * 3)
                     % (
-                        angle_iteration.connection_members[0].label + 1,
-                        angle_iteration.connection_members[1].label + 1,
-                        angle_iteration.connection_members[2].label + 1,
+                        stuct_iteration.get_index(angle_iteration.connection_members[0]) + 1,
+                        stuct_iteration.get_index(angle_iteration.connection_members[1]) + 1,
+                        stuct_iteration.get_index(angle_iteration.connection_members[2]) + 1,
                     )
                 )
 
@@ -4010,16 +4106,14 @@ class Charmm:
             output_write.write(
                 first_indent % no_dihedrals + " !NPHI: dihedrals\n"
             )
-            for i_dihedral, dihedral_iter in enumerate(
-                stuct_iteration.dihedrals
-            ):
+            for i_dihedral, dihedral_iter in enumerate(stuct_iteration.dihedrals):
                 output_write.write(
                     (first_indent * 4)
                     % (
-                        dihedral_iter.connection_members[0].label + 1,
-                        dihedral_iter.connection_members[1].label + 1,
-                        dihedral_iter.connection_members[2].label + 1,
-                        dihedral_iter.connection_members[3].label + 1,
+                        stuct_iteration.get_index(dihedral_iter.connection_members[0]) + 1,
+                        stuct_iteration.get_index(dihedral_iter.connection_members[1]) + 1,
+                        stuct_iteration.get_index(dihedral_iter.connection_members[2]) + 1,
+                        stuct_iteration.get_index(dihedral_iter.connection_members[3]) + 1,
                     )
                 )
 
@@ -4038,16 +4132,14 @@ class Charmm:
             output_write.write(
                 first_indent % no_impropers + " !NIMPHI: impropers\n"
             )
-            for i_improper, improper_iter in enumerate(
-                stuct_iteration.impropers
-            ):
+            for i_improper, improper_iter in enumerate(stuct_iteration.impropers):
                 output_write.write(
                     (first_indent * 4)
                     % (
-                        improper_iter.connection_members[0].label + 1,
-                        improper_iter.connection_members[1].label + 1,
-                        improper_iter.connection_members[2].label + 1,
-                        improper_iter.connection_members[3].label + 1,
+                        stuct_iteration.get_index(improper_iter.connection_members[0]) + 1,
+                        stuct_iteration.get_index(improper_iter.connection_members[1]) + 1,
+                        stuct_iteration.get_index(improper_iter.connection_members[2]) + 1,
+                        stuct_iteration.get_index(improper_iter.connection_members[3]) + 1,
                     )
                 )
 
@@ -4062,22 +4154,24 @@ class Charmm:
             if no_impropers == 0:
                 output_write.write("\n")
 
-            # DONOR: calculate the donor data
+            # DONOR: calculate the donor data (not calculated here printing the header)
             output_write.write(first_indent % no_donors + " !NDON: donors\n")
             output_write.write("\n")
 
-            # ACCEPTOR: calculate the acceptor data
+            # ACCEPTOR: calculate the acceptor data (not calculated here printing the header)
             output_write.write(
                 first_indent % no_acceptors + " !NACC: acceptors\n"
             )
             output_write.write("\n")
 
-            # NNB: calculate the NNB data
+            # NNB: calculate the NNB data (not calculated here printing the header)
             output_write.write(first_indent % no_NNB + " !NNB\n")
             output_write.write("\n")
 
-            # GROUP: calculate the group data
-            output_write.write(first_indent % no_groups + " !NGRP \n")
+            # GROUP: calculate the group data  (not calculated here printing the header)
+            output_write.write(
+                first_indent % no_groups + " !NGRP \n"
+            )
             output_write.write("\n")
 
             output_write.close()
@@ -4088,12 +4182,12 @@ class Charmm:
         # **********************************
 
     def write_pdb(self, space_group="P 1"):
-        """This write_psf function writes the Charmm style PDB (coordinate file), which can be utilized
+        """This write_pdb function writes the Charmm style PDB (coordinate file), which can be utilized
         in the GOMC and NAMD engines.
 
         Parameters
         ----------
-        space_group : str (default="P 1")
+        space_group: str (default="P 1")
             The space group of the structure
 
         """
@@ -4103,13 +4197,13 @@ class Charmm:
         # **********************************
         # **********************************
 
-        date_time = datetime.datetime.today()
         print("******************************")
         print("")
         print("The charmm pdb writer (the write_pdb function) is running")
         print("write_charmm_pdb: residues == {}".format(self.residues))
         print("fix_residue = {}".format(self.fix_residue))
         print("fix_residue_in_box = {}".format(self.fix_residue_in_box))
+        print("set_residue_pdb_occupancy_to_1 = {}".format(self.set_residue_pdb_occupancy_to_1))
         print("bead_to_atom_name_dict = {}".format(self.bead_to_atom_name_dict))
 
         if self.fix_residue is None and self.fix_residue_in_box is None:
@@ -4141,6 +4235,18 @@ class Charmm:
             output = str(file_name_iteration) + ".pdb"
             stuct_only_iteration = stuct_only[q]
 
+            if q == 0:
+                residue_names_list_pdb = self.residue_names_list_box_0
+                residue_id_list_pdb = self.residue_id_list_box_0
+                res_no_chain_iter_corrected_list_pdb = self.res_no_chain_iter_corrected_list_box_0
+                segment_id_list_pdb = self.segment_id_list_box_0
+
+            else:
+                residue_names_list_pdb = self.residue_names_list_box_1
+                residue_id_list_pdb = self.residue_id_list_box_1
+                res_no_chain_iter_corrected_list_pdb = self.res_no_chain_iter_corrected_list_box_1
+                segment_id_list_pdb = self.segment_id_list_box_1
+
             output_write = open(output, "w")
             # output_write.write(
             #'REMARK this file ' + file_name_iteration + ' - created by mBuild/foyer using the' + '\n')
@@ -4148,71 +4254,72 @@ class Charmm:
             #'REMARK parameters from the ' + str(self.forcefield_selection) + ' force field via MoSDef\n')
             # output_write.write('REMARK created on ' + str(date_time) + '\n')
 
-            # caluculate the atom name and unique atom names and lock occupany factor at 1 (instead of: atom.occupancy)
-            locked_occupany_factor = 1.00
+            # caluculate the atom name and unique atom names
             max_no_atoms_in_base10 = 99999  # 99,999 for atoms in psf/pdb
 
             atom_no_list = []
             element_list = []
-            residue_names_list = []
-            residue_id_list = []
-            res_chain_iteration_corrected_list = []
 
+            occupancy_values_atoms_list = []
             fix_atoms_list = []
             atom_alternate_location_list = []
             residue_code_insertion_list = []
             x_y_z_coor_list = []
             segment_id = []
 
+
             atom_alternate_location_all_values = ""
             residue_code_insertion_all_values = ""
             segment_id_all_values = ""
-            for k, site in enumerate(stuct_only_iteration.sites):
-                atom_no_list.append(site.__dict__["label_"])
+            for f, site in enumerate(stuct_only_iteration.sites):
+                if residue_names_list_pdb[f] not in self.residues:
+                    self.input_error = True
+                    print_error_message = "ERROR: Please specifiy all residues (residues) in a list"
+                    raise ValueError(print_error_message)
+
+                # get other values
+                atom_no_list.append(stuct_only_iteration.get_index(site))
 
                 try:
-                    element_list.append(site.__dict__["name_"])
+                    # only 2 character element names are allowed
+                    element_name = str(site.__dict__['name_'])
+                    # check if element is bead (i.e., first part of name "_")
+                    if element_name[0] == '_':
+                        element_name = "BD"
+                    elif len(element_name) > 2:
+                        element_name = "TL"
                 except:
-                    element_list.append("EP")
-
-                residue_names_list.append(site.__dict__["residue_label_"])
-                residue_id_list.append(site.__dict__["residue_index_"])
+                    element_name = "UN"
+                element_list.append(element_name)
 
                 if (self.fix_residue is not None) and (
-                    site.__dict__["residue_label_"] in self.fix_residue
+                        site.__dict__['residue_name_'] in self.fix_residue
                 ):
                     beta_iteration = 1.00
                 elif (self.fix_residue_in_box is not None) and (
-                    site.__dict__["residue_label_"] in self.fix_residue_in_box
+                        site.__dict__['residue_name_'] in self.fix_residue_in_box
                 ):
                     beta_iteration = 2.00
                 else:
                     beta_iteration = 0.00
                 fix_atoms_list.append(beta_iteration)
 
-                atom_alternate_location_list.append(
-                    atom_alternate_location_all_values
-                )
-                residue_code_insertion_list.append(
-                    residue_code_insertion_all_values
-                )
+                if (self.set_residue_pdb_occupancy_to_1 is not None) and (
+                        site.__dict__['residue_name_'] in self.set_residue_pdb_occupancy_to_1
+                ):
+                    occupancy_iteration = 1.00
+                else:
+                    occupancy_iteration = 0.00
+                occupancy_values_atoms_list.append(occupancy_iteration)
 
-                x_y_z_coor = site.__dict__["position_"].to_value("angstrom")
+                atom_alternate_location_list.append(atom_alternate_location_all_values)
+                residue_code_insertion_list.append(residue_code_insertion_all_values)
+
+                x_y_z_coor = site.__dict__['position_'].to_value('angstrom')
                 x_y_z_coor_list.append(x_y_z_coor)
 
                 segment_id.append(segment_id_all_values)
 
-                res_chain_iteration_corrected_list.append(
-                    base10_to_base26_alph(
-                        int(residue_id_list[-1] / (self.max_residue_no + 1))
-                    )[-1:]
-                )
-
-            for n in range(0, len(residue_names_list)):
-                if residue_names_list[n] not in self.residues:
-                    self.input_error = True
-                    print_error_message = "ERROR: Please specifiy all residues (residues) in a list"
-                    raise ValueError(print_error_message)
 
             if (self.fix_residue is not None) and (
                 self.fix_residue_in_box is not None
@@ -4231,12 +4338,12 @@ class Charmm:
                     "CRYST1%9.3f%9.3f%9.3f%7.2f%7."
                     "2f%7.2f %-11s%4s\n"
                     % (
-                        stuct_only_iteration.box[0],
-                        stuct_only_iteration.box[1],
-                        stuct_only_iteration.box[2],
-                        stuct_only_iteration.box[3],
-                        stuct_only_iteration.box[4],
-                        stuct_only_iteration.box[5],
+                        stuct_only_iteration.box.lengths[0].to('angstrom'),
+                        stuct_only_iteration.box.lengths[1].to('angstrom'),
+                        stuct_only_iteration.box.lengths[2].to('angstrom'),
+                        stuct_only_iteration.box.angles[0].to('degree'),
+                        stuct_only_iteration.box.angles[1].to('degree'),
+                        stuct_only_iteration.box.angles[2].to('degree'),
                         space_group,
                         "",
                     )
@@ -4251,8 +4358,8 @@ class Charmm:
                 missing_bead_to_atom_name,
             ] = unique_atom_naming(
                 stuct_only_iteration,
-                residue_id_list,
-                residue_names_list,
+                residue_id_list_pdb,
+                residue_names_list_pdb,
                 bead_to_atom_name_dict=self.bead_to_atom_name_dict,
             )
 
@@ -4283,22 +4390,20 @@ class Charmm:
                         atom_number,
                         individual_atom_names_list[v],
                         atom_alternate_location_list[v],
-                        str(residue_names_list[v])[: self.max_resname_char],
-                        res_chain_iteration_corrected_list[
-                            v
-                        ],  # res_chain_iteration_corrected_list[v],
-                        residue_id_list[v],  # res_no_chain_iter_corrected[v],
+                        str(residue_names_list_pdb[v])[: self.max_resname_char],
+                        segment_id_list_pdb[v],
+                        res_no_chain_iter_corrected_list_pdb[v],
                         residue_code_insertion_list[v],
                         x_y_z_coor_list[v][0],
                         x_y_z_coor_list[v][1],
                         x_y_z_coor_list[v][2],
-                        locked_occupany_factor,
+                        occupancy_values_atoms_list[v],
                         fix_atoms_list[v],
                         segment_id[v],
                         element_list[v],
                         "",
                     )
-                )
+                    )
 
             output_write.write("%-80s\n" % "END")
 
@@ -4309,3 +4414,6 @@ class Charmm:
             # pdb writer (end)
             # **********************************
             # **********************************
+
+
+

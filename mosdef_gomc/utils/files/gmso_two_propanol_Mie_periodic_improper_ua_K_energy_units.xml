@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ForceField name="Mie two-propanol- This is for testing only and not for use for simulations " version="0.0.1">
+  <FFMetaData electrostatics14Scale="0.0" nonBonded14Scale="0.0" combiningRule="lorentz">
+    <Units energy="kcal/mol" mass="amu" charge="elementary_charge" distance="angstrom"/>
+  </FFMetaData>
+  <AtomTypes expression="(n/(n-m)) * (n/m)**(m/(n-m)) * epsilon * ((sigma/r)**n - (sigma/r)**m)">
+    <ParametersUnitDef parameter="epsilon" unit="K"/>
+    <ParametersUnitDef parameter="sigma" unit="angstrom"/>
+    <ParametersUnitDef parameter="n" unit="dimensionless"/>
+    <ParametersUnitDef parameter="m" unit="dimensionless"/>
+    <AtomType name="CH3_sp3" atomclass="CH3" element="_CH3" charge="0.0" mass="15.03500" definition="[_CH3;X1][_CH3,_HC]" description="Alkane CH3, Mie using the k constant from Trappe-UA" doi="10.1021/jp984742e and 10.1021/jp972543+" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="98"/>
+        <Parameter name="sigma" value="3.75"/>
+        <Parameter name="n" value="11"/>
+        <Parameter name="m" value="6"/>
+      </Parameters>
+    </AtomType>
+    <AtomType name="CH_O" atomclass="CH" element="_HC" charge="0.265" mass="13.01900" definition="[_HC;X3]([_CH3,_HC])([_CH3,_HC])OH" description="CH, united atom, attached to hydroxyl, Mie using the k constant from Trappe-UA" doi="10.1021/jp984742e and 10.1021/jp972543+" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="10"/>
+        <Parameter name="sigma" value="4.68"/>
+        <Parameter name="n" value="12"/>
+        <Parameter name="m" value="6"/>
+      </Parameters>
+    </AtomType>
+    <AtomType name="O" atomclass="O" element="O" charge="-0.700" mass="15.99940" definition="OH"  description="Oxygen in hydroxyl"  doi="10.1021/jp003882x" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="93"/>
+        <Parameter name="sigma" value="3.02"/>
+        <Parameter name="n" value="13"/>
+        <Parameter name="m" value="6"/>
+      </Parameters>
+    </AtomType>
+  <AtomType name="H" atomclass="H" element="H" charge="0.435" mass="1.00800" definition="HO" description="Hydrogen in hydroxyl" doi="10.1021/jp003882x" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="0"/>
+        <Parameter name="sigma" value="0"/>
+        <Parameter name="n" value="14"/>
+        <Parameter name="m" value="6"/>
+      </Parameters>
+    </AtomType>
+  </AtomTypes>
+  <BondTypes expression="k * (r-r_eq)**2">
+    <ParametersUnitDef parameter="r_eq" unit="angstrom"/>
+    <ParametersUnitDef parameter="k" unit="K/angstrom**2"/>
+    <BondType name="BondType_Harmonic_CH3_CH" class1="CH3" class2="CH">
+      <Parameters>
+        <Parameter name="k" value="604267.555311465"/>
+        <Parameter name="r_eq" value="1.540"/>
+      </Parameters>
+    </BondType>
+    <BondType name="BondType_Harmonic_CH_O" class1="CH" class2="O">
+      <Parameters>
+        <Parameter name="k" value="604267.555311465"/>
+        <Parameter name="r_eq" value="1.430"/>
+      </Parameters>
+    </BondType>
+    <BondType name="BondType_Harmonic_O_H" class1="O" class2="H">
+      <Parameters>
+        <Parameter name="k" value="604267.555311465"/>
+        <Parameter name="r_eq" value="0.945"/>
+      </Parameters>
+    </BondType>
+  </BondTypes>
+  <AngleTypes expression="k * (theta - theta_eq)**2">
+    <ParametersUnitDef parameter="theta_eq" unit="degree"/>
+    <ParametersUnitDef parameter="k" unit="K/radian**2"/>
+    <AngleType name="AngleType_Harmonic_CH3_CH_CH3" class1="CH3" class2="CH" class3="CH3">
+      <Parameters>
+        <Parameter name="k" value="62500"/>
+        <Parameter name="theta_eq" value="112"/>
+      </Parameters>
+    </AngleType>
+   <AngleType name="AngleType_Harmonic_CH3_CH_O" class1="CH3" class2="CH" class3="O">
+      <Parameters>
+        <Parameter name="k" value="50400"/>
+        <Parameter name="theta_eq" value="109.5"/>
+      </Parameters>
+    </AngleType>
+    <AngleType name="AngleType_Harmonic_CH_O_H" class1="CH" class2="O" class3="H">
+      <Parameters>
+        <Parameter name="k" value="55400"/>
+        <Parameter name="theta_eq" value="108.5"/>
+      </Parameters>
+    </AngleType>
+  </AngleTypes>
+  <DihedralTypes expression="k * (1 + cos(n * phi - phi_eq))">
+    <ParametersUnitDef parameter="k" unit="K"/>
+    <ParametersUnitDef parameter="n" unit="dimensionless"/>
+    <ParametersUnitDef parameter="phi_eq" unit="degree"/>
+    <DihedralType name="DihedralType_Periodic_Proper_CH3_CH_O_H" class1="CH3" class2="CH" class3="O" class4="H">
+      <Parameters>
+          <Parameter name="n">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>-18.75</Value>
+          <Value>10.0</Value>
+          <Value>-10.0</Value>
+          <Value>10.0</Value>
+          <Value>-0.625</Value>
+          <Value>0.0</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>90</Value>
+          <Value>180</Value>
+          <Value>0</Value>
+          <Value>180</Value>
+          <Value>0</Value>
+          <Value>180</Value>
+        </Parameter>
+      </Parameters>
+    </DihedralType>
+  </DihedralTypes>
+</ForceField>

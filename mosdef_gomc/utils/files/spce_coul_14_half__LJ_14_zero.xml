@@ -1,0 +1,16 @@
+<ForceField version="0.0.1" name="SPC/E Water" combining_rule="geometric">
+ <AtomTypes>
+   <Type name="o_spce" class="OW" element="O" mass="15.99940" def="[O;X2](H)(H)" desc="SPC/E water Oxygen" doi="10.1021/j100308a038"/>
+   <Type name="h_spce" class="HW" element="H" mass="1.00800" def="H[O;X2](H)" desc="SPC/E water Hydrogen" doi="10.1021/j100308a038"/>
+ </AtomTypes>
+ <HarmonicBondForce>
+   <Bond class1="OW" class2="HW" length="0.100" k="345000.0"/>
+ </HarmonicBondForce>
+ <HarmonicAngleForce>
+   <Angle class1="HW" class2="OW" class3="HW" angle="1.9106119321582" k="383.0"/>
+ </HarmonicAngleForce>
+ <NonbondedForce coulomb14scale="0.5" lj14scale="0">
+  <Atom type="o_spce" charge="-0.8476" sigma="0.316557" epsilon="0.650194"/>
+  <Atom type="h_spce" charge="0.4238" sigma="0.0" epsilon="0.0"/>
+ </NonbondedForce>
+</ForceField>
