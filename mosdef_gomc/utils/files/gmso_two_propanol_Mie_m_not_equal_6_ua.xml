@@ -97,7 +97,7 @@
           <Value>2</Value>
           <Value>3</Value>
           <Value>4</Value>
-          <Value>5</Value>          
+          <Value>5</Value>
         </Parameter>
         <Parameter name="k">
           <Value>0.0</Value>
@@ -112,10 +112,10 @@
           <Value>0</Value>
           <Value>180</Value>
           <Value>0</Value>
-          <Value>0</Value>  
-          <Value>0</Value>         
+          <Value>0</Value>
+          <Value>0</Value>
         </Parameter>
       </Parameters>
-    </DihedralType>  
+    </DihedralType>
   </DihedralTypes>
 </ForceField>

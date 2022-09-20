@@ -3,18 +3,14 @@ import os
 from warnings import warn
 from xml.dom import minidom
 
-import mbuild as mb
-from mbuild.compound import Compound
-from mbuild.utils.io import has_foyer
 import gmso
-
-from forcefield_utilities.xml_loader import FoyerFFs
-from forcefield_utilities.xml_loader import GMSOFFs
-
+import mbuild as mb
+from forcefield_utilities.xml_loader import FoyerFFs, GMSOFFs
+from gmso.core.views import PotentialFilters
 from gmso.external.convert_mbuild import from_mbuild as mb_convert
 from gmso.parameterization import apply as gmso_apply
-
-from gmso.core.views import PotentialFilters
+from mbuild.compound import Compound
+from mbuild.utils.io import has_foyer
 
 
 def specific_ff_to_residue(
@@ -274,12 +270,9 @@ def specific_ff_to_residue(
         raise ImportError(print_error_message)
 
     if isinstance(structure, (Compound, mb.Box)):
-        print_error_message = (
-            "ERROR: The structure, {} or {}, needs to have have box lengths and angles."
-                .format(
-                type(Compound()),
-                type(mb.Box(lengths=[1, 1, 1])),
-            )
+        print_error_message = "ERROR: The structure, {} or {}, needs to have have box lengths and angles.".format(
+            type(Compound()),
+            type(mb.Box(lengths=[1, 1, 1])),
         )
         if isinstance(structure, Compound):
             if structure.box is None:
@@ -299,7 +292,6 @@ def specific_ff_to_residue(
             )
         )
         raise TypeError(print_error_message)
-
 
     print("forcefield_selection = " + str(forcefield_selection))
     if forcefield_selection is None:
@@ -391,7 +383,6 @@ def specific_ff_to_residue(
                     )
                     raise ValueError(print_error_message)
 
-
     # check if FF files exist and create a forcefield selection with directory paths
     # forcefield_selection_with_paths
     forcefield_selection_with_paths = {}
@@ -403,7 +394,9 @@ def specific_ff_to_residue(
 
             try:
                 read_xlm_iteration = minidom.parse(ff_names_path_iteration)
-                forcefield_selection_with_paths.update({residue_iteration: ff_names_path_iteration})
+                forcefield_selection_with_paths.update(
+                    {residue_iteration: ff_names_path_iteration}
+                )
 
             except:
                 print_error_message = (
@@ -425,7 +418,9 @@ def specific_ff_to_residue(
             )
             try:
                 read_xlm_iteration = minidom.parse(ff_names_path_iteration)
-                forcefield_selection_with_paths.update({residue_iteration: ff_names_path_iteration})
+                forcefield_selection_with_paths.update(
+                    {residue_iteration: ff_names_path_iteration}
+                )
             except:
                 print_error_message = (
                     "Please make sure you are entering the correct foyer FF name, or the "
@@ -454,8 +449,6 @@ def specific_ff_to_residue(
             initial_no_atoms = len(structure.to_parmed().atoms)
             new_gmso_topology = mb_convert(structure, custom_groups=residues)
 
-
-
     elif isinstance(structure, mb.Box):
         initial_no_atoms = 0
         lengths = structure.lengths
@@ -466,36 +459,43 @@ def specific_ff_to_residue(
         new_gmso_topology = gmso.Topology()
         new_gmso_topology.box = gmso.Box(lengths=lengths, angles=angles)
 
-
     # push the FF paths and/or name to the GMSO format and create the new GMSO topology format
     gmso_compatable_forcefield_selection = {}
     for ff_key_iter, ff_value_iter in forcefield_selection_with_paths.items():
         # try to load the Foyer and GMSO FFs, if Foyer convert to GMSO; otherwise, it is an error.
         try:
             try:
-                ff_new_gmso_value_iter = FoyerFFs.get_ff(ff_value_iter).to_gmso_ff()
+                ff_new_gmso_value_iter = FoyerFFs.get_ff(
+                    ff_value_iter
+                ).to_gmso_ff()
             except:
-                ff_new_gmso_value_iter = GMSOFFs.get_ff(ff_value_iter).to_gmso_ff()
+                ff_new_gmso_value_iter = GMSOFFs.get_ff(
+                    ff_value_iter
+                ).to_gmso_ff()
 
         except:
-            print_error = f"ERROR: The supplied force field xml for the " \
-                          f"{ff_key_iter} residue is not a foyer or gmso xml, " \
-                          f"or the xml has errors and it not able to load properly."
+            print_error = (
+                f"ERROR: The supplied force field xml for the "
+                f"{ff_key_iter} residue is not a foyer or gmso xml, "
+                f"or the xml has errors and it not able to load properly."
+            )
             raise TypeError(print_error)
 
-        gmso_compatable_forcefield_selection.update({ff_key_iter: ff_new_gmso_value_iter})
-
+        gmso_compatable_forcefield_selection.update(
+            {ff_key_iter: ff_new_gmso_value_iter}
+        )
 
     # can use  match_ff_by="group" or "molecule", group was only chosen so everything is using the
     # user selected mb.Compound.name...
-    gmso_apply(new_gmso_topology,
-               gmso_compatable_forcefield_selection,
-               identify_connected_components=True,
-               identify_connections=True,
-               match_ff_by=gmso_match_ff_by,
-               use_molecule_info=True,
-               remove_untyped=True,
-               )
+    gmso_apply(
+        new_gmso_topology,
+        gmso_compatable_forcefield_selection,
+        identify_connected_components=True,
+        identify_connections=True,
+        match_ff_by=gmso_match_ff_by,
+        use_molecule_info=True,
+        remove_untyped=True,
+    )
     new_gmso_topology.update_topology()
 
     # find mixing rule.  If an empty.box mixing rule is set to None
@@ -504,10 +504,9 @@ def specific_ff_to_residue(
     elif isinstance(structure, mb.Box):
         combining_rule = None
 
-
     # identify the bonded atoms and hence the molecule, label the GMSO objects
     # and create the function outputs.
-    molecule_number = 0 # 0 sets the 1st molecule_number at 1
+    molecule_number = 0  # 0 sets the 1st molecule_number at 1
     molecules_atom_number_dict = {}
     unique_topology_groups_list = []
     unique_topologies_groups_dict = {}
@@ -518,17 +517,25 @@ def specific_ff_to_residue(
     improper_types_dict = {}
     nonBonded14Scale_dict = {}
     electrostatics14Scale_dict = {}
-    for unique_top_group in new_gmso_topology.unique_site_labels(gmso_match_ff_by, name_only=True):
+    for unique_top_group in new_gmso_topology.unique_site_labels(
+        gmso_match_ff_by, name_only=True
+    ):
         if unique_top_group is not None:
             if unique_top_group not in list(unique_topology_groups_list):
                 unique_topology_groups_list.append(unique_top_group)
 
     for unique_group in unique_topology_groups_list:
-        unique_subtop_group = new_gmso_topology.create_subtop(label_type=gmso_match_ff_by, label=unique_group)
+        unique_subtop_group = new_gmso_topology.create_subtop(
+            label_type=gmso_match_ff_by, label=unique_group
+        )
         unique_topologies_groups_dict[unique_group] = unique_subtop_group
 
-        nb_scalers_list = new_gmso_topology.get_lj_scale(molecule_id=unique_group)
-        electro_scalers_list = new_gmso_topology.get_electrostatics_scale(molecule_id=unique_group)
+        nb_scalers_list = new_gmso_topology.get_lj_scale(
+            molecule_id=unique_group
+        )
+        electro_scalers_list = new_gmso_topology.get_electrostatics_scale(
+            molecule_id=unique_group
+        )
 
         if nb_scalers_list is not None:
             nonBonded14Scale_dict[unique_group] = nb_scalers_list[2]
@@ -549,9 +556,7 @@ def specific_ff_to_residue(
                     f"the {applied_res_i} residue does not match the residues that "
                     f"were found in the foyer and GMSO force field application. "
                 )
-                raise ValueError(
-                    print_error_message_all_res_not_specified
-                )
+                raise ValueError(print_error_message_all_res_not_specified)
 
     # check if all the molecules/residues were found in in the mb.Compound/allowable input
     text_to_print_2 = (
@@ -563,24 +568,29 @@ def specific_ff_to_residue(
         "are not in the structure may have been specified. "
     )
     text_to_print_3 = (
-            f"NOTE: This warning will appear if you are using the CHARMM pdb and psf writers "
-            f"2 boxes, and the boxes do not contain all the residues in each box."
+        f"NOTE: This warning will appear if you are using the CHARMM pdb and psf writers "
+        f"2 boxes, and the boxes do not contain all the residues in each box."
     )
     for res_i in residues:
         if res_i not in unique_topology_groups_list:
-            text_to_print_1 = (
-                f"The {res_i} residues were not used from the forcefield_selection string or dictionary. ")
+            text_to_print_1 = f"The {res_i} residues were not used from the forcefield_selection string or dictionary. "
             if boxes_for_simulation == 1:
-                raise ValueError(f'ERROR: {text_to_print_1}{text_to_print_2}')
+                raise ValueError(f"ERROR: {text_to_print_1}{text_to_print_2}")
             if boxes_for_simulation == 2:
-                warn(f'WARNING: {text_to_print_1}{text_to_print_2}{text_to_print_3}')
+                warn(
+                    f"WARNING: {text_to_print_1}{text_to_print_2}{text_to_print_3}"
+                )
 
     # get all the bonded atoms, which is used for the bonded map to identify molecules
     bonded_atom_number_set = set()
     all_bonded_atoms_list = set()
     for bond in new_gmso_topology.bonds:
-        bonded_atom_0_iter = new_gmso_topology.get_index(bond.connection_members[0])
-        bonded_atom_1_iter = new_gmso_topology.get_index(bond.connection_members[1])
+        bonded_atom_0_iter = new_gmso_topology.get_index(
+            bond.connection_members[0]
+        )
+        bonded_atom_1_iter = new_gmso_topology.get_index(
+            bond.connection_members[1]
+        )
         if bonded_atom_0_iter < bonded_atom_1_iter:
             bonded_atom_tuple_iter = (bonded_atom_0_iter, bonded_atom_1_iter)
         else:
@@ -590,9 +600,9 @@ def specific_ff_to_residue(
         all_bonded_atoms_list.add(bonded_atom_0_iter)
         all_bonded_atoms_list.add(bonded_atom_1_iter)
 
-    '''
+    """
     build_molecule_list_time_start = time.time()
-    '''
+    """
 
     # map all bonded atoms as molecules
     molecules_atom_number_list = []
@@ -605,31 +615,42 @@ def specific_ff_to_residue(
                     bonded_atoms_n_list_iter = list(bonded_atoms_n)
                     atom_found_iter = False
                     if len(molecules_atom_number_list) != 0:
-                        for molecule_j in range(0, len(molecules_atom_number_list)):
-                            if atom_iter_k in molecules_atom_number_list[molecule_j]:
-                                molecules_atom_number_list[molecule_j].add(bonded_atoms_n_list_iter[0])
-                                molecules_atom_number_list[molecule_j].add(bonded_atoms_n_list_iter[1])
+                        for molecule_j in range(
+                            0, len(molecules_atom_number_list)
+                        ):
+                            if (
+                                atom_iter_k
+                                in molecules_atom_number_list[molecule_j]
+                            ):
+                                molecules_atom_number_list[molecule_j].add(
+                                    bonded_atoms_n_list_iter[0]
+                                )
+                                molecules_atom_number_list[molecule_j].add(
+                                    bonded_atoms_n_list_iter[1]
+                                )
                                 atom_found_iter = True
 
-                            if (molecule_j == len(molecules_atom_number_list) - 1) \
-                                    and atom_found_iter is False:
+                            if (
+                                molecule_j
+                                == len(molecules_atom_number_list) - 1
+                            ) and atom_found_iter is False:
                                 molecules_atom_number_list.append(
                                     {
                                         bonded_atoms_n_list_iter[0],
-                                        bonded_atoms_n_list_iter[1]
+                                        bonded_atoms_n_list_iter[1],
                                     }
                                 )
                     else:
                         molecules_atom_number_list.append(
                             {
                                 bonded_atoms_n_list_iter[0],
-                                bonded_atoms_n_list_iter[1]
+                                bonded_atoms_n_list_iter[1],
                             }
                         )
         else:
             molecules_atom_number_list.append({atom_iter_k})
 
-    '''
+    """
     build_molecule_list_time_end = time.time()
     final_build_molecule_list_time_s = build_molecule_list_time_end - build_molecule_list_time_start
     final_build_molecule_list_time_min = (final_build_molecule_list_time_s) / 60
@@ -638,7 +659,7 @@ def specific_ff_to_residue(
     print(f"final_build_molecule_list_time_s = {final_build_molecule_list_time_s}")
     print(f"final_build_molecule_list_time_min = {final_build_molecule_list_time_min}")
     print(f"final_build_molecule_list_time_hr = {final_build_molecule_list_time_hr}")
-    '''
+    """
 
     # create a molecule number to atom number dict
     # Example:  {molecule_number_x: {atom_number_1, ..., atom_number_y}, ...}
@@ -655,116 +676,170 @@ def specific_ff_to_residue(
             if site_atom_number_iter in atom_set_n:
                 molecule_p_number = mol_n
 
-        if gmso_match_ff_by == 'group':
-            site.__dict__['residue_name_'] = site.__dict__['group_']
-        elif gmso_match_ff_by == 'molecule':
-            site.__dict__['residue_name_'] = site.__dict__['molecule_'].name
+        if gmso_match_ff_by == "group":
+            site.__dict__["residue_name_"] = site.__dict__["group_"]
+        elif gmso_match_ff_by == "molecule":
+            site.__dict__["residue_name_"] = site.__dict__["molecule_"].name
 
-        site.__dict__['residue_number_'] = molecule_p_number + 1
+        site.__dict__["residue_number_"] = molecule_p_number + 1
 
     # create a topolgy only with the bonded parameters, including their residue/molecule type
     # which permit force fielding in GOMC easier in the charmm_writer
     # iterate thru the unique topologies and get the unique atom, bond, angle, dihedral, improper types
-    for unique_top_group_name_iter, unique_top_iter in unique_topologies_groups_dict.items():
+    for (
+        unique_top_group_name_iter,
+        unique_top_iter,
+    ) in unique_topologies_groups_dict.items():
         # get the unique non-bonded data, equations, and other info
         atom_type_expression_set = set()
-        for atom_type_k in unique_top_iter.atom_types(filter_by=PotentialFilters.UNIQUE_NAME_CLASS):
-            atom_type_k.__dict__['tags_'] = {'resname': unique_top_group_name_iter}
+        for atom_type_k in unique_top_iter.atom_types(
+            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+        ):
+            atom_type_k.__dict__["tags_"] = {
+                "resname": unique_top_group_name_iter
+            }
             atom_type_expression_set.add(atom_type_k.expression)
         if len(atom_type_expression_set) == 1:
-            atom_types_dict.update({unique_top_group_name_iter:
-                                        {'expression': list(atom_type_expression_set)[0],
-                                         'atom_types': unique_top_iter.atom_types(
-                                             filter_by=PotentialFilters.UNIQUE_NAME_CLASS)
-                                         }})
+            atom_types_dict.update(
+                {
+                    unique_top_group_name_iter: {
+                        "expression": list(atom_type_expression_set)[0],
+                        "atom_types": unique_top_iter.atom_types(
+                            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+                        ),
+                    }
+                }
+            )
         elif len(atom_type_expression_set) == 0:
             atom_types_dict.update({unique_top_group_name_iter: None})
         else:
-            raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                             ''.format('non-bonded'))
+            raise ValueError(
+                "ERROR: There is more than 1 {} equation types per residue or molecules "
+                "".format("non-bonded")
+            )
 
         # get the unique bond data, equations, and other info
         bond_type_expression_set = set()
         for bond_type_k in unique_top_iter.bond_types(
-                filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
         ):
-            bond_type_k.__dict__['tags_'] = {'resname': unique_top_group_name_iter}
+            bond_type_k.__dict__["tags_"] = {
+                "resname": unique_top_group_name_iter
+            }
             bond_type_expression_set.add(bond_type_k.expression)
         if len(bond_type_expression_set) == 1:
-            bond_types_dict.update({unique_top_group_name_iter:
-                                        {'expression': list(bond_type_expression_set)[0],
-                                         'bond_types': unique_top_iter.bond_types(
-                                             filter_by=PotentialFilters.UNIQUE_NAME_CLASS)
-                                         }})
+            bond_types_dict.update(
+                {
+                    unique_top_group_name_iter: {
+                        "expression": list(bond_type_expression_set)[0],
+                        "bond_types": unique_top_iter.bond_types(
+                            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+                        ),
+                    }
+                }
+            )
         elif len(bond_type_expression_set) == 0:
             bond_types_dict.update({unique_top_group_name_iter: None})
         else:
-            raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                             ''.format('bond'))
+            raise ValueError(
+                "ERROR: There is more than 1 {} equation types per residue or molecules "
+                "".format("bond")
+            )
 
         # get the unique angle data, equations, and other info
         angle_type_expression_set = set()
         for angle_type_k in unique_top_iter.angle_types(
-                filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
         ):
-            angle_type_k.__dict__['tags_'] = {'resname': unique_top_group_name_iter}
+            angle_type_k.__dict__["tags_"] = {
+                "resname": unique_top_group_name_iter
+            }
             angle_type_expression_set.add(angle_type_k.expression)
         if len(angle_type_expression_set) == 1:
-            angle_types_dict.update({unique_top_group_name_iter:
-                                         {'expression': list(angle_type_expression_set)[0],
-                                          'angle_types': unique_top_iter.angle_types(
-                                              filter_by=PotentialFilters.UNIQUE_NAME_CLASS)
-                                          }})
+            angle_types_dict.update(
+                {
+                    unique_top_group_name_iter: {
+                        "expression": list(angle_type_expression_set)[0],
+                        "angle_types": unique_top_iter.angle_types(
+                            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+                        ),
+                    }
+                }
+            )
         elif len(angle_type_expression_set) == 0:
             angle_types_dict.update({unique_top_group_name_iter: None})
         else:
-            raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                             ''.format('angle'))
+            raise ValueError(
+                "ERROR: There is more than 1 {} equation types per residue or molecules "
+                "".format("angle")
+            )
 
         # get the unique dihedral data, equations, and other info
         dihedral_type_expression_set = set()
         for dihedral_type_k in unique_top_iter.dihedral_types(
-                filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
         ):
-            dihedral_type_k.__dict__['tags_'] = {'resname': unique_top_group_name_iter}
+            dihedral_type_k.__dict__["tags_"] = {
+                "resname": unique_top_group_name_iter
+            }
             dihedral_type_expression_set.add(dihedral_type_k.expression)
         if len(dihedral_type_expression_set) == 1:
-            dihedral_types_dict.update({unique_top_group_name_iter:
-                                            {'expression': list(dihedral_type_expression_set)[0],
-                                             'dihedral_types': unique_top_iter.dihedral_types(
-                                                 filter_by=PotentialFilters.UNIQUE_NAME_CLASS)
-                                             }})
+            dihedral_types_dict.update(
+                {
+                    unique_top_group_name_iter: {
+                        "expression": list(dihedral_type_expression_set)[0],
+                        "dihedral_types": unique_top_iter.dihedral_types(
+                            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+                        ),
+                    }
+                }
+            )
         elif len(dihedral_type_expression_set) == 0:
             dihedral_types_dict.update({unique_top_group_name_iter: None})
         else:
-            raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                             ''.format('dihedral'))
+            raise ValueError(
+                "ERROR: There is more than 1 {} equation types per residue or molecules "
+                "".format("dihedral")
+            )
 
         # get the unique improper data, equations, and other info
         improper_type_expression_set = set()
         for improper_type_k in unique_top_iter.improper_types(
-                filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
         ):
-            improper_type_k.__dict__['tags_'] = {'resname': unique_top_group_name_iter}
+            improper_type_k.__dict__["tags_"] = {
+                "resname": unique_top_group_name_iter
+            }
             improper_type_expression_set.add(improper_type_k.expression)
         if len(improper_type_expression_set) == 1:
-            improper_types_dict.update({unique_top_group_name_iter:
-                                            {'expression': list(improper_type_expression_set)[0],
-                                             'improper_types': unique_top_iter.improper_types(
-                                                 filter_by=PotentialFilters.UNIQUE_NAME_CLASS)
-                                             }})
+            improper_types_dict.update(
+                {
+                    unique_top_group_name_iter: {
+                        "expression": list(improper_type_expression_set)[0],
+                        "improper_types": unique_top_iter.improper_types(
+                            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+                        ),
+                    }
+                }
+            )
         elif len(improper_type_expression_set) == 0:
             improper_types_dict.update({unique_top_group_name_iter: None})
         else:
-            raise ValueError('ERROR: There is more than 1 {} equation types per residue or molecules '
-                             ''.format('improper'))
-
+            raise ValueError(
+                "ERROR: There is more than 1 {} equation types per residue or molecules "
+                "".format("improper")
+            )
 
         # check to see if the non-bonded and electrostatic 1-4 interactions are in each group/molecule/residue
-        if unique_top_group_name_iter not in list(nonBonded14Scale_dict.keys()) \
-                or unique_top_group_name_iter not in list(electrostatics14Scale_dict.keys()):
-            raise ValueError(f'ERROR: The {unique_top_group_name_iter} residue is not provided for the '
-                             f'{"nonBonded14Scale"} and {"electrostatics14Scale"} values')
+        if unique_top_group_name_iter not in list(
+            nonBonded14Scale_dict.keys()
+        ) or unique_top_group_name_iter not in list(
+            electrostatics14Scale_dict.keys()
+        ):
+            raise ValueError(
+                f"ERROR: The {unique_top_group_name_iter} residue is not provided for the "
+                f'{"nonBonded14Scale"} and {"electrostatics14Scale"} values'
+            )
 
     topology = new_gmso_topology
     # calculate the final number of atoms
