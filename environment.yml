@@ -3,9 +3,25 @@ channels:
   - conda-forge
 dependencies:
   - garnett
+  - gsd
+  - ipython
+  - numpydoc
+  - mock
+  - sphinx_rtd_theme
+  - nbsphinx
+  - sphinxcontrib
   - pycifrw
+  - pytest
   - python=3.9
   - forcefield-utilities=0.2.1
   - foyer=0.11.3
   - gmso=0.9.1
   - mbuild=0.15.1
+  - pre-commit
+  - sphinx
+  - pip
+  - pip:
+      - bump2version
+      - sphinxcontrib-svg2pdfconverter
+      - sphinxcontrib-video
+      - sphinxcontrib-serializinghtml
