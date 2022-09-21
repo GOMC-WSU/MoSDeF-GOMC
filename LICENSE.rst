@@ -27,7 +27,7 @@ notice:
 BSD 3-Clause License for garnett
 
 Copyright (c) 2020 The Regents of the University of Michigan
-All rights reserved. 
+All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
