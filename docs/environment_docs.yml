@@ -25,4 +25,3 @@ dependencies:
       - sphinxcontrib-svg2pdfconverter
       - sphinxcontrib-video
       - sphinxcontrib-serializinghtml
-
