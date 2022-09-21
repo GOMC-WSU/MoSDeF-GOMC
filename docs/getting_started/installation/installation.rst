@@ -47,8 +47,8 @@ Python versions older than 3.9 may work, but there is no guarantee.
 Testing your installation
 -------------------------
 
-MoSDeF-GOMC uses `pytest <https://docs.pytest.org/en/stable/>`_ to test the code for accuracy, possible errors, code changes, or if the existing implementation is correct. 
-The pytest package is auto-installed in the mosdef_gomc environment. 
+MoSDeF-GOMC uses `pytest <https://docs.pytest.org/en/stable/>`_ to test the code for accuracy, possible errors, code changes, or if the existing implementation is correct.
+The pytest package is auto-installed in the mosdef_gomc environment.
 
 To run these unit tests, run the following from the base directory::
 
@@ -58,7 +58,7 @@ Building the documentation
 --------------------------
 
 MoSDeF-GOMC documentation is all built using `sphinx <https://www.sphinx-doc.org/en/master/index.html>`_.
-The sphinx package is auto-installed in the mosdef_gomc environment. 
+The sphinx package is auto-installed in the mosdef_gomc environment.
 
 The ``docs`` can be built locally with the following commands when in the ``docs`` directory::
 
