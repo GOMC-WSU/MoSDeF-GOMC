@@ -41,10 +41,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
           use-mamba: true
       - shell: bash -l {0}
+          run: |
+            pip install .
+      - shell: bash -l {0}
         run: |
-          pip install .
-          python -m pytest -v
+          python -m pytest -v --color=yes
           echo "tests finished"
+
 
   bleeding-edge-test:
     if: github.event.pull_request.draft == false
@@ -96,13 +99,14 @@ jobs:
         if: github.ref_type == 'tag'
 
       - name: Get Push Version
-          run: |
-            echo "DOCKER_TAGS=GOMC-WSU/MoSDeF-GOMC:${GITHUB_REF_NAME}, GOMC-WSU/MoSDeF-GOMC:latest" >> $GITHUB_ENV
-          if: github.ref_type == 'branch'
+        run: |
+          echo "DOCKER_TAGS=GOMC-WSU/MoSDeF-GOMC:${GITHUB_REF_NAME}, GOMC-WSU/MoSDeF-GOMC:latest" >> $GITHUB_ENV
+        if: github.ref_type == 'branch'
 
       - name: Docker Image Info
         run: |
           echo Docker Image tags: ${DOCKER_TAGS}
+
       - name: Build and Push
         uses: docker/build-push-action@v2
         with:
