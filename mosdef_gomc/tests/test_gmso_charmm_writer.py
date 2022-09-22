@@ -9840,14 +9840,17 @@ class TestCharmmWriterData(BaseTest):
                         ["ha0", "ca0", "ca0", "ha0", "3.625", "2", "180.0"],
                         ["ca0", "ca0", "ca0", "ca0", "3.625", "2", "180.0"],
                     ]
+
+                    # need to get and sort order as order seems to be random sometimes
+                    actual_dihed = []
+
                     for j in range(0, len(dihed_types)):
                         assert (
-                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                                len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
                         )
-                        assert (
-                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
-                            == dihed_types[j]
-                        )
+                        actual_dihed.append(out_gomc[i + 1 + j].split("!")[0].split()[0:7])
+
+                    assert actual_dihed.sort() == dihed_types.sort()
 
                 elif (
                     "! type_1" in line
