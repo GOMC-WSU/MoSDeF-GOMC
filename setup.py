@@ -8,7 +8,7 @@ from distutils.spawn import find_executable
 
 from setuptools import find_packages, setup
 
-####################################
+#####################################
 NAME = "MoSDeF-GOMC"
 VERSION = "1.0.0"
 ISRELEASED = True
@@ -16,7 +16,7 @@ if ISRELEASED:
     __version__ = VERSION
 else:
     __version__ = VERSION + ".dev0"
-####################################
+#####################################
 
 
 def proto_procedure():
