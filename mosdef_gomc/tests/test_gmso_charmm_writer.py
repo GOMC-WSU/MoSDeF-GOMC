@@ -9697,7 +9697,7 @@ class TestCharmmWriterData(BaseTest):
         benzene = mb.load("c1ccccc1", smiles=True)
         benzene.name = "BEN"
 
-        box_0 = mb.fill_box(compound=[benzene], n_compounds=[2], box=[4, 4, 4])
+        box_0 = mb.fill_box(compound=[benzene], n_compounds=[1], box=[4, 4, 4])
 
         charmm = Charmm(
             box_0,
@@ -9749,7 +9749,7 @@ class TestCharmmWriterData(BaseTest):
                 ):
                     bonds_read = True
                     bond_types = [
-                        ["ca0", "ca0", "461.1", "1.529"],
+                        ["ca0", "ca0", "461.1", "1.3984"],
                         ["ca0", "ha0", "345.8", "1.086"],
                     ]
                     assert len(out_gomc[i + 1].split("!")[0].split()) == 4
@@ -9791,7 +9791,7 @@ class TestCharmmWriterData(BaseTest):
                 ):
                     angles_read = True
                     angle_types = [
-                        ["ca0", "ca0", "ch0", "48.2", "119.88"],
+                        ["ca0", "ca0", "ha0", "48.2", "119.88"],
                         ["ca0", "ca0", "ca0", "66.6", "120.02"],
                     ]
                     assert len(out_gomc[i + 1].split("!")[0].split()) == 5
@@ -9826,32 +9826,6 @@ class TestCharmmWriterData(BaseTest):
                     and "type_2" in line
                     and "type_3" in line
                     and "type_4" in line
-                    and "Kw" in line
-                    and "n" in line
-                    and "w0" in line
-                    and "extended_type_1" in line
-                    and "extended_type_2" in line
-                    and "extended_type_3" in line
-                    and "extended_type_4" in line
-                ):
-                    impropers_read = True
-                    improp_types = [
-                        ["ca0", "ca0", "ca0", "ha0", "1.1", "2", "180.0"],
-                    ]
-                    for j in range(0, len(improp_types)):
-                        assert (
-                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
-                        )
-                        assert (
-                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
-                            == improp_types[j]
-                        )
-
-                elif (
-                    "! type_1" in line
-                    and "type_2" in line
-                    and "type_3" in line
-                    and "type_4" in line
                     and "Kchi" in line
                     and "n" in line
                     and "delta" in line
@@ -9873,6 +9847,32 @@ class TestCharmmWriterData(BaseTest):
                         assert (
                             out_gomc[i + 1 + j].split("!")[0].split()[0:7]
                             == dihed_types[j]
+                        )
+
+                elif (
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "type_4" in line
+                    and "Kw" in line
+                    and "n" in line
+                    and "w0" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                    and "extended_type_4" in line
+                ):
+                    impropers_read = True
+                    improp_types = [
+                        ["ca0", "ca0", "ca0", "ha0", "1.1", "2", "180.0"],
+                    ]
+                    for j in range(0, len(improp_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == improp_types[j]
                         )
 
                 elif (
