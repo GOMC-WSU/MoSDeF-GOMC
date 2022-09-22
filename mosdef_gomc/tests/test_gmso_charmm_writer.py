@@ -9846,9 +9846,11 @@ class TestCharmmWriterData(BaseTest):
 
                     for j in range(0, len(dihed_types)):
                         assert (
-                                len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
                         )
-                        actual_dihed.append(out_gomc[i + 1 + j].split("!")[0].split()[0:7])
+                        actual_dihed.append(
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                        )
 
                     assert actual_dihed.sort() == dihed_types.sort()
 
