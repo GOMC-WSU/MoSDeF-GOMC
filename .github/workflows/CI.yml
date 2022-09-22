@@ -43,6 +43,7 @@ jobs:
       - shell: bash -l {0}
         run: |
           pip install .
+          python -m pytest -v
           echo "tests finished"
 
   bleeding-edge-test:
@@ -93,3 +94,17 @@ jobs:
         run: |
           echo "DOCKER_TAGS=GOMC-WSU/MoSDeF-GOMC:${GITHUB_REF_NAME}, GOMC-WSU/MoSDeF-GOMC:stable" >> $GITHUB_ENV
         if: github.ref_type == 'tag'
+
+      - name: Get Push Version
+          run: |
+            echo "DOCKER_TAGS=GOMC-WSU/MoSDeF-GOMC:${GITHUB_REF_NAME}, GOMC-WSU/MoSDeF-GOMC:latest" >> $GITHUB_ENV
+          if: github.ref_type == 'branch'
+
+      - name: Docker Image Info
+        run: |
+          echo Docker Image tags: ${DOCKER_TAGS}
+      - name: Build and Push
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ${{ env.DOCKER_TAGS }}
