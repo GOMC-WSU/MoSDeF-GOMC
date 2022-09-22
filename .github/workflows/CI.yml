@@ -48,36 +48,30 @@ jobs:
   bleeding-edge-test:
     if: github.event.pull_request.draft == false
     name: Bleeding Edge Tests for MoSDeF-GOMC
-    runs-on: ${{ matrix.os }}-latest
-      strategy:
-        fail-fast: false
-        matrix:
-          python-version: ["3.9"]
-          os: ["ubuntu"]
-          include:
-            - os: ubuntu
-              environment-file: environment.yml
-              miniforge-variant: Mambaforge
-              miniforge-version: 4.9.2-4
-            - os: macos
-              environment-file: environment.yml
-              miniforge-variant: Mambaforge-pypy3
-      steps:
-        - uses: actions/checkout@v2
-        - uses: conda-incubator/setup-miniconda@v2
-          with:
-            environment-file: ${{ matrix.environment-file }}
-            miniforge-variant: ${{ matrix.miniforge-variant }}
-            miniforge-version: ${{ matrix.miniforge-version }}
-            python-version: ${{ matrix.python-version }}
-            use-mamba: true
-        - name: Install Packages from Source
-        - shell: bash -l {0}
-          run: |
-            pip install -e .
-        - name: Run Bleeding Edge Tests
-          run: |
-            python -m pytest -v --color yes --pyargs mosdef_gomc
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout Branch / Pull Request
+
+      - name: Install Mamba
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: environment.yml
+          extra-specs: |
+            python=3.9
+      - name: Clone MoSDeF-GOMC
+        run: |
+          git clone https://github.com/GOMC-WSU/MoSDeF-GOMC.git
+      - name: Install Packages from Source
+        run: |
+          pip install -e .
+      - name: Run Bleeding Edge Tests
+        run: |
+          python -m pytest -v --color yes --pyargs mosdef_gomc
 
   docker:
     runs-on: ubuntu-latest
