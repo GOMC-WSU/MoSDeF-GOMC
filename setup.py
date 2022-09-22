@@ -62,8 +62,8 @@ if __name__ == "__main__":
         long_description=__doc__,
         author="",
         author_email="",
-        url="https://github.com/bc118/MoSDeF-GOMC",
-        download_url="https://github.com/bc118/MoSDeF-GOMC/tarball/{}".format(
+        url="https://github.com/GOMC-WSU/MoSDeF-GOMC",
+        download_url="https://github.com/GOMC-WSU/MoSDeF-GOMC/tarball/{}".format(
             __version__
         ),
         packages=find_packages(),
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         zip_safe=False,
         keywords="MoSDeF-GOMC",
         classifiers=[
-            "Development Status :: 0 - Beta",
+            "Development Status :: 0 - 1",
             "Intended Audience :: Science/Research",
             "Intended Audience :: Developers",
             "License :: OSI Approved :: MIT Open Source License",
