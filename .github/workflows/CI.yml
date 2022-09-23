@@ -41,37 +41,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
           use-mamba: true
       - shell: bash -l {0}
+          run: |
+            pip install .
+      - shell: bash -l {0}
         run: |
-          pip install .
+          python -m pytest -v --color yes mosdef_gomc/tests --cov
+          coverage xml
           echo "tests finished"
 
-  bleeding-edge-test:
-    if: github.event.pull_request.draft == false
-    name: Bleeding Edge Tests for MoSDeF-GOMC
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-
-    steps:
-      - uses: actions/checkout@v2
-        name: Checkout Branch / Pull Request
-
-      - name: Install Mamba
-        uses: mamba-org/provision-with-micromamba@main
-        with:
-          environment-file: environment.yml
-          extra-specs: |
-            python=3.9
-      - name: Clone MoSDeF-GOMC
-        run: |
-          git clone https://github.com/GOMC-WSU/MoSDeF-GOMC.git
-      - name: Install Packages from Source
-        run: |
-          pip install -e .
-      - name: Run Bleeding Edge Tests
-        run: |
-          python -m pytest -v --color yes --pyargs mosdef_gomc
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
 
   docker:
     runs-on: ubuntu-latest
@@ -93,3 +72,18 @@ jobs:
         run: |
           echo "DOCKER_TAGS=GOMC-WSU/MoSDeF-GOMC:${GITHUB_REF_NAME}, GOMC-WSU/MoSDeF-GOMC:stable" >> $GITHUB_ENV
         if: github.ref_type == 'tag'
+
+      - name: Get Push Version
+        run: |
+          echo "DOCKER_TAGS=GOMC-WSU/MoSDeF-GOMC:${GITHUB_REF_NAME}, GOMC-WSU/MoSDeF-GOMC:latest" >> $GITHUB_ENV
+        if: github.ref_type == 'branch'
+
+      - name: Docker Image Info
+        run: |
+          echo Docker Image tags: ${DOCKER_TAGS}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ${{ env.DOCKER_TAGS }}
