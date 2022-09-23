@@ -40,9 +40,11 @@ jobs:
           miniforge-version: ${{ matrix.miniforge-version }}
           python-version: ${{ matrix.python-version }}
           use-mamba: true
+
       - shell: bash -l {0}
-          run: |
-            pip install .
+        run: |
+          pip install .
+
       - shell: bash -l {0}
         run: |
           python -m pytest -v --color yes mosdef_gomc/tests --cov
