@@ -85,9 +85,9 @@ nbsphinx_prolog = r"""
 
   <div class="admonition note">
       <p>This page was generated from
-        <a class="reference external" href="https://github.com/bc118/MoSDeF-GOMC/blob/{{ env.config.release|e }}/{{ docname|e }}">{{ docname|e }}</a>.
+        <a class="reference external" href="https://github.com/GOMC-WSU/MoSDeF-GOMC/blob/{{ env.config.release|e }}/{{ docname|e }}">{{ docname|e }}</a>.
         <br>Interactive online version:
-        <a href="https://mybinder.org/v2/gh/bc118/MoSDeF-GOMC/master?filepath={{ docname|e }}"><img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom"></a>.
+        <a href="https://mybinder.org/v2/gh/GOMC-WSU/MoSDeF-GOMC/master?filepath={{ docname|e }}"><img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom"></a>.
       </p>
     </div>
 
