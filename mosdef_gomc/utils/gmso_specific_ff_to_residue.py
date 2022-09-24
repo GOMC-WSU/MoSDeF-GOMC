@@ -1,15 +1,14 @@
 # GMSO and foyer use specific residues to apply force fields and mapping molecule number to atom numbers
-import datetime
 import os
 from warnings import warn
 from xml.dom import minidom
 
 import gmso
 import mbuild as mb
-import parmed as pmd
-from foyer import Forcefield as oldFF
-from foyer.general_forcefield import Forcefield as gmsoFF
-from gmso.external import from_parmed
+from forcefield_utilities.xml_loader import FoyerFFs, GMSOFFs
+from gmso.core.views import PotentialFilters
+from gmso.external.convert_mbuild import from_mbuild as mb_convert
+from gmso.parameterization import apply as gmso_apply
 from mbuild.compound import Compound
 from mbuild.utils.io import has_foyer
 
@@ -17,13 +16,13 @@ from mbuild.utils.io import has_foyer
 def specific_ff_to_residue(
     structure,
     forcefield_selection=None,
+    gmso_match_ff_by="molecule",
     residues=None,
-    reorder_res_in_pdb_psf=False,
     boxes_for_simulation=1,
 ):
 
     """
-    Takes the mbuild Compound or mbuild Box structure and applies the selected
+    Takes the mbuild Compound or mbuild Box and applies the selected
     force field to the corresponding residue via foyer and GMSO.
     Note: a residue is defined as a molecule in this case, so it is not
     designed for applying a force field to a protein.
@@ -31,25 +30,159 @@ def specific_ff_to_residue(
     Parameters
     ----------
     structure: mbuild Compound object or mbuild Box object;
-        The mBuild Compound object or mbuild Box object, which contains the molecules
+        The mBuild Compound object with box lengths and angles or mbuild Box object, which contains the molecules
         (or empty box) that will have the force field applied to them.
     forcefield_selection: str or dictionary, default=None
         Apply a force field to the output file by selecting a force field xml file with
         its path or by using the standard force field name provided the `foyer` package.
-        Example dict for FF file: {'ETH' : 'oplsaa.xml', 'OCT': 'path_to file/trappe-ua.xml'}
+        Example dict for FF file: {'ETH': 'oplsaa.xml', 'OCT': 'path_to file/trappe-ua.xml'}
         Example str for FF file: 'path_to file/trappe-ua.xml'
-        Example dict for standard FF names : {'ETH' : 'oplsaa', 'OCT': 'trappe-ua'}
+        Example dict for standard FF names: {'ETH': 'oplsaa', 'OCT': 'trappe-ua'}
         Example str for standard FF names: 'trappe-ua'
-        Example of a mixed dict with both : {'ETH' : 'oplsaa', 'OCT': 'path_to file/'trappe-ua.xml'}
+        Example of a mixed dict with both: {'ETH': 'oplsaa', 'OCT': 'path_to file/'trappe-ua.xml'}
+    gmso_match_ff_by: str ("group" or "molecule"), default = "molecule"
+        How the GMSO force field is applied, using the molecules name/residue name (mbuild.Compound().name)
+        for GOMC and NAMD.  This is regardless number of levels in the (mbuild.Compound().name or mbuild.Box()).
+
+        * "molecule" applies the force field using the molecule's name or atom's name for a
+        single atom molecule (1 atom/bead  = molecule).
+            -  Molecule > 1 atom ----> uses the "mbuild.Compound().name" (1 level above the atoms/beads)
+            is the molecule's name.  This "mb.Compound().name" (1 level above the atoms/beads) needs
+            to be used in the Charmm object's residue_list and forcefield_selection (if >1 force field), and
+            will be the residue name in the PSF, PDB, and FF files.
+            -  Molecule = 1 atom/bead  ----> uses the "atom/bead's name" is the molecule's name.
+            This "atom/bead's name" needs to be used in the Charmm object's residue_list and
+            forcefield_selection (if >1 force field), and will be the residue name in the PSF, PDB, and FF files.
+
+            NOTE: Non-bonded zeolites or other fixed structures without bonds will use the
+            "atom/bead's name" as the molecule's name, if they are single non-bonded atoms.
+            However, the user may want to use the "group" option instead for this type of system,
+            if applicable (see the "group" option).
+
+            - Example (Charmm_writer selects the user changeable "ETH", in the Charmm object residue_list and
+            forcefield_selection (if >1 force field), which sets the residue "ETH" in the PSF, PDB, and FF files):
+                ethane = mbuild.load("CC", smiles=True)
+                ethane.name = "ETH"
+
+                ethane_box = mbuild.fill_box(
+                compound=[ethane],
+                n_compounds=[100],
+                box=[4, 4, 4]
+                )
+
+            - Example (Charmm_writer must to select the non-user changeable "_CH4" (per the foyer TraPPE force field),
+            in the Charmm object residue_list and forcefield_selection (if >1 force field),
+            which sets the residue "_CH4" in the PSF, PDB, and FF files):
+
+            methane_ua_bead_name = "_CH4"
+            methane_child_bead = mbuild.Compound(name=methane_ua_bead_name)
+            methane_box = mbuild.fill_box(
+                compound=methane_child_bead, n_compounds=4, box=[1, 2, 3]
+            )
+            methane_box.name = "MET"
+
+            - Example (Charmm_writer must to select the non-user changeable "Na" and "Cl"
+            in the Charmm object residue_list and forcefield_selection (if >1 force field),
+            which sets the residues "Na" and "Cl" in the PSF, PDB, and FF files):
+
+            sodium_atom_name = "Na"
+            sodium_child_atom = mbuild.Compound(name=sodium_atom_name)
+            sodium = mb.Compound(name="SOD")
+            sodium.add(sodium_child_atom, inherit_periodicity=False)
+
+            chloride_atom_name = "Cl"
+            chloride_child_bead = mbuild.Compound(name=chloride_atom_name)
+            chloride = mb.Compound(name="CHL")
+            chloride.add(chloride_child_atom, inherit_periodicity=False)
+
+            sodium_chloride_box = mbuild.fill_box(
+                compound=[sodium, chloride],
+                n_compounds=[4, 4],
+                box=[1, 2, 3]
+            )
+
+            - Example zeolite (Charmm_writer must to select the non-user changeable "Si" and "O"
+            in the Charmm object residue_list and forcefield_selection (if >1 force field),
+            which sets the residues "Si" and "O" in the PSF, PDB, and FF files):
+
+            lattice_cif_ETV_triclinic = load_cif(file_or_path=get_mosdef_gomc_fn("ETV_triclinic.cif"))
+            ETV_triclinic = lattice_cif_ETV_triclinic.populate(x=1, y=1, z=1)
+            ETV_triclinic.name = "ETV"
+
+        * "group" applies the force field 1 level under the top level (mbuild.Compound().name or mbuild.Box())
+        or to the 2nd level (mbuild.Compound().name or mbuild.Box()) if only 2 levels exist,
+        taking the next levels name mbuild.Compound().name, respectively.  Or in other words:
+            - For only 2 level (mbuild container-particles) group will grab the name of the mbuild container
+            - For > 2 levels (e.g., mbuild container-etc-molecule-residue-particle),
+            group will grab 1 level down from top
+
+        This is ideal to use when you are building simulation box(es) using mbuild.fill_box(),
+        with molecules, and it allows you to add another level to single single atom molecules
+        (1 atom/bead  = molecule) to rename the mbuild.Compound().name, changing the residue's
+        name and allowing keeping the atom/bead name so the force field is applied properly.
+
+        WARNING: This "group" option will take all the molecule below it, regardless if they
+        are selected to be separte from the group via the residue_list and forcefield_selection
+        (if >1 force field).
+
+        NOTE: This "group" option may be best for non-bonded zeolites or other fixed structures
+        without bonds, if they are single non-bonded atoms. Using this "group" option, the user
+        can select the residue name for the Charmm_writer's residue_list and forcefield_selection
+        (if >1 force field) to force field all the atoms with a single residue name, and output
+        this residue name in the PSF, PDB, and FF files.
+
+            - Example (Charmm_writer select the user changeable "MET" in the Charmm object residue_list
+            and forcefield_selection (if >1 force field), which sets the residue "MET" in the
+            PSF, PDB, and FF files):
+
+            methane_ua_bead_name = "_CH4"
+            methane_child_bead = mbuild.Compound(name=methane_ua_bead_name)
+            methane_box = mbuild.fill_box(
+                compound=methane_child_bead, n_compounds=4, box=[1, 2, 3]
+            )
+            methane_box.name = "MET"
+
+            - Example (Charmm_writer select the user changeable "MET" in the Charmm object residue_list
+            and forcefield_selection (if >1 force field), which sets the residue "MET" in the
+            PSF, PDB, and FF files):
+
+            methane_ua_bead_name = "_CH4"
+            methane_molecule_name = "MET"
+            methane = mb.Compound(name=methane_molecule_name)
+            methane_child_bead = mb.Compound(name=methane_ua_bead_name)
+            methane.add(methane_child_bead, inherit_periodicity=False)
+
+            methane_box = mb.fill_box(
+                compound=methane, n_compounds=10, box=[1, 2, 3]
+            )
+
+            - Example (Charmm_writer select the user changeable "MET" in the Charmm object residue_list
+            and forcefield_selection (if >1 force field), which sets the residue "MET" in the
+            PSF, PDB, and FF files):
+
+            methane_child_bead = mb.Compound(name="_CH4")
+            methane = mb.Compound(name="MET")
+            methane.add(methane_child_bead, inherit_periodicity=False)
+
+            box_liq = mb.fill_box(
+                compound=methane,
+                n_compounds=1230,
+                box=[4.5, 4.5, 4.5]
+            )
+
+            - Example zeolite (Charmm_writer select the user changeable "ETV" in the Charmm object residue_list
+            and forcefield_selection (if >1 force field), which sets the residue
+            "ETV" in the PSF, PDB, and FF files):
+
+            lattice_cif_ETV_triclinic = load_cif(file_or_path=get_mosdef_gomc_fn("ETV_triclinic.cif"))
+            ETV_triclinic = lattice_cif_ETV_triclinic.populate(x=1, y=1, z=1)
+            ETV_triclinic.name = "ETV"
+
     residues: list, [str, ..., str], default=None
         Labels of unique residues in the Compound. Residues are assigned by
         checking against Compound.name.  Only supply residue names as 4 characters
         strings, as the residue names are truncated to 4 characters to fit in the
         psf and pdb file.
-    reorder_res_in_pdb_psf: bool, default=False
-        This option provides the ability to reorder the residues/molecules from the original
-        structure's order.  If True, the residues will be reordered as they appear in the residues
-        variable.  If False, the order will be the same as entered in the original structure.
     boxes_for_simulation: int [1, 2], default = 1
         Gibbs (GEMC) or grand canonical (GCMC) ensembles are examples of where the boxes_for_simulation would be 2.
         Canonical (NVT) or isothermal–isobaric (NPT) ensembles are example with the boxes_for_simulation equal to 1.
@@ -67,12 +200,12 @@ def specific_ff_to_residue(
         angle_types_dict,
         dihedral_types_dict,
         improper_types_dict,
-        combining_rule_dict,
+        combining_rule,
         ]
 
     topology: gmso.Topology
         gmso Topology with applied force field
-    residues_applied_list: list
+    unique_topology_groups_list: list
         list of residues (i.e., list of stings).
         These are all the residues in which the force field actually applied.
     electrostatics14Scale_dict: dict
@@ -82,28 +215,31 @@ def specific_ff_to_residue(
         A dictionary with the 1,4-non-bonded scalars for each residue,
         as the forcefields are specified by residue {'residue_name': '1-4_nonBonded_scaler'}.
     atom_types_dict: dict
-        A dict with the all the residues as the keys. The values are a list containing,
+        A dict with the all the residues as the keys. The unique values are a list containing,
         {'expression': confirmed singular atom types expression or equation,
         'atom_types': gmso Topology.atom_types}.
     bond_types_dict: dict
-        A dict with the all the residues as the keys. The values are a list containing,
+        A dict with the all the residues as the keys. The unique  values are a list containing,
         {'expression': confirmed singular bond types expression or equation,
         'bond_types': gmso Topology.bond_types}.
     angle_types_dict: dict
-        A dict with the all the residues as the keys. The values are a list containing,
+        A dict with the all the residues as the keys. The unique  values are a list containing,
         {'expression': confirmed singular angle types expression or equation,
         'angle_types': gmso Topology.angle_types}.
     dihedral_types_dict: dict
-        A dict with the all the residues as the keys. The values are a list containing,
+        A dict with the all the residues as the keys. The unique  values are a list containing,
         {'expression': confirmed singular dihedral types expression or equation,
         'dihedral_types': gmso Topology.dihedral_types}.
     improper_types_dict: dict
-        A dict with the all the residues as the keys. The values are a list containing,
+        A dict with the all the residues as the keys. The unique  values are a list containing,
         {'expression': confirmed singular improper types expression or equation,
         'improper_types': gmso Topology.improper_types}.
-    combining_rule_dict: dict
-        A dict with the all the residues as the keys and the gmso Topology._combining_rule as the values.
-        {'residue_name': 'combining_rule_type'}.
+    combining_rule: str
+        The possible mixing/combining  rules are 'geometric' or 'lorentz',
+        which provide the  geometric and arithmetic mixing rule, respectively.
+        NOTE: Arithmetic means the 'lorentz' combining or mixing rule.
+        NOTE: GMSO default to the 'lorentz' mixing rule if none is provided,
+        and this writers default is the GMSO default.
     Notes
     -----
     To write the NAMD/GOMC force field, pdb, psf, and force field
@@ -133,7 +269,20 @@ def specific_ff_to_residue(
         )
         raise ImportError(print_error_message)
 
-    if not isinstance(structure, (Compound, mb.Box)):
+    if isinstance(structure, (Compound, mb.Box)):
+        print_error_message = "ERROR: The structure, {} or {}, needs to have have box lengths and angles.".format(
+            type(Compound()),
+            type(mb.Box(lengths=[1, 1, 1])),
+        )
+        if isinstance(structure, Compound):
+            if structure.box is None:
+                raise TypeError(print_error_message)
+
+        elif isinstance(structure, mb.Box):
+            if structure.lengths is None or structure.angles is None:
+                raise TypeError(print_error_message)
+
+    else:
         print_error_message = (
             "ERROR: The structure expected to be of type: "
             "{} or {}, received: {}".format(
@@ -149,7 +298,7 @@ def specific_ff_to_residue(
         print_error_message = (
             "Please the force field selection (forcefield_selection) as a dictionary "
             "with all the residues specified to a force field "
-            '-> Ex: {"Water" : "oplsaa", "OCT": "path/trappe-ua.xml"}, '
+            '-> Ex: {"Water": "oplsaa", "OCT": "path/trappe-ua.xml"}, '
             "Note: the file path must be specified the force field file "
             "or by using the standard force field name provided the `foyer` package."
         )
@@ -162,7 +311,7 @@ def specific_ff_to_residue(
             "The force field selection (forcefield_selection) "
             "is not a dictionary. Please enter a dictionary "
             "with all the residues specified to a force field "
-            '-> Ex: {"Water" : "oplsaa", "OCT": "path/trappe-ua.xml"}, '
+            '-> Ex: {"Water": "oplsaa", "OCT": "path/trappe-ua.xml"}, '
             "Note: the file path must be specified the force field file "
             "or by using the standard force field name provided the `foyer` package."
         )
@@ -171,13 +320,6 @@ def specific_ff_to_residue(
     if residues is None or not isinstance(residues, list):
         print_error_message = (
             "Please enter the residues in the Specific_FF_to_residue function."
-        )
-        raise TypeError(print_error_message)
-
-    if not isinstance(reorder_res_in_pdb_psf, bool):
-        print_error_message = (
-            "Please enter the reorder_res_in_pdb_psf "
-            "in the Specific_FF_to_residue function (i.e., True or False)."
         )
         raise TypeError(print_error_message)
 
@@ -241,23 +383,20 @@ def specific_ff_to_residue(
                     )
                     raise ValueError(print_error_message)
 
-    electrostatics14Scale_dict = {}
-    nonBonded14Scale_dict = {}
-
-    atom_types_dict = {}
-    bond_types_dict = {}
-    angle_types_dict = {}
-    dihedral_types_dict = {}
-    improper_types_dict = {}
-
-    combining_rule_dict = {}
-
+    # check if FF files exist and create a forcefield selection with directory paths
+    # forcefield_selection_with_paths
+    forcefield_selection_with_paths = {}
     for j in range(0, len(forcefield_keys_list)):
         residue_iteration = forcefield_keys_list[j]
+        ff_for_residue_iteration = ff_data[residue_iteration]
         if user_entered_ff_with_path_dict[residue_iteration]:
-            ff_for_residue_iteration = ff_data[residue_iteration]
+            ff_names_path_iteration = ff_data[residue_iteration]
+
             try:
-                read_xlm_iteration = minidom.parse(ff_for_residue_iteration)
+                read_xlm_iteration = minidom.parse(ff_names_path_iteration)
+                forcefield_selection_with_paths.update(
+                    {residue_iteration: ff_names_path_iteration}
+                )
 
             except:
                 print_error_message = (
@@ -279,6 +418,9 @@ def specific_ff_to_residue(
             )
             try:
                 read_xlm_iteration = minidom.parse(ff_names_path_iteration)
+                forcefield_selection_with_paths.update(
+                    {residue_iteration: ff_names_path_iteration}
+                )
             except:
                 print_error_message = (
                     "Please make sure you are entering the correct foyer FF name, or the "
@@ -288,6 +430,10 @@ def specific_ff_to_residue(
 
     # Check to see if it is an empty mbuild.Compound and set intial atoms to 0
     # note empty mbuild.Compound will read 1 atoms but there is really noting there
+    # calculate the initial number of atoms for later comparison
+    # flatten the mbuild.compound, which is needed to get the mbuild.compound.names correctly from
+    # unflattend mbuild.compound.
+    # if mbuild.box do not flatten as it must be an empty box.
     if isinstance(structure, Compound):
         if len(structure.children) == 0:
             # there are no real atoms in the Compound so the test fails. User should use mbuild.Box
@@ -298,412 +444,404 @@ def specific_ff_to_residue(
                 "mbuild Box ({})".format(type(mb.Box(lengths=[1, 1, 1])))
             )
             raise TypeError(print_error_message)
+
         else:
             initial_no_atoms = len(structure.to_parmed().atoms)
+            new_gmso_topology = mb_convert(structure, custom_groups=residues)
 
-    # calculate the initial number of atoms for later comparison
-    if isinstance(structure, mb.Box):
+    elif isinstance(structure, mb.Box):
+        initial_no_atoms = 0
         lengths = structure.lengths
         angles = structure.angles
 
-        structure = mb.Compound()
-        structure.box = mb.Box(lengths=lengths, angles=angles)
-        initial_no_atoms = 0
+        # create a new empty gmso topology.  This is needed because an empty mbuild.Compound
+        # can not be converted to gmso.Topology without counting at 1 atom
+        new_gmso_topology = gmso.Topology()
+        new_gmso_topology.box = gmso.Box(lengths=lengths, angles=angles)
 
-    # add the FF to the residues
-    compound_box_infor = structure.to_parmed(residues=residues)
-    new_topology = gmso.Topology(name="main", box=compound_box_infor.box)
+    # push the FF paths and/or name to the GMSO format and create the new GMSO topology format
+    gmso_compatable_forcefield_selection = {}
+    for ff_key_iter, ff_value_iter in forcefield_selection_with_paths.items():
+        # try to load the Foyer and GMSO FFs, if Foyer convert to GMSO; otherwise, it is an error.
+        try:
+            try:
+                ff_new_gmso_value_iter = FoyerFFs.get_ff(
+                    ff_value_iter
+                ).to_gmso_ff()
+            except:
+                ff_new_gmso_value_iter = GMSOFFs.get_ff(
+                    ff_value_iter
+                ).to_gmso_ff()
 
-    # create a temporary list of gmso.Topology objects until the gmso.Topology object can be directly added together
-    topology_per_residue_list = []
-
-    # prepare all compound and remove nested compounds
-    no_layers_to_check_for_residues = 3
-
-    print_error_message_all_res_not_specified = (
-        "ERROR: All the residues are not specified, or "
-        "the residues entered does not match the residues that "
-        "were found and built for structure."
-    )
-    for j in range(0, no_layers_to_check_for_residues):
-        new_compound_iter = mb.Compound()
-        new_compound_iter.periodicity = structure.periodicity
-        if structure.name in residues:
-            if len(structure.children) == 0:
-                warn(
-                    "Warning: This residue is the atom, and is a single atom., "
-                    + str(structure.name)
-                )
-                new_compound_iter.add(mb.compound.clone(structure))
-
-            elif len(structure.children) > 0:
-
-                new_compound_iter.add(mb.compound.clone(structure))
-
-        else:
-            for child in structure.children:
-                if len(child.children) == 0:
-                    if child.name not in residues:
-                        raise ValueError(
-                            print_error_message_all_res_not_specified
-                        )
-
-                    else:
-                        new_compound_iter.add(mb.compound.clone(child))
-
-                elif len(child.children) > 0:
-                    if child.name in residues:
-                        new_compound_iter.add(mb.compound.clone(child))
-                    else:
-                        for sub_child in child.children:
-                            if sub_child.name in residues:
-                                new_compound_iter.add(
-                                    mb.compound.clone(sub_child)
-                                )
-
-                            else:
-                                if len(sub_child.children) == 0 and (
-                                    child.name not in residues
-                                ):
-
-                                    raise ValueError(
-                                        print_error_message_all_res_not_specified
-                                    )
-
-        structure = new_compound_iter
-
-    residues_applied_list = []
-    residue_orig_order_list = []
-    for child in structure.children:
-        if child.name not in residue_orig_order_list:
-            residue_orig_order_list.append(child.name)
-    for res_reorder_iter in range(0, len(residues)):
-        if residues[res_reorder_iter] not in residue_orig_order_list:
-            text_to_print_1 = (
-                "All the residues were not used from the forcefield_selection "
-                "string or dictionary. There may be residues below other "
-                "specified residues in the mbuild.Compound hierarchy. "
-                "If so, all the highest listed residues pass down the force "
-                "fields through the hierarchy. Alternatively, residues that "
-                "are not in the structure may have been specified. "
+        except:
+            print_error = (
+                f"ERROR: The supplied force field xml for the "
+                f"{ff_key_iter} residue is not a foyer or gmso xml, "
+                f"or the xml has errors and it not able to load properly."
             )
-            text_to_print_2 = (
-                "Note: This warning will appear if you are using the CHARMM pdb and psf writers "
-                + "2 boxes, and the boxes do not contain all the residues in each box."
-            )
-            if boxes_for_simulation == 1:
-                warn(text_to_print_1)
-                raise ValueError(text_to_print_1)
-            if boxes_for_simulation == 2:
-                warn(text_to_print_1 + text_to_print_2)
+            raise TypeError(print_error)
 
-    if not reorder_res_in_pdb_psf:
-        residues = residue_orig_order_list
-    elif reorder_res_in_pdb_psf:
-        print(
-            "INFO: the output file are being reordered in via the residues list's sequence."
+        gmso_compatable_forcefield_selection.update(
+            {ff_key_iter: ff_new_gmso_value_iter}
         )
 
-    atom_number = 0  # 0 sets the 1st atom_number at 1
+    # can use  match_ff_by="group" or "molecule", group was only chosen so everything is using the
+    # user selected mb.Compound.name...
+    gmso_apply(
+        new_gmso_topology,
+        gmso_compatable_forcefield_selection,
+        identify_connected_components=True,
+        identify_connections=True,
+        match_ff_by=gmso_match_ff_by,
+        use_molecule_info=True,
+        remove_untyped=True,
+    )
+    new_gmso_topology.update_topology()
+
+    # find mixing rule.  If an empty.box mixing rule is set to None
+    if isinstance(structure, Compound):
+        combining_rule = new_gmso_topology._combining_rule
+    elif isinstance(structure, mb.Box):
+        combining_rule = None
+
+    # identify the bonded atoms and hence the molecule, label the GMSO objects
+    # and create the function outputs.
     molecule_number = 0  # 0 sets the 1st molecule_number at 1
     molecules_atom_number_dict = {}
-    for i in range(0, len(residues)):
-        children_in_iteration = False
-        new_compound_iteration = mb.Compound()
-        new_compound_iter.periodicity = structure.periodicity
-        for child in structure.children:
-            if ff_data.get(child.name) is None:
-                print_error_message = "ERROR: All residues are not specified in the force_field dictionary"
-                raise ValueError(print_error_message)
+    unique_topology_groups_list = []
+    unique_topologies_groups_dict = {}
+    atom_types_dict = {}
+    bond_types_dict = {}
+    angle_types_dict = {}
+    dihedral_types_dict = {}
+    improper_types_dict = {}
+    nonBonded14Scale_dict = {}
+    electrostatics14Scale_dict = {}
+    for unique_top_group in new_gmso_topology.unique_site_labels(
+        gmso_match_ff_by, name_only=True
+    ):
+        if unique_top_group is not None:
+            if unique_top_group not in list(unique_topology_groups_list):
+                unique_topology_groups_list.append(unique_top_group)
 
-            if child.name == residues[i]:
-                children_in_iteration = True
-                new_compound_iteration.add(mb.compound.clone(child))
+    for unique_group in unique_topology_groups_list:
+        unique_subtop_group = new_gmso_topology.create_subtop(
+            label_type=gmso_match_ff_by, label=unique_group
+        )
+        unique_topologies_groups_dict[unique_group] = unique_subtop_group
 
-        if children_in_iteration:
-            if user_entered_ff_with_path_dict[residues[i]]:
-                ff_iteration = gmsoFF(
-                    forcefield_files=ff_data[residues[i]], strict=False
+        nb_scalers_list = new_gmso_topology.get_lj_scale(
+            molecule_id=unique_group
+        )
+        electro_scalers_list = new_gmso_topology.get_electrostatics_scale(
+            molecule_id=unique_group
+        )
+
+        if nb_scalers_list is not None:
+            nonBonded14Scale_dict[unique_group] = nb_scalers_list[2]
+        elif nb_scalers_list is None:
+            nonBonded14Scale_dict[unique_group] = None
+
+        if electro_scalers_list is not None:
+            electrostatics14Scale_dict[unique_group] = electro_scalers_list[2]
+        elif nb_scalers_list is None:
+            electrostatics14Scale_dict[unique_group] = None
+
+    # Check that all residues in box are in the residue names
+    if isinstance(structure, mb.Compound):
+        for applied_res_i in unique_topology_groups_list:
+            if applied_res_i not in residues:
+                print_error_message_all_res_not_specified = (
+                    f"ERROR: All the residues are not specified in the residue list, or "
+                    f"the {applied_res_i} residue does not match the residues that "
+                    f"were found in the foyer and GMSO force field application. "
                 )
-                residues_applied_list.append(residues[i])
-            elif not user_entered_ff_with_path_dict[residues[i]]:
-                ff_iteration = gmsoFF(name=ff_data[residues[i]], strict=False)
-                residues_applied_list.append(residues[i])
+                raise ValueError(print_error_message_all_res_not_specified)
 
-            new_compound_iteration.box = None
+    # check if all the molecules/residues were found in in the mb.Compound/allowable input
+    text_to_print_2 = (
+        "All the residues were not used from the forcefield_selection "
+        "string or dictionary. There may be residues below other "
+        "specified residues in the mbuild.Compound hierarchy. "
+        "If so, all the highest listed residues pass down the force "
+        "fields through the hierarchy. Alternatively, residues that "
+        "are not in the structure may have been specified. "
+    )
+    text_to_print_3 = (
+        f"NOTE: This warning will appear if you are using the CHARMM pdb and psf writers "
+        f"2 boxes, and the boxes do not contain all the residues in each box."
+    )
+    for res_i in residues:
+        if res_i not in unique_topology_groups_list:
+            text_to_print_1 = f"The {res_i} residues were not used from the forcefield_selection string or dictionary. "
+            if boxes_for_simulation == 1:
+                raise ValueError(f"ERROR: {text_to_print_1}{text_to_print_2}")
+            if boxes_for_simulation == 2:
+                warn(
+                    f"WARNING: {text_to_print_1}{text_to_print_2}{text_to_print_3}"
+                )
 
-            ff_apply_start_time_s = datetime.datetime.today()
-            new_topology_iteration = ff_iteration.apply(
-                new_compound_iteration,
-                residues=[residues[i]],
-                assert_improper_params=False,
-                name=residues[i],
-                box=compound_box_infor.box,
-            )
+    # get all the bonded atoms, which is used for the bonded map to identify molecules
+    bonded_atom_number_set = set()
+    all_bonded_atoms_list = set()
+    for bond in new_gmso_topology.bonds:
+        bonded_atom_0_iter = new_gmso_topology.get_index(
+            bond.connection_members[0]
+        )
+        bonded_atom_1_iter = new_gmso_topology.get_index(
+            bond.connection_members[1]
+        )
+        if bonded_atom_0_iter < bonded_atom_1_iter:
+            bonded_atom_tuple_iter = (bonded_atom_0_iter, bonded_atom_1_iter)
+        else:
+            bonded_atom_tuple_iter = (bonded_atom_1_iter, bonded_atom_0_iter)
 
-            ff_apply_end_time_s = datetime.datetime.today()
-            ff_apply_total_time_s = (
-                ff_apply_end_time_s - ff_apply_start_time_s
-            ).total_seconds()
-            write_log_data = (
-                f"*************************************************\n"
-                f"residue name = {residues[i]} \n"
-                f"ff_apply_total_time_s (s) = {ff_apply_total_time_s} \n"
-            )
-            print(write_log_data)
+        bonded_atom_number_set.add(bonded_atom_tuple_iter)
+        all_bonded_atoms_list.add(bonded_atom_0_iter)
+        all_bonded_atoms_list.add(bonded_atom_1_iter)
 
-            print("xxxxxxxxxxxxxxxxxxx")
-            print("xxxxxxxxxxxxxxxxxxx")
-            print("xxxxxxxxxxxxxxxxxxx")
+    """
+    build_molecule_list_time_start = time.time()
+    """
 
-            # add atom numbers (renumber) to the combined gmso topology
-            for site in new_topology_iteration.sites:
-                site.__dict__["label_"] = atom_number
-                atom_number += 1
+    # map all bonded atoms as molecules
+    molecules_atom_number_list = []
+    for site_j, site in enumerate(new_gmso_topology.sites):
+        atom_iter_k = new_gmso_topology.get_index(site)
 
-            bonded_atom_number_set = set()
-            all_bonded_atoms_list = set()
-            for bond in new_topology_iteration.bonds:
-                bonded_atom_0_iter = bond.__dict__["connection_members_"][
-                    0
-                ].__dict__["label_"]
-                bonded_atom_1_iter = bond.__dict__["connection_members_"][
-                    1
-                ].__dict__["label_"]
+        if atom_iter_k in all_bonded_atoms_list:
+            for bonded_atoms_n in bonded_atom_number_set:
+                if atom_iter_k in bonded_atoms_n:
+                    bonded_atoms_n_list_iter = list(bonded_atoms_n)
+                    atom_found_iter = False
+                    if len(molecules_atom_number_list) != 0:
+                        for molecule_j in range(
+                            0, len(molecules_atom_number_list)
+                        ):
+                            if (
+                                atom_iter_k
+                                in molecules_atom_number_list[molecule_j]
+                            ):
+                                molecules_atom_number_list[molecule_j].add(
+                                    bonded_atoms_n_list_iter[0]
+                                )
+                                molecules_atom_number_list[molecule_j].add(
+                                    bonded_atoms_n_list_iter[1]
+                                )
+                                atom_found_iter = True
 
-                if bonded_atom_0_iter < bonded_atom_1_iter:
-                    bonded_atom_tuple_iter = (
-                        bonded_atom_0_iter,
-                        bonded_atom_1_iter,
-                    )
-                else:
-                    bonded_atom_tuple_iter = (
-                        bonded_atom_1_iter,
-                        bonded_atom_0_iter,
-                    )
-
-                bonded_atom_number_set.add(bonded_atom_tuple_iter)
-                all_bonded_atoms_list.add(bonded_atom_0_iter)
-                all_bonded_atoms_list.add(bonded_atom_1_iter)
-
-            # map all bonded atoms as molecules
-            molecules_atom_number_list = []
-            for site in new_topology_iteration.sites:
-                atom_iter_k = site.__dict__["label_"]
-
-                if atom_iter_k in all_bonded_atoms_list:
-                    for bonded_atoms_n in bonded_atom_number_set:
-                        if atom_iter_k in bonded_atoms_n:
-                            bonded_atoms_n_list_iter = list(bonded_atoms_n)
-                            atom_found_iter = False
-                            if len(molecules_atom_number_list) != 0:
-                                for molecule_j in range(
-                                    0, len(molecules_atom_number_list)
-                                ):
-                                    if (
-                                        atom_iter_k
-                                        in molecules_atom_number_list[
-                                            molecule_j
-                                        ]
-                                    ):
-                                        molecules_atom_number_list[
-                                            molecule_j
-                                        ].add(bonded_atoms_n_list_iter[0])
-                                        molecules_atom_number_list[
-                                            molecule_j
-                                        ].add(bonded_atoms_n_list_iter[1])
-                                        atom_found_iter = True
-
-                                    if (
-                                        molecule_j
-                                        == len(molecules_atom_number_list) - 1
-                                    ) and atom_found_iter is False:
-                                        molecules_atom_number_list.append(
-                                            {
-                                                bonded_atoms_n_list_iter[0],
-                                                bonded_atoms_n_list_iter[1],
-                                            }
-                                        )
-                            else:
+                            if (
+                                molecule_j
+                                == len(molecules_atom_number_list) - 1
+                            ) and atom_found_iter is False:
                                 molecules_atom_number_list.append(
                                     {
                                         bonded_atoms_n_list_iter[0],
                                         bonded_atoms_n_list_iter[1],
                                     }
                                 )
-                else:
-                    molecules_atom_number_list.append({atom_iter_k})
+                    else:
+                        molecules_atom_number_list.append(
+                            {
+                                bonded_atoms_n_list_iter[0],
+                                bonded_atoms_n_list_iter[1],
+                            }
+                        )
+        else:
+            molecules_atom_number_list.append({atom_iter_k})
 
-            # create a molecule number to atom number dict
-            # Example:  {molecule_number_x: {atom_number_1, ..., atom_number_y}, ...}
-            for molecule_iter in range(0, len(molecules_atom_number_list)):
-                molecules_atom_number_dict.update(
-                    {molecule_number: molecules_atom_number_list[molecule_iter]}
-                )
-                molecule_number += 1
+    """
+    build_molecule_list_time_end = time.time()
+    final_build_molecule_list_time_s = build_molecule_list_time_end - build_molecule_list_time_start
+    final_build_molecule_list_time_min = (final_build_molecule_list_time_s) / 60
+    final_build_molecule_list_time_hr = (final_build_molecule_list_time_s) / 60 / 60
 
-            for site in new_topology_iteration.sites:
-                site_atom_number_iter = site.__dict__["label_"]
+    print(f"final_build_molecule_list_time_s = {final_build_molecule_list_time_s}")
+    print(f"final_build_molecule_list_time_min = {final_build_molecule_list_time_min}")
+    print(f"final_build_molecule_list_time_hr = {final_build_molecule_list_time_hr}")
+    """
 
-                # get molecule number
-                for mol_n, atom_set_n in molecules_atom_number_dict.items():
-                    if site_atom_number_iter in atom_set_n:
-                        molecule_p_number = mol_n
+    # create a molecule number to atom number dict
+    # Example:  {molecule_number_x: {atom_number_1, ..., atom_number_y}, ...}
+    for molecule_iter in range(0, len(molecules_atom_number_list)):
+        molecules_atom_number_dict.update(
+            {molecule_number: molecules_atom_number_list[molecule_iter]}
+        )
+        molecule_number += 1
 
-                # change 'residue_label_' to "residue_name_"
-                # change 'residue_index_' to "residue_number_"
-                site.__dict__["residue_label_"] = residues[i]
-                site.__dict__["residue_index_"] = molecule_p_number + 1
+    for site in new_gmso_topology.sites:
+        site_atom_number_iter = new_gmso_topology.get_index(site)
+        # get molecule number
+        for mol_n, atom_set_n in molecules_atom_number_dict.items():
+            if site_atom_number_iter in atom_set_n:
+                molecule_p_number = mol_n
 
-            # get the non-bonded, bond, angle, dihedral and improper equations and impropers and other info
-            atom_type_expression_set = set()
-            for atom_type_k in new_topology_iteration.atom_types:
-                atom_type_expression_set.add(atom_type_k.expression)
-            if len(atom_type_expression_set) == 1:
-                atom_types_dict.update(
-                    {
-                        residues[i]: {
-                            "expression": list(atom_type_expression_set)[0],
-                            "atom_types": new_topology_iteration.atom_types,
-                        }
+        if gmso_match_ff_by == "group":
+            site.__dict__["residue_name_"] = site.__dict__["group_"]
+        elif gmso_match_ff_by == "molecule":
+            site.__dict__["residue_name_"] = site.__dict__["molecule_"].name
+
+        site.__dict__["residue_number_"] = molecule_p_number + 1
+
+    # create a topolgy only with the bonded parameters, including their residue/molecule type
+    # which permit force fielding in GOMC easier in the charmm_writer
+    # iterate thru the unique topologies and get the unique atom, bond, angle, dihedral, improper types
+    for (
+        unique_top_group_name_iter,
+        unique_top_iter,
+    ) in unique_topologies_groups_dict.items():
+        # get the unique non-bonded data, equations, and other info
+        atom_type_expression_set = set()
+        for atom_type_k in unique_top_iter.atom_types(
+            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+        ):
+            atom_type_k.__dict__["tags_"] = {
+                "resname": unique_top_group_name_iter
+            }
+            atom_type_expression_set.add(atom_type_k.expression)
+        if len(atom_type_expression_set) == 1:
+            atom_types_dict.update(
+                {
+                    unique_top_group_name_iter: {
+                        "expression": list(atom_type_expression_set)[0],
+                        "atom_types": unique_top_iter.atom_types(
+                            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+                        ),
                     }
-                )
-            elif len(atom_type_expression_set) == 0:
-                atom_types_dict.update({residues[i]: None})
-            else:
-                raise ValueError(
-                    "ERROR: There is more than 1 {} equation types per residue or molecules "
-                    "".format("non-bonded")
-                )
-
-            bond_type_expression_set = set()
-            for bond_type_k in new_topology_iteration.bond_types:
-                bond_type_expression_set.add(bond_type_k.expression)
-            if len(bond_type_expression_set) == 1:
-                bond_types_dict.update(
-                    {
-                        residues[i]: {
-                            "expression": list(bond_type_expression_set)[0],
-                            "bond_types": new_topology_iteration.bond_types,
-                        }
-                    }
-                )
-            elif len(bond_type_expression_set) == 0:
-                bond_types_dict.update({residues[i]: None})
-            else:
-                raise ValueError(
-                    "ERROR: There is more than 1 {} equation types per residue or molecules "
-                    "".format("bond")
-                )
-
-            angle_type_expression_set = set()
-            for angle_type_k in new_topology_iteration.angle_types:
-                angle_type_expression_set.add(angle_type_k.expression)
-            if len(angle_type_expression_set) == 1:
-                angle_types_dict.update(
-                    {
-                        residues[i]: {
-                            "expression": list(angle_type_expression_set)[0],
-                            "angle_types": new_topology_iteration.angle_types,
-                        }
-                    }
-                )
-            elif len(angle_type_expression_set) == 0:
-                angle_types_dict.update({residues[i]: None})
-            else:
-                raise ValueError(
-                    "ERROR: There is more than 1 {} equation types per residue or molecules "
-                    "".format("angle")
-                )
-
-            dihedral_type_expression_set = set()
-            for dihedral_type_k in new_topology_iteration.dihedral_types:
-                dihedral_type_expression_set.add(dihedral_type_k.expression)
-            if len(dihedral_type_expression_set) == 1:
-                dihedral_types_dict.update(
-                    {
-                        residues[i]: {
-                            "expression": list(dihedral_type_expression_set)[0],
-                            "dihedral_types": new_topology_iteration.dihedral_types,
-                        }
-                    }
-                )
-            elif len(dihedral_type_expression_set) == 0:
-                dihedral_types_dict.update({residues[i]: None})
-            else:
-                raise ValueError(
-                    "ERROR: There is more than 1 {} equation types per residue or molecules "
-                    "".format("dihedral")
-                )
-
-            improper_type_expression_set = set()
-            for improper_type_k in new_topology_iteration.improper_types:
-                improper_type_expression_set.add(improper_type_k.expression)
-            if len(improper_type_expression_set) == 1:
-                improper_types_dict.update(
-                    {
-                        residues[i]: {
-                            "expression": list(improper_type_expression_set)[0],
-                            "improper_types": new_topology_iteration.improper_types,
-                        }
-                    }
-                )
-            elif len(improper_type_expression_set) == 0:
-                improper_types_dict.update({residues[i]: None})
-            else:
-                raise ValueError(
-                    "ERROR: There is more than 1 {} equation types per residue or molecules "
-                    "".format("improper")
-                )
-
-            nonBonded_1_4_scaling_factor_set = set()
-            electro_1_4_scaling_factor_set = set()
-            nonBonded_1_4_scaling_factor_set.add(
-                new_topology_iteration.scaling_factors["nonBonded14Scale"]
+                }
             )
-            electro_1_4_scaling_factor_set.add(
-                new_topology_iteration.scaling_factors["electrostatics14Scale"]
-            )
-            if (
-                len(nonBonded_1_4_scaling_factor_set) == 1
-                and len(electro_1_4_scaling_factor_set) == 1
-            ):
-                nonBonded14Scale_dict.update(
-                    {residues[i]: list(nonBonded_1_4_scaling_factor_set)[0]}
-                )
-                electrostatics14Scale_dict.update(
-                    {residues[i]: list(electro_1_4_scaling_factor_set)[0]}
-                )
-            elif (
-                len(nonBonded_1_4_scaling_factor_set) == 0
-                and len(electro_1_4_scaling_factor_set) == 0
-            ):
-                nonBonded14Scale_dict.update({residues[i]: None})
-                electrostatics14Scale_dict.update({residues[i]: None})
-            else:
-                raise ValueError(
-                    "ERROR: There is more than 1 {} equation types per residue or molecules "
-                    "".format("1-4 scaling facter")
-                )
-
-            combining_rule_dict.update(
-                {residues[i]: new_topology_iteration._combining_rule}
+        elif len(atom_type_expression_set) == 0:
+            atom_types_dict.update({unique_top_group_name_iter: None})
+        else:
+            raise ValueError(
+                "ERROR: There is more than 1 {} equation types per residue or molecules "
+                "".format("non-bonded")
             )
 
-            topology_per_residue_list.append(new_topology_iteration)
+        # get the unique bond data, equations, and other info
+        bond_type_expression_set = set()
+        for bond_type_k in unique_top_iter.bond_types(
+            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+        ):
+            bond_type_k.__dict__["tags_"] = {
+                "resname": unique_top_group_name_iter
+            }
+            bond_type_expression_set.add(bond_type_k.expression)
+        if len(bond_type_expression_set) == 1:
+            bond_types_dict.update(
+                {
+                    unique_top_group_name_iter: {
+                        "expression": list(bond_type_expression_set)[0],
+                        "bond_types": unique_top_iter.bond_types(
+                            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+                        ),
+                    }
+                }
+            )
+        elif len(bond_type_expression_set) == 0:
+            bond_types_dict.update({unique_top_group_name_iter: None})
+        else:
+            raise ValueError(
+                "ERROR: There is more than 1 {} equation types per residue or molecules "
+                "".format("bond")
+            )
 
-    # iterate thru topologies
-    for top_i in topology_per_residue_list:
-        # iterate thru sites and add to empty topology
-        for site_i in top_i.sites:
-            new_topology.add_site(site_i)
+        # get the unique angle data, equations, and other info
+        angle_type_expression_set = set()
+        for angle_type_k in unique_top_iter.angle_types(
+            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+        ):
+            angle_type_k.__dict__["tags_"] = {
+                "resname": unique_top_group_name_iter
+            }
+            angle_type_expression_set.add(angle_type_k.expression)
+        if len(angle_type_expression_set) == 1:
+            angle_types_dict.update(
+                {
+                    unique_top_group_name_iter: {
+                        "expression": list(angle_type_expression_set)[0],
+                        "angle_types": unique_top_iter.angle_types(
+                            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+                        ),
+                    }
+                }
+            )
+        elif len(angle_type_expression_set) == 0:
+            angle_types_dict.update({unique_top_group_name_iter: None})
+        else:
+            raise ValueError(
+                "ERROR: There is more than 1 {} equation types per residue or molecules "
+                "".format("angle")
+            )
 
-        # iterate thru connections (bonds, angles, dihedrals, and impropers) and add to empty topology
-        for connection_i in top_i.connections:
-            new_topology.add_connection(connection_i)
+        # get the unique dihedral data, equations, and other info
+        dihedral_type_expression_set = set()
+        for dihedral_type_k in unique_top_iter.dihedral_types(
+            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+        ):
+            dihedral_type_k.__dict__["tags_"] = {
+                "resname": unique_top_group_name_iter
+            }
+            dihedral_type_expression_set.add(dihedral_type_k.expression)
+        if len(dihedral_type_expression_set) == 1:
+            dihedral_types_dict.update(
+                {
+                    unique_top_group_name_iter: {
+                        "expression": list(dihedral_type_expression_set)[0],
+                        "dihedral_types": unique_top_iter.dihedral_types(
+                            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+                        ),
+                    }
+                }
+            )
+        elif len(dihedral_type_expression_set) == 0:
+            dihedral_types_dict.update({unique_top_group_name_iter: None})
+        else:
+            raise ValueError(
+                "ERROR: There is more than 1 {} equation types per residue or molecules "
+                "".format("dihedral")
+            )
 
-    topology = new_topology
+        # get the unique improper data, equations, and other info
+        improper_type_expression_set = set()
+        for improper_type_k in unique_top_iter.improper_types(
+            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+        ):
+            improper_type_k.__dict__["tags_"] = {
+                "resname": unique_top_group_name_iter
+            }
+            improper_type_expression_set.add(improper_type_k.expression)
+        if len(improper_type_expression_set) == 1:
+            improper_types_dict.update(
+                {
+                    unique_top_group_name_iter: {
+                        "expression": list(improper_type_expression_set)[0],
+                        "improper_types": unique_top_iter.improper_types(
+                            filter_by=PotentialFilters.UNIQUE_NAME_CLASS
+                        ),
+                    }
+                }
+            )
+        elif len(improper_type_expression_set) == 0:
+            improper_types_dict.update({unique_top_group_name_iter: None})
+        else:
+            raise ValueError(
+                "ERROR: There is more than 1 {} equation types per residue or molecules "
+                "".format("improper")
+            )
 
+        # check to see if the non-bonded and electrostatic 1-4 interactions are in each group/molecule/residue
+        if unique_top_group_name_iter not in list(
+            nonBonded14Scale_dict.keys()
+        ) or unique_top_group_name_iter not in list(
+            electrostatics14Scale_dict.keys()
+        ):
+            raise ValueError(
+                f"ERROR: The {unique_top_group_name_iter} residue is not provided for the "
+                f'{"nonBonded14Scale"} and {"electrostatics14Scale"} values'
+            )
+
+    topology = new_gmso_topology
     # calculate the final number of atoms
     final_no_atoms = topology.n_sites
 
@@ -722,7 +860,7 @@ def specific_ff_to_residue(
 
     return [
         topology,
-        residues_applied_list,
+        unique_topology_groups_list,
         electrostatics14Scale_dict,
         nonBonded14Scale_dict,
         atom_types_dict,
@@ -730,5 +868,5 @@ def specific_ff_to_residue(
         angle_types_dict,
         dihedral_types_dict,
         improper_types_dict,
-        combining_rule_dict,
+        combining_rule,
     ]

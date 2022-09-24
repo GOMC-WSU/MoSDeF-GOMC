@@ -10,9 +10,9 @@
 This Python code allows the auto-generation of the [GPU Optimized Monte Carlo (GOMC)](http://gomc.eng.wayne.edu) files for a simulation, which includes the coordinate (PDB), topology (PSF), force field (FF), and the GOMC control file.  This software supports various systems, force field types, and can also create the PDB, PSF, and FF files for the  [NAMD](https://www.ks.uiuc.edu/Research/namd/) simulation engine.  Since MoSDeF-GOMC was built from the  [Molecular Simulation Design Framework (MoSDeF)](https://mosdef.org) ([MoSDeF Github](https://github.com/mosdef-hub)) platform, it provides complete integration with the MoSDeF software.
 
 ### Warning
-MoSDeF-GOMC is currently still under construction and may not work correctly yet.
-
 MoSDeF-GOMC is a new product continually adding functionality to provide an optimal user experience. Therefore, there could be some user-noticeable changes to this software when upgrading newer MoSDeF-GOMC versions.
+
+The original version of MoSDeF-GOMC, which uses Parmed as the software backend, will be deprecated by December 2022.  This Parmed version is already replaced with the new MoSDeF-GOMC version, which uses MoSDeF's GMSO software as the new backend.  We recommend that the new **GMSO** version of MoSDeF-GOMC be used because it has many new features, and the Parmed is no longer supported.
 
 ### Resources
  - [GOMC Github repository](https://github.com/GOMC-WSU)
@@ -30,4 +30,4 @@ Please cite MoSDeF-GOMC, GOMC, and MoSDeF tools, which are provided [here](XXX).
 
 The MoSDeF-GOMC package is available via conda:
 
-conda install -c conda-forge mosdef-gomc
+`conda create --name mosdef_gomc -c conda-forge mosdef_gomc`
