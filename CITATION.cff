@@ -1,0 +1,99 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.0.0
+title: >-
+  MoSDeF-GOMC: Python software for the
+creation of scientific workflows for the Monte
+Carlo simulation engine GOMC."
+message: "Please cite this software using these metadata and the preferred citation."
+type: software
+authors:
+  - given-names: "Brad"
+    family-names: Crawford
+    affiliation: "Wayne State University"
+    orcid: 'https://orcid.org/0000-0003-0638-7333'
+  - given-names: Umesh
+    family-names: Timalsina
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-5430-3993'
+  - given-names: "Co D."
+    family-names: Quach
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-1255-4161'
+  - given-names: "Nicholas"
+    family-names: Craven
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-4607-4377'
+  - given-names: "Justin B."
+    family-names: Gilmer
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-6915-5591'
+  - given-names: "Peter T."
+    family-names: Cummings
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-9766-2216'
+  - given-names: "Jeffrey"
+    family-names: Potoff
+    affiliation: "Wayne State University"
+    orcid: 'https://orcid.org/0000-0002-4421-8787'
+
+repository-code: 'https://github.com/GOMC-WSU'
+url: 'https://github.com/GOMC-WSU'
+repository: 'https://github.com/GOMC-WSU/MoSDeF-GOMC'
+repository-artifact: 'https://github.com/GOMC-WSU/MoSDeF-GOMC/releases'
+abstract: >-
+MoSDeF-GOMC: Python software for the
+creation of scientific workflows for the Monte
+Carlo simulation engine GOMC
+
+      MoSDeF-GOMC is designed to produce all the required files to run a Monte Carlo simulation, with only tens of lines of Python code.  Alternately, this software's output can also build the starting files for a single residue molecules via NAMD and and the py-MCMD codes.
+
+keywords:
+  - Python
+  - Reproducibility
+  - "Molecular Simulation"
+  - "Monte Carlo"
+  - GOMC
+  - "computational chemistry"
+  - chemistry
+  - 'TRUE'
+  - mosdef
+license: "MIT"
+preferred-citation:
+  type: "article"
+  authors:
+  - given-names: "Brad"
+    family-names: Crawford
+    affiliation: "Wayne State University"
+  - given-names: Umesh
+    family-names: Timalsina
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-5430-3993'
+  - given-names: "Co D."
+    family-names: Quach
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-1255-4161'
+  - given-names: "Nicholas"
+    family-names: Craven
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-4607-4377'
+  - given-names: "Justin B."
+    family-names: Gilmer
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-6915-5591'
+  - given-names: "Peter T."
+    family-names: Cummings
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-9766-2216'
+  - given-names: "Peter T."
+    family-names: Cummings
+    affiliation: "Vanderbilt University"
+    orcid: 'https://orcid.org/0000-0002-9766-2216'
+  - given-names: "Jeffrey"
+    family-names: Potoff
+    affiliation: "Wayne State University"
+    orcid: 'https://orcid.org/0000-0002-4421-8787'
+  title: "MoSDeF-GOMC: Python software for the creation of scientific workflows for the Monte Carlo simulation engine GOMC"
+  year: "TBD"
+  doi: "TBD"
