@@ -1,14 +1,16 @@
 import os
 
 import mbuild as mb
-import mbuild.formats.gmso_gomc_conf_writer as gomc_control
 import pytest
 import unyt as u
-from mbuild.formats.gmso_charmm_writer import Charmm
 from mbuild.lattice import load_cif
-from mbuild.tests.base_test import BaseTest
 from mbuild.utils.io import get_fn, has_foyer
 from unyt.dimensions import energy, length, pressure, temperature
+
+import mosdef_gomc.formats.gmso_gomc_conf_writer as gomc_control
+from mosdef_gomc.formats.gmso_charmm_writer import Charmm
+from mosdef_gomc.tests.base_test import BaseTest
+from mosdef_gomc.utils.io import get_mosdef_gomc_fn
 
 
 @pytest.mark.skipif(not has_foyer, reason="Foyer package not installed")
@@ -33,7 +35,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "ff_psf_pdb_file_directory",
                 "check_input_files_exist",
                 "Restart",
-                "RestartCheckpoint",
+                "Checkpoint",
                 "Parameters",
                 "Coordinates_box_0",
                 "override_psf_box_0",
@@ -58,7 +60,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "Temperature",
                 "ff_psf_pdb_file_directory",
                 "Restart",
-                "RestartCheckpoint",
+                "Checkpoint",
                 "ExpertMode",
                 "check_input_files_exist",
                 "Parameters",
@@ -550,6 +552,7 @@ class TestGOMCControlFileWriter(BaseTest):
             300 * u.K,
             check_input_files_exist=True,
             Restart=False,
+            input_variables_dict={"VDWGeometricSigma": False},
         )
 
         with open("test_save_basic_NVT.conf", "r") as fp:
@@ -1160,7 +1163,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 elif line.startswith("VDWGeometricSigma "):
                     variables_read_dict["VDWGeometricSigma"] = True
                     split_line = line.split()
-                    assert split_line[1] == "False"
+                    assert split_line[1] == "True"
 
                 elif line.startswith("useConstantArea "):
                     variables_read_dict["useConstantArea"] = True
@@ -1534,7 +1537,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 if line.startswith("DisFreq "):
                     variables_read_dict["DisFreq"] = True
                     split_line = line.split()
-                    assert split_line[1] == "0.2"
+                    assert split_line[1] == "0.19"
+
+                elif line.startswith("VolumeFreq "):
+                    variables_read_dict["RotFreq"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0.01"
 
                 elif line.startswith("RotFreq "):
                     variables_read_dict["RotFreq"] = True
@@ -8345,6 +8353,7 @@ class TestGOMCControlFileWriter(BaseTest):
             residues=[ETV_triclinic_1_cell.name, ETV_triclinic_3_cell.name],
             bead_to_atom_name_dict=None,
             fix_residue=[ETV_triclinic_1_cell.name, ETV_triclinic_3_cell.name],
+            gmso_match_ff_by="group",
         )
 
         gomc_control.write_gomc_control_file(
@@ -8432,6 +8441,7 @@ class TestGOMCControlFileWriter(BaseTest):
         methane_box_orth = mb.fill_box(
             compound=methane, n_compounds=1, box=[1, 2, 3]
         )
+        print(f"methane.name = {methane.name}")
 
         charmm_bad_box_0 = Charmm(
             methane_box_orth,
@@ -8439,6 +8449,7 @@ class TestGOMCControlFileWriter(BaseTest):
             ff_filename="methane_box_orth_bad_box_0_non_orth",
             residues=[methane.name],
             forcefield_selection="trappe-ua",
+            gmso_match_ff_by="group",
         )
 
         # set the vectors all too long
@@ -8460,6 +8471,7 @@ class TestGOMCControlFileWriter(BaseTest):
             ff_filename="methane_box_orth_bad_box_1_non_orth",
             residues=[methane.name],
             forcefield_selection="trappe-ua",
+            gmso_match_ff_by="group",
         )
 
         # set the vectors all too long
@@ -8552,7 +8564,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "EqSteps": 3,
                 "CoordinatesFreq": [True, 4],
                 "RestartFreq": [True, 5],
-                "CheckpointFreq": [True, 6],
+                "CheckpointFreq": [True, 5],
                 "ConsoleFreq": [True, 7],
                 "BlockAverageFreq": [True, 8],
                 "HistogramFreq": [True, 9],
@@ -8614,7 +8626,7 @@ class TestGOMCControlFileWriter(BaseTest):
                     variables_read_dict["CheckpointFreq"] = True
                     split_line = line.split()
                     assert split_line[1] == "True"
-                    assert split_line[2] == "6"
+                    assert split_line[2] == "5"
 
                 elif line.startswith("ConsoleFreq "):
                     variables_read_dict["ConsoleFreq"] = True
@@ -8894,11 +8906,11 @@ class TestGOMCControlFileWriter(BaseTest):
                 Restart=restart_input,
             )
 
-        restart_checkpoint_input = "XXXXX"
         with pytest.raises(
             TypeError,
-            match=r"ERROR: The {} input is {} and needs to be a boolean \(i.e., True or False\)."
-            "".format("RestartCheckpoint", type(restart_checkpoint_input)),
+            match=r"ERROR: Checkpoint is a list, and the list need to be "
+            r"\[True, str\] ---> \[True, checkpoint_filename\] or "
+            r"\[False, str\] ---> \[False, checkpoint_filename\].",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -8907,7 +8919,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 100,
                 300 * u.K,
                 check_input_files_exist=False,
-                RestartCheckpoint="XXXXX",
+                Checkpoint="XXXXX",
             )
 
         check_input_files_exist_input = "XXXXX"
@@ -9013,7 +9025,7 @@ class TestGOMCControlFileWriter(BaseTest):
                         split_line[2] == "../test_files/NVT_toluene_box_0.coor"
                     )
 
-                elif line.startswith("extendedSystem 	0 "):
+                elif line.startswith("extendedSystem   0 "):
                     variables_read_dict["extendedSystem_box_0"] = True
                     split_line = line.split()
                     assert split_line[1] == "0"
@@ -9021,7 +9033,7 @@ class TestGOMCControlFileWriter(BaseTest):
                         split_line[2] == "../test_files/NVT_toluene_box_0.xsc"
                     )
 
-                elif line.startswith("binVelocities   	0"):
+                elif line.startswith("binVelocities    0 "):
                     variables_read_dict["binVelocities_box_0"] = True
                     split_line = line.split()
                     assert split_line[1] == "0"
@@ -9134,13 +9146,13 @@ class TestGOMCControlFileWriter(BaseTest):
                         split_line[2] == "../test_files/NVT_ethane_box_0.coor"
                     )
 
-                elif line.startswith("extendedSystem 	0 "):
+                elif line.startswith("extendedSystem   0 "):
                     variables_read_dict["extendedSystem_box_0"] = True
                     split_line = line.split()
                     assert split_line[1] == "0"
                     assert split_line[2] == "../test_files/NVT_ethane_box_0.xsc"
 
-                elif line.startswith("binVelocities   	0"):
+                elif line.startswith("binVelocities    0 "):
                     variables_read_dict["binVelocities_box_0"] = True
                     split_line = line.split()
                     assert split_line[1] == "0"
@@ -9166,13 +9178,13 @@ class TestGOMCControlFileWriter(BaseTest):
                         split_line[2] == "../test_files/NVT_ethane_box_1.coor"
                     )
 
-                elif line.startswith("extendedSystem 	1 "):
+                elif line.startswith("extendedSystem   1 "):
                     variables_read_dict["extendedSystem_box_1"] = True
                     split_line = line.split()
                     assert split_line[1] == "1"
                     assert split_line[2] == "../test_files/NVT_ethane_box_1.xsc"
 
-                elif line.startswith("binVelocities   	1"):
+                elif line.startswith("binVelocities    1 "):
                     variables_read_dict["binVelocities_box_1"] = True
                     split_line = line.split()
                     assert split_line[1] == "1"
@@ -9215,10 +9227,10 @@ class TestGOMCControlFileWriter(BaseTest):
             "NVT",
             1000,
             300 * u.K,
-            ff_psf_pdb_file_directory="../Test",
+            ff_psf_pdb_file_directory="../Test_1",
             Parameters="../test_folder/new.par",
             Restart=True,
-            RestartCheckpoint=True,
+            Checkpoint=[True, "../Test_2/Output_data.chk"],
             check_input_files_exist=False,
             input_variables_dict={},
         )
@@ -9229,7 +9241,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "Coordinates_box_0": False,
                 "Structure_box_0": False,
                 "Restart": False,
-                "RestartCheckpoint": False,
+                "Checkpoint": False,
             }
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
@@ -9242,30 +9254,31 @@ class TestGOMCControlFileWriter(BaseTest):
                     variables_read_dict["Coordinates_box_0"] = True
                     split_line = line.split()
                     assert split_line[1] == "0"
-                    assert split_line[2] == "../Test/ethane_box_0.pdb"
+                    assert split_line[2] == "../Test_1/ethane_box_0.pdb"
 
                 elif line.startswith("Structure 0 "):
                     variables_read_dict["Structure_box_0"] = True
                     split_line = line.split()
                     assert split_line[1] == "0"
-                    assert split_line[2] == "../Test/ethane_box_0.psf"
+                    assert split_line[2] == "../Test_1/ethane_box_0.psf"
 
                 elif line.startswith("Restart "):
                     variables_read_dict["Restart"] = True
                     split_line = line.split()
                     assert split_line[1] == "True"
 
-                elif line.startswith("RestartCheckpoint "):
-                    variables_read_dict["RestartCheckpoint"] = True
+                elif line.startswith("Checkpoint "):
+                    variables_read_dict["Checkpoint"] = True
                     split_line = line.split()
                     assert split_line[1] == "True"
+                    assert split_line[2] == "../Test_2/Output_data.chk"
 
         assert variables_read_dict == {
             "Parameters": True,
             "Coordinates_box_0": True,
             "Structure_box_0": True,
             "Restart": True,
-            "RestartCheckpoint": True,
+            "Checkpoint": True,
         }
 
     def test_restarting_pdb_psf_NVT_only_rename_coordinates(self, ethane_gomc):
@@ -9291,7 +9304,7 @@ class TestGOMCControlFileWriter(BaseTest):
             300 * u.K,
             ff_psf_pdb_file_directory="../Test",
             Restart=True,
-            RestartCheckpoint=True,
+            Checkpoint=False,
             Coordinates_box_0="../test_files_1/NVT_toluene_box_0.pdb",
             Structure_box_0=None,
             check_input_files_exist=False,
@@ -9304,6 +9317,7 @@ class TestGOMCControlFileWriter(BaseTest):
             variables_read_dict = {
                 "Coordinates_box_0": False,
                 "Structure_box_0": False,
+                "Checkpoint": False,
             }
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
@@ -9321,9 +9335,15 @@ class TestGOMCControlFileWriter(BaseTest):
                     assert split_line[1] == "0"
                     assert split_line[2] == "../Test/ethane_box_0.psf"
 
+                elif line.startswith("Checkpoint "):
+                    variables_read_dict["Checkpoint"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "False"
+
         assert variables_read_dict == {
             "Coordinates_box_0": True,
             "Structure_box_0": True,
+            "Checkpoint": True,
         }
 
     def test_restarting_pdb_psf_NVT_only_rename_structure(self, ethane_gomc):
@@ -9349,7 +9369,7 @@ class TestGOMCControlFileWriter(BaseTest):
             300 * u.K,
             ff_psf_pdb_file_directory=None,
             Restart=True,
-            RestartCheckpoint=True,
+            Checkpoint=[True, "../../Folder_1/test_checkpoint.chk"],
             Coordinates_box_0=None,
             Structure_box_0="../test_files_2/NVT_toluene_box_0.psf",
             check_input_files_exist=False,
@@ -9362,6 +9382,7 @@ class TestGOMCControlFileWriter(BaseTest):
             variables_read_dict = {
                 "Coordinates_box_0": False,
                 "Structure_box_0": False,
+                "Checkpoint": False,
             }
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
@@ -9379,9 +9400,16 @@ class TestGOMCControlFileWriter(BaseTest):
                         split_line[2] == "../test_files_2/NVT_toluene_box_0.psf"
                     )
 
+                elif line.startswith("Checkpoint "):
+                    variables_read_dict["Checkpoint"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+                    assert split_line[2] == "../../Folder_1/test_checkpoint.chk"
+
         assert variables_read_dict == {
             "Coordinates_box_0": True,
             "Structure_box_0": True,
+            "Checkpoint": True,
         }
 
     def test_restarting_pdb_psf_GEMC_NVT_only_rename_coordinates(
@@ -9409,7 +9437,7 @@ class TestGOMCControlFileWriter(BaseTest):
             300 * u.K,
             ff_psf_pdb_file_directory=None,
             Restart=True,
-            RestartCheckpoint=True,
+            Checkpoint=[True, "test_checkpoint"],
             Coordinates_box_0="../test_files_1/NVT_toluene_box_0.pdb",
             Structure_box_0=None,
             Coordinates_box_1="../test_files_2/NVT_toluene_box_1.pdb",
@@ -9426,6 +9454,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "Structure_box_0": False,
                 "Coordinates_box_1": False,
                 "Structure_box_1": False,
+                "Checkpoint": False,
             }
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
@@ -9457,11 +9486,18 @@ class TestGOMCControlFileWriter(BaseTest):
                     assert split_line[1] == "1"
                     assert split_line[2] == "ethane_box_1.psf"
 
+                elif line.startswith("Checkpoint "):
+                    variables_read_dict["Checkpoint"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+                    assert split_line[2] == "test_checkpoint.chk"
+
         assert variables_read_dict == {
             "Coordinates_box_0": True,
             "Structure_box_0": True,
             "Coordinates_box_1": True,
             "Structure_box_1": True,
+            "Checkpoint": True,
         }
 
     def test_restarting_pdb_psf_GEMC_NVT_only_rename_structure(
@@ -9489,7 +9525,7 @@ class TestGOMCControlFileWriter(BaseTest):
             300 * u.K,
             ff_psf_pdb_file_directory="../Test",
             Restart=True,
-            RestartCheckpoint=True,
+            Checkpoint=[False, "test_checkpoint_1.chk"],
             Coordinates_box_0=None,
             Structure_box_0="../test_files_1/NVT_toluene_box_0.psf",
             Coordinates_box_1=None,
@@ -9506,6 +9542,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "Structure_box_0": False,
                 "Coordinates_box_1": False,
                 "Structure_box_1": False,
+                "Checkpoint": False,
             }
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
@@ -9537,11 +9574,18 @@ class TestGOMCControlFileWriter(BaseTest):
                         split_line[2] == "../test_files_2/NVT_toluene_box_1.psf"
                     )
 
+                elif line.startswith("Checkpoint "):
+                    variables_read_dict["Checkpoint"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "False"
+                    assert split_line[2] == "test_checkpoint_1.chk"
+
         assert variables_read_dict == {
             "Coordinates_box_0": True,
             "Structure_box_0": True,
             "Coordinates_box_1": True,
             "Structure_box_1": True,
+            "Checkpoint": True,
         }
 
     def test_restarting_pdb_psf_GEMC_NVT(self, ethane_gomc):
@@ -9568,7 +9612,7 @@ class TestGOMCControlFileWriter(BaseTest):
             ff_psf_pdb_file_directory="../Test",
             Parameters="../test_folder/new.inp",
             Restart=True,
-            RestartCheckpoint=True,
+            Checkpoint=[True, "test_checkpoint_2.chk"],
             check_input_files_exist=False,
             input_variables_dict={},
         )
@@ -9581,7 +9625,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "Coordinates_box_1": False,
                 "Structure_box_1": False,
                 "Restart": False,
-                "RestartCheckpoint": False,
+                "Checkpoint": False,
             }
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
@@ -9619,10 +9663,11 @@ class TestGOMCControlFileWriter(BaseTest):
                     split_line = line.split()
                     assert split_line[1] == "True"
 
-                elif line.startswith("RestartCheckpoint "):
-                    variables_read_dict["RestartCheckpoint"] = True
+                elif line.startswith("Checkpoint "):
+                    variables_read_dict["Checkpoint"] = True
                     split_line = line.split()
                     assert split_line[1] == "True"
+                    assert split_line[2] == "test_checkpoint_2.chk"
 
         assert variables_read_dict == {
             "Parameters": True,
@@ -9631,7 +9676,7 @@ class TestGOMCControlFileWriter(BaseTest):
             "Coordinates_box_1": True,
             "Structure_box_1": True,
             "Restart": True,
-            "RestartCheckpoint": True,
+            "Checkpoint": True,
         }
 
     def test_failures_restarting_dcd_and_binary_files_NVT(self, ethane_gomc):
@@ -9814,12 +9859,8 @@ class TestGOMCControlFileWriter(BaseTest):
         test_box_0_pdb = "XXXX"
         with pytest.raises(
             TypeError,
-            match=r'ERROR: The {} variable expects a file extension of {}, but the actual file extension is "{}". '
-            r"".format(
-                "Coordinates_box_0",
-                r"\['.pdb'\]",
-                os.path.splitext(test_box_0_pdb)[-1],
-            ),
+            match="ERROR: The Coordinates_box_0 variable expects a str with a file extension of \['.pdb'\], "
+            'but the actual file extension is "".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -9837,12 +9878,8 @@ class TestGOMCControlFileWriter(BaseTest):
         test_box_1_pdb = "XXXX"
         with pytest.raises(
             TypeError,
-            match=r'ERROR: The {} variable expects a file extension of {}, but the actual file extension is "{}". '
-            r"".format(
-                "Coordinates_box_1",
-                r"\['.pdb'\]",
-                os.path.splitext(test_box_1_pdb)[-1],
-            ),
+            match="ERROR: The Coordinates_box_1 variable expects a str with a file extension of \['.pdb'\], "
+            'but the actual file extension is "".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -9860,12 +9897,8 @@ class TestGOMCControlFileWriter(BaseTest):
         test_box_0_psf = "XXXX"
         with pytest.raises(
             TypeError,
-            match=r'ERROR: The {} variable expects a file extension of {}, but the actual file extension is "{}". '
-            r"".format(
-                "Structure_box_0",
-                r"\['.psf'\]",
-                os.path.splitext(test_box_0_psf)[-1],
-            ),
+            match="ERROR: The Structure_box_0 variable expects a str with a file extension of \['.psf'\], "
+            'but the actual file extension is "".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -9883,12 +9916,8 @@ class TestGOMCControlFileWriter(BaseTest):
         test_box_1_psf = "XXXX"
         with pytest.raises(
             TypeError,
-            match=r'ERROR: The {} variable expects a file extension of {}, but the actual file extension is "{}". '
-            r"".format(
-                "Structure_box_1",
-                r"\['.psf'\]",
-                os.path.splitext(test_box_1_psf)[-1],
-            ),
+            match="ERROR: The Structure_box_1 variable expects a str with a file extension of \['.psf'\], "
+            'but the actual file extension is "".',
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -14488,4 +14517,1204 @@ class TestGOMCControlFileWriter(BaseTest):
                         },
                     },
                 },
+            )
+
+    def test_warning_if_geometric_mixing_used(self, ethane_gomc):
+        test_box_ethane_gomc = mb.fill_box(
+            compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+        )
+        charmm = Charmm(
+            test_box_ethane_gomc,
+            "ethane_box_0",
+            structure_box_1=None,
+            filename_box_1=None,
+            ff_filename="ethane_FF",
+            residues=[ethane_gomc.name],
+            forcefield_selection="oplsaa",
+        )
+
+        with pytest.warns(
+            UserWarning,
+            match=r"WARNING: The geometric combining rules is being used in the GOMC "
+            r"control file.  If this is OK or intentional, please ignore this warning. "
+            r"NOTE: This could just be the force file XML files correct parameters, "
+            r"but many GOMC simulations utilize 'lorentz' mixing rules, so a "
+            r"warning is provided.",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "warning_if_geometric_mixing_used.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={},
+            )
+
+    def test_default_VDWGeometricSigma_if_True(self, water):
+        test_box_water_gomc = mb.fill_box(
+            compound=[water], n_compounds=[1], box=[1, 1, 1]
+        )
+        charmm = Charmm(
+            test_box_water_gomc,
+            "water",
+            ff_filename="water",
+            residues=[water.name],
+            forcefield_selection=get_mosdef_gomc_fn(
+                "gmso_spce_water__no_combining_rule.xml"
+            ),
+        )
+        charmm.write_inp()
+
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "test_default_VDWGeometricSigma_if_True.conf",
+            "NVT",
+            10,
+            300 * u.K,
+            check_input_files_exist=False,
+            Restart=False,
+            input_variables_dict={},
+        )
+
+        with open("test_default_VDWGeometricSigma_if_True.conf", "r") as fp:
+            variables_read_dict = {
+                "VDWGeometricSigma": False,
+            }
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if line.startswith("VDWGeometricSigma "):
+                    variables_read_dict["VDWGeometricSigma"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+
+                    pass
+
+        assert variables_read_dict == {
+            "VDWGeometricSigma": True,
+        }
+
+    def test_check_VDWGeometricSigma_if_set_False(self, water):
+        test_box_water_gomc = mb.fill_box(
+            compound=[water], n_compounds=[1], box=[1, 1, 1]
+        )
+        charmm = Charmm(
+            test_box_water_gomc,
+            "water",
+            ff_filename="water",
+            residues=[water.name],
+            forcefield_selection=get_mosdef_gomc_fn(
+                "gmso_spce_water__no_combining_rule.xml"
+            ),
+        )
+        charmm.write_inp()
+
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "test_default_VDWGeometricSigma_if_True.conf",
+            "NVT",
+            10,
+            300 * u.K,
+            check_input_files_exist=False,
+            Restart=False,
+            input_variables_dict={"VDWGeometricSigma": False},
+        )
+
+        with open("test_default_VDWGeometricSigma_if_True.conf", "r") as fp:
+            variables_read_dict = {
+                "VDWGeometricSigma": False,
+            }
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if line.startswith("VDWGeometricSigma "):
+                    variables_read_dict["VDWGeometricSigma"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "False"
+
+                    pass
+
+        assert variables_read_dict == {
+            "VDWGeometricSigma": True,
+        }
+
+    def test_restarting_pdb_psf_restart_checkpoint_true_NVT(self, ethane_gomc):
+        test_box_ethane_gomc = mb.fill_box(
+            compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+        )
+
+        charmm = Charmm(
+            test_box_ethane_gomc,
+            "ethane_box_0",
+            structure_box_1=None,
+            filename_box_1=None,
+            ff_filename="ethane_FF",
+            residues=[ethane_gomc.name],
+            forcefield_selection="oplsaa",
+        )
+
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "test_restarting_pdb_psf_NVT",
+            "NVT",
+            1000,
+            300 * u.K,
+            ff_psf_pdb_file_directory="../Test_1",
+            Parameters="../test_folder_3/new.inp",
+            Coordinates_box_0="../test_folder_1/new.pdb",
+            Structure_box_0="../test_folder_2/new.psf",
+            Restart=True,
+            Checkpoint=[True, "Output.chk"],
+            check_input_files_exist=False,
+            input_variables_dict={},
+        )
+
+        with open("test_restarting_pdb_psf_NVT.conf", "r") as fp:
+            variables_read_dict = {
+                "Parameters": False,
+                "Coordinates_box_0": False,
+                "Structure_box_0": False,
+                "Restart": False,
+                "Checkpoint": False,
+            }
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if line.startswith("Parameters "):
+                    variables_read_dict["Parameters"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "../test_folder_3/new.inp"
+
+                elif line.startswith("Coordinates 0 "):
+                    variables_read_dict["Coordinates_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "../test_folder_1/new.pdb"
+
+                elif line.startswith("Structure 0 "):
+                    variables_read_dict["Structure_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "../test_folder_2/new.psf"
+
+                elif line.startswith("Restart "):
+                    variables_read_dict["Restart"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+
+                elif line.startswith("Checkpoint "):
+                    variables_read_dict["Checkpoint"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+                    assert split_line[2] == "Output.chk"
+
+        assert variables_read_dict == {
+            "Parameters": True,
+            "Coordinates_box_0": True,
+            "Structure_box_0": True,
+            "Restart": True,
+            "Checkpoint": True,
+        }
+
+    def test_restarting_pdb_psf_restart_checkpoint_false_with_filename_NVT(
+        self, ethane_gomc
+    ):
+        test_box_ethane_gomc = mb.fill_box(
+            compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+        )
+
+        charmm = Charmm(
+            test_box_ethane_gomc,
+            "ethane_box_0",
+            structure_box_1=None,
+            filename_box_1=None,
+            ff_filename="ethane_FF",
+            residues=[ethane_gomc.name],
+            forcefield_selection="oplsaa",
+        )
+
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "test_restarting_pdb_psf_NVT",
+            "NVT",
+            1000,
+            300 * u.K,
+            ff_psf_pdb_file_directory="../Test_1",
+            Parameters="../test_folder_3/new.inp",
+            Coordinates_box_0="../test_folder_1/new.pdb",
+            Structure_box_0="../test_folder_2/new.psf",
+            Restart=True,
+            Checkpoint=[False, "Output.chk"],
+            check_input_files_exist=False,
+            input_variables_dict={},
+        )
+
+        with open("test_restarting_pdb_psf_NVT.conf", "r") as fp:
+            variables_read_dict = {
+                "Parameters": False,
+                "Coordinates_box_0": False,
+                "Structure_box_0": False,
+                "Restart": False,
+                "Checkpoint": False,
+            }
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if line.startswith("Parameters "):
+                    variables_read_dict["Parameters"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "../test_folder_3/new.inp"
+
+                elif line.startswith("Coordinates 0 "):
+                    variables_read_dict["Coordinates_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "../test_folder_1/new.pdb"
+
+                elif line.startswith("Structure 0 "):
+                    variables_read_dict["Structure_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "../test_folder_2/new.psf"
+
+                elif line.startswith("Restart "):
+                    variables_read_dict["Restart"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+
+                elif line.startswith("Checkpoint "):
+                    variables_read_dict["Checkpoint"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "False"
+                    assert split_line[2] == "Output.chk"
+
+        assert variables_read_dict == {
+            "Parameters": True,
+            "Coordinates_box_0": True,
+            "Structure_box_0": True,
+            "Restart": True,
+            "Checkpoint": True,
+        }
+
+    def test_restarting_pdb_psf_restart_checkpoint_false_without_filename_NVT(
+        self, ethane_gomc
+    ):
+        test_box_ethane_gomc = mb.fill_box(
+            compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+        )
+
+        charmm = Charmm(
+            test_box_ethane_gomc,
+            "ethane_box_0",
+            structure_box_1=None,
+            filename_box_1=None,
+            ff_filename="ethane_FF",
+            residues=[ethane_gomc.name],
+            forcefield_selection="oplsaa",
+        )
+
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "test_restarting_pdb_psf_NVT",
+            "NVT",
+            1000,
+            300 * u.K,
+            ff_psf_pdb_file_directory="../Test_1",
+            Parameters="../test_folder_3/new.inp",
+            Coordinates_box_0="../test_folder_1/new.pdb",
+            Structure_box_0="../test_folder_2/new.psf",
+            Restart=True,
+            Checkpoint=[False, "output.chk"],
+            check_input_files_exist=False,
+            input_variables_dict={},
+        )
+
+        with open("test_restarting_pdb_psf_NVT.conf", "r") as fp:
+            variables_read_dict = {
+                "Parameters": False,
+                "Coordinates_box_0": False,
+                "Structure_box_0": False,
+                "Restart": False,
+                "Checkpoint": False,
+            }
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if line.startswith("Parameters "):
+                    variables_read_dict["Parameters"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "../test_folder_3/new.inp"
+
+                elif line.startswith("Coordinates 0 "):
+                    variables_read_dict["Coordinates_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "../test_folder_1/new.pdb"
+
+                elif line.startswith("Structure 0 "):
+                    variables_read_dict["Structure_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "../test_folder_2/new.psf"
+
+                elif line.startswith("Restart "):
+                    variables_read_dict["Restart"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+
+                elif line.startswith("Checkpoint "):
+                    variables_read_dict["Checkpoint"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "False"
+
+        assert variables_read_dict == {
+            "Parameters": True,
+            "Coordinates_box_0": True,
+            "Structure_box_0": True,
+            "Restart": True,
+            "Checkpoint": True,
+        }
+
+    def test_restarting_pdb_psf_restart_checkpoint_false_without_filename_GEMC_NVT(
+        self, ethane_gomc
+    ):
+        test_box_ethane_gomc = mb.fill_box(
+            compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+        )
+
+        charmm = Charmm(
+            test_box_ethane_gomc,
+            "ethane_box_0",
+            structure_box_1=test_box_ethane_gomc,
+            filename_box_1="ethane_box_1",
+            ff_filename="ethane_FF",
+            residues=[ethane_gomc.name],
+            forcefield_selection="oplsaa",
+        )
+
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "test_restarting_pdb_psf_GEMC_NVT",
+            "GEMC_NVT",
+            1000,
+            300 * u.K,
+            ff_psf_pdb_file_directory="../Test_1",
+            Parameters="../test_folder_3/new.inp",
+            Coordinates_box_0="../test_folder_1/new.pdb",
+            Structure_box_0="../test_folder_2/new.psf",
+            Coordinates_box_1="../test_folder_11/new.pdb",
+            Structure_box_1="../test_folder_12/new.psf",
+            Restart=True,
+            Checkpoint=False,
+            check_input_files_exist=False,
+            input_variables_dict={},
+        )
+
+        with open("test_restarting_pdb_psf_GEMC_NVT.conf", "r") as fp:
+            variables_read_dict = {
+                "Parameters": False,
+                "Coordinates_box_0": False,
+                "Structure_box_0": False,
+                "Coordinates_box_1": False,
+                "Structure_box_1": False,
+                "Restart": False,
+                "Checkpoint": False,
+            }
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if line.startswith("Parameters "):
+                    variables_read_dict["Parameters"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "../test_folder_3/new.inp"
+
+                elif line.startswith("Coordinates 0 "):
+                    variables_read_dict["Coordinates_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "../test_folder_1/new.pdb"
+
+                elif line.startswith("Structure 0 "):
+                    variables_read_dict["Structure_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "../test_folder_2/new.psf"
+
+                elif line.startswith("Coordinates 1 "):
+                    variables_read_dict["Coordinates_box_1"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "1"
+                    assert split_line[2] == "../test_folder_11/new.pdb"
+
+                elif line.startswith("Structure 1 "):
+                    variables_read_dict["Structure_box_1"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "1"
+                    assert split_line[2] == "../test_folder_12/new.psf"
+
+                elif line.startswith("Restart "):
+                    variables_read_dict["Restart"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+
+                elif line.startswith("Checkpoint "):
+                    variables_read_dict["Checkpoint"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "False"
+
+        assert variables_read_dict == {
+            "Parameters": True,
+            "Coordinates_box_0": True,
+            "Structure_box_0": True,
+            "Coordinates_box_1": True,
+            "Structure_box_1": True,
+            "Restart": True,
+            "Checkpoint": True,
+        }
+
+    def test_restarting_pdb_psf_restart_false_checkpoint_true(
+        self, ethane_gomc
+    ):
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: If Checkpoint is True, Restart must also be True.",
+        ):
+            test_box_ethane_gomc = mb.fill_box(
+                compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+            )
+
+            charmm = Charmm(
+                test_box_ethane_gomc,
+                "ethane_box_0",
+                structure_box_1=None,
+                filename_box_1=None,
+                ff_filename="ethane_FF",
+                residues=[ethane_gomc.name],
+                forcefield_selection="oplsaa",
+            )
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true(",
+                "NVT",
+                1000,
+                300 * u.K,
+                ff_psf_pdb_file_directory=None,
+                Restart=False,
+                Checkpoint=[True, "Output.chk"],
+                check_input_files_exist=False,
+                input_variables_dict={},
+            )
+
+    def test_restarting_pdb_psf_restartfreq_checkpointfreq_not_equal(
+        self, ethane_gomc
+    ):
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: If CheckpointFreq is True, the CheckpointFreq and RestartFreq "
+            r"output frequencies must be the same to start GOMC. This ensures the "
+            r"simulation can always be properly restarted.",
+        ):
+            test_box_ethane_gomc = mb.fill_box(
+                compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+            )
+
+            charmm = Charmm(
+                test_box_ethane_gomc,
+                "ethane_box_0",
+                structure_box_1=None,
+                filename_box_1=None,
+                ff_filename="ethane_FF",
+                residues=[ethane_gomc.name],
+                forcefield_selection="oplsaa",
+            )
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true(",
+                "NVT",
+                1000,
+                300 * u.K,
+                ff_psf_pdb_file_directory=None,
+                Restart=True,
+                Checkpoint=[True, "Output.chk"],
+                check_input_files_exist=False,
+                input_variables_dict={
+                    "RestartFreq": [True, 100],
+                    "CheckpointFreq": [True, 1000],
+                },
+            )
+
+    def test_checkpoint_errors(self, ethane_gomc):
+        test_box_ethane_gomc = mb.fill_box(
+            compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+        )
+
+        charmm = Charmm(
+            test_box_ethane_gomc,
+            "ethane_box_0",
+            structure_box_1=None,
+            filename_box_1=None,
+            ff_filename="ethane_FF",
+            residues=[ethane_gomc.name],
+            forcefield_selection="oplsaa",
+        )
+
+        # test_checkpoint_list_bool_True
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: Checkpoint is only allowed to be the bool False, not True. "
+            r"When Checkpoint is True it need to be "
+            r"\[True, str\] ---> \[True, checkpoint_filename\].",
+        ):
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true(",
+                "NVT",
+                1000,
+                300 * u.K,
+                ff_psf_pdb_file_directory=None,
+                Restart=True,
+                Checkpoint=True,
+                check_input_files_exist=False,
+                input_variables_dict={
+                    "RestartFreq": [True, 1000],
+                    "CheckpointFreq": [True, 1000],
+                },
+            )
+
+        # test_checkpoint_list_len_not_2
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: Checkpoint is a list, and the list need to be "
+            r"\[True, str\] ---> \[True, checkpoint_filename\] or "
+            r"\[False, str\] ---> \[False, checkpoint_filename\].",
+        ):
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true(",
+                "NVT",
+                1000,
+                300 * u.K,
+                ff_psf_pdb_file_directory=None,
+                Restart=True,
+                Checkpoint=[True, "name", "bad_length"],
+                check_input_files_exist=False,
+                input_variables_dict={},
+            )
+
+        # test_checkpoint_wrong_extension
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: Please enter the Checkpoint file name without an "
+            r"extension or the .chk extension.",
+        ):
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true(",
+                "NVT",
+                1000,
+                300 * u.K,
+                ff_psf_pdb_file_directory=None,
+                Restart=True,
+                Checkpoint=[True, "filename_wrong_extension.dat"],
+                check_input_files_exist=False,
+                input_variables_dict={},
+            )
+
+        # test_checkpoint_check_input_files_exist_True
+        with pytest.raises(
+            ValueError,
+            match=r"The checkpoint \(chk\) file with the file directory "
+            r"and name name.chk, does not exist.",
+        ):
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "NVT",
+                1000,
+                300 * u.K,
+                ff_psf_pdb_file_directory=None,
+                Restart=True,
+                Checkpoint=[True, "name"],
+                check_input_files_exist=True,
+                input_variables_dict={},
+            )
+
+    # test the other restart binCoordinates, extendedSystem, and binVelocities errors
+    def test_coor_xsc_vel_list_or_no_extension_errors(self, ethane_gomc):
+        test_box_ethane_gomc = mb.fill_box(
+            compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+        )
+
+        charmm = Charmm(
+            test_box_ethane_gomc,
+            "ethane_box_0",
+            structure_box_1=test_box_ethane_gomc,
+            filename_box_1="ethane_box_1",
+            ff_filename="ethane_FF",
+            residues=[ethane_gomc.name],
+            forcefield_selection="oplsaa",
+        )
+
+        # binCoordinates_box_0 is a list not str
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("binCoordinates_box_0", "coor", "<class 'list'>"),
+        ):
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0=["list"],
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
+                input_variables_dict={},
+            )
+
+        # extendedSystem_box_0 is a list not str
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("extendedSystem_box_0", "xsc", "<class 'list'>"),
+        ):
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
+                extendedSystem_box_0=["list"],
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
+                input_variables_dict={},
+            )
+
+        # binVelocities_box_0 is a list not str
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("binVelocities_box_0", "vel", "<class 'list'>"),
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
+                binVelocities_box_0=["list"],
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
+                input_variables_dict={},
+            )
+
+        # binCoordinates_box_1 is a list not str
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("binCoordinates_box_1", "coor", "<class 'list'>"),
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
+                binCoordinates_box_1=["list"],
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
+                input_variables_dict={},
+            )
+
+        # extendedSystem_box_1 is a list not str
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("extendedSystem_box_1", "xsc", "<class 'list'>"),
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
+                extendedSystem_box_1=["list"],
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
+                input_variables_dict={},
+            )
+
+        # binVelocities_box_1 is a list not str
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The {} variable for directly entering the "
+            r"{} file directory and name is a {} and not a string."
+            r"".format("binVelocities_box_1", "vel", "<class 'list'>"),
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
+                binVelocities_box_1=["list"],
+                input_variables_dict={},
+            )
+
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The binCoordinates_box_0 variable expects a "
+            r"str with a file extension of \['.coor'\], "
+            r'but the actual file extension is ".psf".',
+        ):
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.psf",
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
+                input_variables_dict={},
+            )
+
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The extendedSystem_box_0 variable expects a "
+            r"str with a file extension of \['.xsc'\], "
+            r'but the actual file extension is ".pdb".',
+        ):
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.pdb",
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
+                input_variables_dict={},
+            )
+
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The binVelocities_box_0 variable expects a "
+            r"str with a file extension of \['.vel'\], "
+            r'but the actual file extension is ".csv".',
+        ):
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.csv",
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
+                input_variables_dict={},
+            )
+
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The binCoordinates_box_1 variable expects a "
+            r"str with a file extension of \['.coor'\], "
+            r'but the actual file extension is ".txt".',
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.txt",
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
+                input_variables_dict={},
+            )
+
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The extendedSystem_box_1 variable expects a "
+            r"str with a file extension of \['.xsc'\], "
+            r'but the actual file extension is ".xml".',
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xml",
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
+                input_variables_dict={},
+            )
+
+        with pytest.raises(
+            TypeError,
+            match=r"ERROR: The binVelocities_box_1 variable expects a "
+            r"str with a file extension of \['.vel'\], "
+            r'but the actual file extension is ".tmp".',
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_restart_false_checkpoint_true",
+                "GEMC_NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                binCoordinates_box_0="../test_files/NVT_ethane_box_0.coor",
+                extendedSystem_box_0="../test_files/NVT_ethane_box_0.xsc",
+                binVelocities_box_0="../test_files/NVT_ethane_box_0.vel",
+                binCoordinates_box_1="../test_files/NVT_ethane_box_1.coor",
+                extendedSystem_box_1="../test_files/NVT_ethane_box_1.xsc",
+                binVelocities_box_1="../test_files/NVT_ethane_box_1.tmp",
+                input_variables_dict={},
+            )
+
+    def test_save_Mie_conf_config(self, two_propanol_ua):
+        box_0 = mb.fill_box(
+            compound=[two_propanol_ua], n_compounds=[1], box=[3, 3, 3]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "charmm_data_Mie_UA",
+            ff_filename="charmm_data_Mie_UA",
+            residues=[two_propanol_ua.name],
+            forcefield_selection={
+                two_propanol_ua.name: get_mosdef_gomc_fn(
+                    "gmso_two_propanol_Mie_ua.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            gomc_fix_bonds_angles=None,
+        )
+
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "charmm_data_Mie_UA",
+            "NVT",
+            1000,
+            300 * u.K,
+            check_input_files_exist=False,
+            input_variables_dict={},
+        )
+
+        with open("charmm_data_Mie_UA.conf", "r") as fp:
+            variables_read_dict = {
+                "ParaTypeMie": False,
+                "Parameters": False,
+                "Coordinates_box_0": False,
+                "Structure_box_0": False,
+                "Potential": False,
+            }
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if line.startswith("ParaTypeMie "):
+                    variables_read_dict["ParaTypeMie"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+
+                elif line.startswith("Parameters "):
+                    variables_read_dict["Parameters"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "charmm_data_Mie_UA.inp"
+
+                elif line.startswith("Coordinates 0 "):
+                    variables_read_dict["Coordinates_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "charmm_data_Mie_UA.pdb"
+
+                elif line.startswith("Structure 0 "):
+                    variables_read_dict["Structure_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "charmm_data_Mie_UA.psf"
+
+                elif line.startswith("Potential "):
+                    variables_read_dict["Potential"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "VDW"
+
+                else:
+                    pass
+
+        assert variables_read_dict == {
+            "ParaTypeMie": True,
+            "Parameters": True,
+            "Coordinates_box_0": True,
+            "Structure_box_0": True,
+            "Potential": True,
+        }
+
+    def test_save_Mie_with_LJ_conf_config(self, water, two_propanol_ua):
+        box_0 = mb.fill_box(
+            compound=[water, two_propanol_ua], n_compounds=[1, 1], box=[3, 3, 3]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "charmm_data_Mie_UA",
+            ff_filename="charmm_data_Mie_UA",
+            residues=[water.name, two_propanol_ua.name],
+            forcefield_selection={
+                water.name: get_mosdef_gomc_fn(
+                    "gmso_spce_water__lorentz_combining.xml"
+                ),
+                two_propanol_ua.name: get_mosdef_gomc_fn(
+                    "gmso_two_propanol_Mie_ua.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            gomc_fix_bonds_angles=[water.name],
+        )
+
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "charmm_data_Mie_UA",
+            "NVT",
+            1000,
+            300 * u.K,
+            check_input_files_exist=False,
+            input_variables_dict={},
+        )
+
+        with open("charmm_data_Mie_UA.conf", "r") as fp:
+            variables_read_dict = {
+                "ParaTypeMie": False,
+                "Parameters": False,
+                "Coordinates_box_0": False,
+                "Structure_box_0": False,
+                "Potential": False,
+            }
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if line.startswith("ParaTypeMie "):
+                    variables_read_dict["ParaTypeMie"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+
+                elif line.startswith("Parameters "):
+                    variables_read_dict["Parameters"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "charmm_data_Mie_UA.inp"
+
+                elif line.startswith("Coordinates 0 "):
+                    variables_read_dict["Coordinates_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "charmm_data_Mie_UA.pdb"
+
+                elif line.startswith("Structure 0 "):
+                    variables_read_dict["Structure_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "charmm_data_Mie_UA.psf"
+
+                elif line.startswith("Potential "):
+                    variables_read_dict["Potential"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "VDW"
+
+                else:
+                    pass
+
+        assert variables_read_dict == {
+            "ParaTypeMie": True,
+            "Parameters": True,
+            "Coordinates_box_0": True,
+            "Structure_box_0": True,
+            "Potential": True,
+        }
+
+    # test non-bonded setting errors
+    def test_overriding_nb_without_setting_charmm_object_one_to_False(
+        self, ethane_gomc
+    ):
+        test_box_ethane_gomc = mb.fill_box(
+            compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+        )
+
+        charmm = Charmm(
+            test_box_ethane_gomc,
+            "ethane_box_0",
+            structure_box_1=None,
+            filename_box_1=None,
+            ff_filename="ethane_FF",
+            residues=[ethane_gomc.name],
+            forcefield_selection="oplsaa",
+        )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: There can only be 1 non-bonded type set to true.  Please set only one of the "
+            "ParaTypeCHARMM, ParaTypeMie, ParaTypeMARTINI types to True in the input_variables_dict.",
+        ):
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "ethane_box_0_nb_test",
+                "NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={
+                    "ParaTypeCHARMM": True,
+                    "ParaTypeMie": True,
+                },
+            )
+
+    # test non-bonded setting errors for LJ
+    def test_lj_mosdef_gomc_nb_not_match_set_one(self, ethane_gomc):
+        with pytest.warns(
+            UserWarning,
+            match=r"MoSDeF-GOMC has selected the non-bonded for to be LJ, but ParaTypeCHARMM = False.",
+        ):
+            test_box_ethane_gomc = mb.fill_box(
+                compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+            )
+
+            charmm = Charmm(
+                test_box_ethane_gomc,
+                "test_lj_mosdef_gomc_nb_not_match_set_one",
+                structure_box_1=None,
+                filename_box_1=None,
+                ff_filename="test_lj_mosdef_gomc_nb_not_match_set_one_FF",
+                residues=[ethane_gomc.name],
+                forcefield_selection="oplsaa",
+            )
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_lj_mosdef_gomc_nb_not_match_set_one",
+                "NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"ParaTypeMARTINI": True},
+            )
+
+    # test non-bonded setting errors for Mie
+    def test_mie_mosdef_gomc_nb_not_match_set_one(self, two_propanol_ua):
+        with pytest.warns(
+            UserWarning,
+            match=r"MoSDeF-GOMC has selected the non-bonded for to be Mie, but ParaTypeMie = False.",
+        ):
+            box_0 = mb.fill_box(
+                compound=[two_propanol_ua], n_compounds=[1], box=[3, 3, 3]
+            )
+
+            charmm = Charmm(
+                box_0,
+                "mie_mosdef_gomc_nb_not_match_set_one",
+                ff_filename="mie_mosdef_gomc_nb_not_match_set_one",
+                residues=[two_propanol_ua.name],
+                forcefield_selection={
+                    two_propanol_ua.name: get_mosdef_gomc_fn(
+                        "gmso_two_propanol_Mie_ua.xml"
+                    ),
+                },
+                bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+                gomc_fix_bonds_angles=None,
+            )
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "mie_mosdef_gomc_nb_not_match_set_one",
+                "NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"ParaTypeMARTINI": True},
+            )
+
+    # test non-bonded setting errors for Mie
+    def test_potential_exp6_not_available(self, ethane_gomc):
+        with pytest.warns(
+            UserWarning,
+            match=r"WARNING: The Potential = EXP6 is not currently available.",
+        ):
+            test_box_ethane_gomc = mb.fill_box(
+                compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
+            )
+
+            charmm = Charmm(
+                test_box_ethane_gomc,
+                "test_potential_exp6_not_available",
+                structure_box_1=None,
+                filename_box_1=None,
+                ff_filename="test_potential_exp6_not_available",
+                residues=[ethane_gomc.name],
+                forcefield_selection="oplsaa",
+            )
+
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_potential_exp6_not_available",
+                "NVT",
+                1000,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"Potential": "EXP6"},
             )

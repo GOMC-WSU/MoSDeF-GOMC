@@ -5,6 +5,9 @@ test-output.xml
 # C extensions
 *.so
 
+# github
+**/.DS_Store
+
 # Packages
 *.egg
 *.egg-info

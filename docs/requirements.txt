@@ -1,0 +1,17 @@
+unyt
+gsd
+sphinx
+ele
+nbsphinx
+lark-parser
+requests
+mock
+numpydoc
+anaconda
+widgetsnbextension
+ipywidgets
+sphinxcontrib
+sphinx_rtd_theme
+sphinxcontrib-svg2pdfconverter
+sphinxcontrib-video
+ipykernel
