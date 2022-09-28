@@ -72,12 +72,12 @@ jobs:
 
       - name: Get Tagged Version
         run: |
-          echo "DOCKER_TAGS=MoSDeF-GOMC:${GITHUB_REF_NAME}, MoSDeF-GOMC:stable" >> $GITHUB_ENV
+          echo "DOCKER_TAGS=mosdef-gomc:${GITHUB_REF_NAME}, mosdef-gomc:stable" >> $GITHUB_ENV
         if: github.ref_type == 'tag'
 
       - name: Get Push Version
         run: |
-          echo "DOCKER_TAGS=MoSDeF-GOMC:${GITHUB_REF_NAME}, MoSDeF-GOMC:latest" >> $GITHUB_ENV
+          echo "DOCKER_TAGS=mosdef-gomc:${GITHUB_REF_NAME}, mosdef-gomc:latest" >> $GITHUB_ENV
         if: github.ref_type == 'branch'
 
       - name: Docker Image Info
