@@ -1,4 +1,4 @@
-ARG PY_VERSION=3.8
+ARG PY_VERSION=3.9
 FROM continuumio/miniconda3:4.10.3-alpine AS builder
 
 EXPOSE 8888
@@ -39,7 +39,7 @@ WORKDIR /home/anaconda
 
 COPY devtools/docker-entrypoint.sh /entrypoint.sh
 
-RUN chmod a+x /docker-entrypoint.sh
+RUN chmod a+x /entrypoint.sh
 
 USER anaconda
 
