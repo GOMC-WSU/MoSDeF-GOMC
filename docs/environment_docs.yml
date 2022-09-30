@@ -12,11 +12,11 @@ dependencies:
   - nbsphinx
   - sphinxcontrib
   - pycifrw
+  - sympy=1.10
   - python>=3.8,<=3.9
   - forcefield-utilities=0.2.1
   - foyer=0.11.3
   - gmso=0.9.1
-  - sympy=1.10
   - mbuild=0.15.1
   - sphinx
   - pip
