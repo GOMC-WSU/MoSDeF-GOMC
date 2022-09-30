@@ -16,6 +16,7 @@ dependencies:
   - forcefield-utilities=0.2.1
   - foyer=0.11.3
   - gmso=0.9.1
+  - sympy=1.10
   - mbuild=0.15.1
   - sphinx
   - pip
