@@ -2295,7 +2295,7 @@ class Charmm:
 
                         print_error = (
                             f"ERROR: Only the same Mie n values are permitted for an atom class. "
-                            f"The {atom_residue_class_n_iter} atom class has different n values"
+                            f"The {atom_class_mie_n_iter} atom class has different n values"
                         )
                         raise ValueError(print_error)
 
@@ -4128,18 +4128,6 @@ class Charmm:
                         periodic_improper_phi_eq_values_len = len(
                             periodic_impropers_phi_eq_values
                         )
-
-                        """
-                        periodic_impropers_k_values = len(
-                            improper_type_x.parameters['k']
-                        )
-                        periodic_impropers_n_values = len(
-                             improper_type_x.parameters['n']
-                        )
-                        periodic_impropers_phi_eq_values = len(
-                            improper_type_x.parameters['phi_eq']
-                        )
-                        """
 
                         if (
                             periodic_impropers_k_values_len
