@@ -17,8 +17,8 @@ The original version of MoSDeF-GOMC, which uses Parmed as the software backend, 
 ### Resources
  - [GOMC Github repository](https://github.com/GOMC-WSU)
  - [Downloading GOMC](https://github.com/GOMC-WSU/GOMC)
- - [Installing GOMC via GOMC manual](https://github.com/GOMC-WSU/GOMC/blob/main/GOMC_Manual.pdf)
- - [MoSDeF-GOMC tutorials and examples](https://github.com/GOMC-WSU/GOMC-MoSDeF) with [MoSDeF-GOMC YouTube videos](https://www.youtube.com/watch?v=7StVoUCGkHs&list=PLdxD0z6HRx8Y9VhwcODxAHNQBBJDRvxMf)
+ - [Installing GOMC via GOMC manual](https://github.com/GOMC-WSU/Manual)
+ - [MoSDeF-GOMC tutorials and examples](https://github.com/GOMC-WSU/GOMC_Examples/tree/main/MoSDef-GOMC) with [MoSDeF-GOMC YouTube videos](https://www.youtube.com/watch?v=7StVoUCGkHs&list=PLdxD0z6HRx8Y9VhwcODxAHNQBBJDRvxMf)
  - [GOMC YouTube channel](https://www.youtube.com/channel/UCueLGE6tuOyu-mvxIt-U1HQ/playlists)
  - [MoSDeF tools](https://mosdef.org/)
 
