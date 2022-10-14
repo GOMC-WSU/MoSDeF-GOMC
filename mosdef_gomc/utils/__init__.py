@@ -1,3 +1,1 @@
 """mosdef_gomc utilities."""
-
-

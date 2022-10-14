@@ -197,4 +197,3 @@ class BaseTest:
                 self.energy_minimize(forcefield="trappe-ua", steps=10**9)
 
         return AltTwoPropanolUA()
-
