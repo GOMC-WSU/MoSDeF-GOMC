@@ -1,4 +1,4 @@
-"""mBuild conversion utilities."""
+"""MoSDeF-GOMC conversion utilities."""
 from warnings import warn
 
 import numpy as np
