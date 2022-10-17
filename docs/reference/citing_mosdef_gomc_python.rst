@@ -4,7 +4,7 @@ Citing
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
     :target: http://opensource.org/licenses/MIT
 
-If you use this code for your research, please cite for following:
+If you use this code for your research, please cite for following sources:
 
 `The GitHub repository <https://github.com/GOMC-WSU/MoSDeF-GOMC>`_:
 
@@ -42,7 +42,7 @@ Download as :download:`BibTeX <mosdef_gomc_python.bib>` or :download:`RIS <mosde
 	title       = "MoSDeF-GOMC: Python software for the creation of scientific workflows for the Monte Carlo simulation engine GOMC",
 	year        = "2022",
 	publisher   = "Zenodo",
-	url         = "https://doi.org/10.5281/zenodo.5142483"
+	url         = "https://doi.org/10.5281/zenodo.5142483",
 	doi	    = "10.5281/zenodo.721763"
     }
 
