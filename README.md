@@ -24,7 +24,11 @@ The original version of MoSDeF-GOMC, which uses Parmed as the software backend, 
 
 ### Citation
 
-Please cite MoSDeF-GOMC, GOMC, and MoSDeF tools, which are provided [here](XXX).
+Please cite MoSDeF-GOMC, GOMC, and MoSDeF tools, which are provided [here](https://mosdef-gomc.readthedocs.io/en/latest/reference/citing_mosdef_gomc_python.html).
+
+### Documentation
+
+The MoSDeF-GOMC documentation is located [here](https://mosdef-gomc.readthedocs.io/en/latest/index.html).
 
 ### Installation
 
