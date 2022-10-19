@@ -54,5 +54,6 @@ The **MoSDeF-GOMC** software is compatible with the following software or simula
     	:maxdepth: 2
 
 	reference/units
-    	reference/citing_mosdef_gomc_python
 	reference/user_notices
+	reference/credits
+    	reference/citing_mosdef_gomc_python
