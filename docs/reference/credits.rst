@@ -21,6 +21,6 @@ MoSDeF-GOMC developers:
 **Jeffrey Potoff** - Advisor and maintainer
 
 
-`MoSDeF-GOMC <https://github.com/GOMC-WSU/MoSDeF-GOMC>`_ was created and developed with a collaborative effort between **Wayne State University** and **Vanderbilt University**, which included the `GPU Optimized Monte Carlo (GOMC) <http://gomc.eng.wayne.edu>`_ and `Molecular Simulation Design Framework (MoSDeF) <https://mosdef.org>`_ teams. 
+`MoSDeF-GOMC <https://github.com/GOMC-WSU/MoSDeF-GOMC>`_ was created and developed with a collaborative effort between **Wayne State University** and **Vanderbilt University**, which included the `GPU Optimized Monte Carlo (GOMC) <http://gomc.eng.wayne.edu>`_ and `Molecular Simulation Design Framework (MoSDeF) <https://mosdef.org>`_ teams.
 
-The **MoSDeF-GOMC** software was supported via National Science Foundation (**NSF**) grants OAC-1835713 and OAC-1835874.  Any statements stated or expressed are solely those of the **MoSDeF-GOMC** software or developers and not the **NSF**.  
+The **MoSDeF-GOMC** software was supported via National Science Foundation (**NSF**) grants OAC-1835713 and OAC-1835874.  Any statements stated or expressed are solely those of the **MoSDeF-GOMC** software or developers and not the **NSF**.

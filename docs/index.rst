@@ -52,7 +52,7 @@ The **MoSDeF-GOMC** software is compatible with the following software or simula
 .. toctree::
     	:caption: Reference
     	:maxdepth: 2
-	
+
 	reference/units
 	reference/user_notices
 	reference/credits
