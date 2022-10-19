@@ -48,7 +48,7 @@ sys.path.insert(0, os.path.abspath(".."))
 base_path = pathlib.Path(__file__).parent
 os.system("python {} --name".format((base_path / "../setup.py").resolve()))
 
-# -- General configuration ------git ------------------------------------------
+# -- General configuration ------git -------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 # needs_sphinx = '1.0'
