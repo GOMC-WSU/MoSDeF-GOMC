@@ -1,1 +1,1 @@
-"""Format library for mBuild, for the GOMC Engine"""
+"""Format library for MoSDeF-GOMC, for the GOMC Engine"""
