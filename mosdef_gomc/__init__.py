@@ -2,4 +2,4 @@
 from mosdef_gomc.formats.gmso_charmm_writer import Charmm
 from mosdef_gomc.formats.gmso_gomc_conf_writer import GOMCControl
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
