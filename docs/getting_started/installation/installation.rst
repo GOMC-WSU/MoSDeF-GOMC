@@ -8,7 +8,7 @@ Install with `conda <https://repo.anaconda.com/miniconda/>`_
 ------------------------------------------------------------
 ::
 
-    $ conda install -c conda-forge mosdef_gomc
+    $ conda install -c conda-forge mosdef-gomc
 
 
 Install an editable version from the source code
