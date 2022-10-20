@@ -34,4 +34,4 @@ The MoSDeF-GOMC documentation is located [here](https://mosdef-gomc.readthedocs.
 
 The MoSDeF-GOMC package is available via conda:
 
-`conda create --name mosdef_gomc -c conda-forge mosdef_gomc`
+`conda create --name mosdef_gomc -c conda-forge mosdef-gomc`
