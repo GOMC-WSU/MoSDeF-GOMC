@@ -6004,7 +6004,7 @@ class GOMCControl:
             "#########################################\n"
         )
         data_control_file.write(
-            "##  This file ({}) - was created by mBuild "
+            "##  This file ({}) - was created by MoSDeF-GOMC "
             "using the on {}\n".format(self.conf_filename, date_time)
         )
         data_control_file.write(
@@ -6638,8 +6638,7 @@ class GOMCControl:
 
         data_control_file.write("####################################\n")
         data_control_file.write(
-            "# BOX DIMENSION #, X, Y, Z    (only orthoganol boxes are currently "
-            "available in this control file writer)\n"
+            "# BOX DIMENSION #, X, Y, Z    \n"
         )
         data_control_file.write("####################################\n")
         data_control_file.write(
