@@ -7002,9 +7002,7 @@ class GOMCControl:
             data_control_file.write(" \n")
 
         data_control_file.write("####################################\n")
-        data_control_file.write(
-            "# BOX DIMENSION #, X, Y, Z    \n"
-        )
+        data_control_file.write("# BOX DIMENSION #, X, Y, Z    \n")
         data_control_file.write("####################################\n")
         data_control_file.write(
             "{:25s} {:20s} {:20s} {:20s}\n".format(
