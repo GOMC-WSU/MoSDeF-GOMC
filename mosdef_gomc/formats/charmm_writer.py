@@ -2557,7 +2557,7 @@ class Charmm:
                         + self.filename_box_0
                         + " and "
                         + self.filename_box_1
-                        + " - created by mBuild using the on "
+                        + " - created by MoSDeF-GOMC using the on "
                         + str(date_time)
                         + "\n"
                     )
@@ -2565,7 +2565,7 @@ class Charmm:
                     data.write(
                         "*  "
                         + self.filename_box_0
-                        + " - created by mBuild using the on "
+                        + " - created by MoSDeF-GOMC using the on "
                         + str(date_time)
                         + "\n"
                     )
@@ -3469,7 +3469,7 @@ class Charmm:
             output_write.write(
                 " REMARKS this file "
                 + file_name_iteration
-                + " - created by mBuild/foyer using the"
+                + " - created by MoSDeF-GOMC using the"
                 + "\n"
             )
             output_write.write(
@@ -3828,7 +3828,7 @@ class Charmm:
 
             output_write = genopen(output, "w")
             # output_write.write(
-            #'REMARK this file ' + file_name_iteration + ' - created by mBuild/foyer using the' + '\n')
+            #'REMARK this file ' + file_name_iteration +' - created by using MoSDeF-GOMC.' + '\n')
             # output_write.write(
             #'REMARK parameters from the ' + str(self.forcefield_selection) + ' force field via MoSDef\n')
             # output_write.write('REMARK created on ' + str(date_time) + '\n')
