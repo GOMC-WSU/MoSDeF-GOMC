@@ -39,9 +39,7 @@ def evaluate_nonbonded_lj_format_with_scaler(new_lj_form, base_lj_form):
             r,
             Rmin,
             two,
-        ) = sympy.symbols(
-            "eqn_ratio epsilon sigma r Rmin two"
-        )
+        ) = sympy.symbols("eqn_ratio epsilon sigma r Rmin two")
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
@@ -92,9 +90,7 @@ def evaluate_nonbonded_mie_format_with_scaler(new_mie_form, base_mie_form):
             sigma,
             r,
             n,
-        ) = sympy.symbols(
-            "eqn_ratio epsilon sigma r n"
-        )
+        ) = sympy.symbols("eqn_ratio epsilon sigma r n")
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
@@ -144,9 +140,7 @@ def evaluate_nonbonded_exp6_format_with_scaler(new_exp6_form, base_exp6_form):
             r,
             Rmin,
             alpha,
-        ) = sympy.symbols(
-            "eqn_ratio epsilon sigma r Rmin alpha"
-        )
+        ) = sympy.symbols("eqn_ratio epsilon sigma r Rmin alpha")
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
