@@ -10,6 +10,15 @@ Install with `conda <https://repo.anaconda.com/miniconda/>`_
 
     $ conda install -c conda-forge mosdef-gomc
 
+There is currently an issue building MoSDeF-GOMC version 1.0.0 with ``conda`` or ``conda-forge`` not pulling the latest ``conda`` build version. To rectify this, the user can run the additional command below or install using ``mamba`` because ``mamba`` is using the correct build.::
+
+    $ conda install -c conda-forge sympy=1.10 garnett gsd pycifrw
+
+Install with `mamba <https://github.com/mamba-org/mamba>`_
+----------------------------------------------------------
+::
+
+    $ mamba install -c conda-forge mosdef-gomc
 
 Install an editable version from the source code
 ------------------------------------------------
