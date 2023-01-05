@@ -3,7 +3,7 @@ import pytest
 from gmso.tests.base_test import BaseTest
 from mbuild.utils.io import has_foyer
 
-from mosdef_gomc.utils.equation_compare import (
+from mosdef_gomc.utils.gmso_equation_compare import (
     evaluate_harmonic_angle_format_with_scaler,
     evaluate_harmonic_bond_format_with_scaler,
     evaluate_harmonic_improper_format_with_scaler,
