@@ -1,12 +1,11 @@
 import mbuild as mb
 import pytest
 from foyer.forcefields import forcefields
+from gmso.exceptions import GMSOError
 from mbuild import Box, Compound
 from mbuild.utils.io import has_foyer
 
-from gmso.exceptions import GMSOError
 from mosdef_gomc.tests.base_test import BaseTest
-
 from mosdef_gomc.utils.gmso_specific_ff_to_residue import specific_ff_to_residue
 from mosdef_gomc.utils.io import get_mosdef_gomc_fn
 

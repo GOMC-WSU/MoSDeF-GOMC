@@ -1,7 +1,5 @@
 import mbuild as mb
 import pytest
-from mbuild.utils.io import has_foyer
-
 from gmso.tests.base_test import BaseTest
 from gmso.utils.equation_compare import (
     evaluate_harmonic_angle_format_with_scaler,
@@ -17,6 +15,8 @@ from gmso.utils.equation_compare import (
     evaluate_RB_torsion_format_with_scaler,
     get_atom_type_expressions_and_scalars,
 )
+from mbuild.utils.io import has_foyer
+
 from mosdef_gomc.utils.gmso_specific_ff_to_residue import specific_ff_to_residue
 from mosdef_gomc.utils.io import get_mosdef_gomc_fn
 
