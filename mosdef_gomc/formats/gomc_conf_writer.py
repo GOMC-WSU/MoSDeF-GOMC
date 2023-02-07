@@ -4646,7 +4646,6 @@ class GOMCControl:
                                         ][1]
                                         in all_atom_names_and_res_pairs_keys_list
                                     ):
-
                                         if (
                                             self.input_variables_dict[key][
                                                 MEMC_iter
@@ -4657,7 +4656,6 @@ class GOMCControl:
                                                 ][1]
                                             ]
                                         ):
-
                                             bad_input_variables_values_list.append(
                                                 key
                                             )
@@ -5826,7 +5824,6 @@ class GOMCControl:
                     or self.MEMC_DataInput[MEMC_2_i][4][0] is None
                     or self.MEMC_DataInput[MEMC_2_i][4][1] is None
                 ):
-
                     self.input_error = True
                     print_error_message = (
                         "ERROR:  The  LargeKindBackBone and SmallKindBackBones unique "
@@ -6362,7 +6359,6 @@ class GOMCControl:
             or self.IntraMEMC_2Freq > 0
             or self.IntraMEMC_3Freq > 0
         ):
-
             ExchangeRatio_list = []
             ExchangeLargeKind_list = []
             LargeKindBackBone_list = []
@@ -6698,7 +6694,6 @@ class GOMCControl:
             and self.InitialState is not None
             and self.LambdaVDW is not None
         ):
-
             # make list for number of states, LambdaVDW, and Lambda_Coul, and convert the list to string for printing
             Lambda_states_list = []
             Lambda_VDW_list = []
@@ -7889,7 +7884,6 @@ def _check_if_input_files_exist(
         os.path.isfile(file_directory_and_name) is False
         and check_input_files_exist is True
     ):
-
         print_error_message = (
             "The {} with the file directory and name {}, "
             "does not exist.".format(type_of_file, file_directory_and_name)
@@ -8946,7 +8940,6 @@ def write_gomc_control_file(
         gomc_control.input_error is False
         and test_gomc_control_write_conf_file == "GOMC_CONTROL_FILE_WRITTEN"
     ):
-
         return "GOMC_CONTROL_FILE_WRITTEN"
     else:
         return None

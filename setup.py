@@ -52,7 +52,6 @@ def compile_proto(protoc):
 
 
 if __name__ == "__main__":
-
     proto_procedure()
 
     setup(

@@ -332,7 +332,6 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
     def test_print_ensemble_info(self):
-
         try:
             gomc_control.print_required_input(description=True)
             gomc_control.print_required_input(description=False)
@@ -8250,7 +8249,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"object with one simulation boxes, and the {} ensemble only accepts "
             r"two boxes \(box 0 and box 1\).".format("GEMC_NVT", "GEMC_NVT"),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_one_box,
                 "test_charmm_object_has_proper_no_boxes_for_ensemble_part_9_1_box",
@@ -8267,7 +8265,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"object with one simulation boxes, and the {} ensemble only accepts "
             r"two boxes \(box 0 and box 1\).".format("GEMC_NPT", "GEMC_NPT"),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_one_box,
                 "test_charmm_object_has_proper_no_boxes_for_ensemble_part_9_1_box",
@@ -8284,7 +8281,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"object with one simulation boxes, and the {} ensemble only accepts "
             r"two boxes \(box 0 and box 1\).".format("GCMC", "GCMC"),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_one_box,
                 "test_charmm_object_has_proper_no_boxes_for_ensemble_part_9_1_box",
@@ -8301,7 +8297,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"object with two simulation boxes, and the {} ensemble only accepts "
             r"one box \(box 0\).".format("NVT", "NVT"),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_two_boxes,
                 "test_charmm_object_has_proper_no_boxes_for_ensemble_part_9_1_box",
@@ -8433,7 +8428,6 @@ class TestGOMCControlFileWriter(BaseTest):
         assert cell_vector_box_1_3_read == True
 
     def test_box_vector_too_many_char(self):
-
         methane = mb.Compound(name="MET")
         methane_child_bead = mb.Compound(name="_CH4")
         methane.add(methane_child_bead, inherit_periodicity=False)
@@ -8492,7 +8486,6 @@ class TestGOMCControlFileWriter(BaseTest):
             "or greater than {} characters."
             "".format(0, 16),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_bad_box_0,
                 "test_box_vector_too_many_char_box_0",
@@ -8509,7 +8502,6 @@ class TestGOMCControlFileWriter(BaseTest):
             "or greater than {} characters."
             "".format(1, 16),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_bad_box_1,
                 "test_box_vector_too_many_char_box_1",
@@ -14104,7 +14096,6 @@ class TestGOMCControlFileWriter(BaseTest):
             f"{u.array.unyt_quantity} in energy units, "
             f"such as kcal/mol, kJ/mol, or K.",
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "test_Chempot_unyt_inputs.conf",
@@ -15062,7 +15053,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"When Checkpoint is True it need to be "
             r"\[True, str\] ---> \[True, checkpoint_filename\].",
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true(",
@@ -15086,7 +15076,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"\[True, str\] ---> \[True, checkpoint_filename\] or "
             r"\[False, str\] ---> \[False, checkpoint_filename\].",
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true(",
@@ -15106,7 +15095,6 @@ class TestGOMCControlFileWriter(BaseTest):
             match=r"ERROR: Please enter the Checkpoint file name without an "
             r"extension or the .chk extension.",
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true(",
@@ -15126,7 +15114,6 @@ class TestGOMCControlFileWriter(BaseTest):
             match=r"The checkpoint \(chk\) file with the file directory "
             r"and name name.chk, does not exist.",
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true",
@@ -15163,7 +15150,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"{} file directory and name is a {} and not a string."
             r"".format("binCoordinates_box_0", "coor", "<class 'list'>"),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true",
@@ -15187,7 +15173,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"{} file directory and name is a {} and not a string."
             r"".format("extendedSystem_box_0", "xsc", "<class 'list'>"),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true",
@@ -15302,7 +15287,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"str with a file extension of \['.coor'\], "
             r'but the actual file extension is ".psf".',
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true",
@@ -15325,7 +15309,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"str with a file extension of \['.xsc'\], "
             r'but the actual file extension is ".pdb".',
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true",
@@ -15348,7 +15331,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"str with a file extension of \['.vel'\], "
             r'but the actual file extension is ".csv".',
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "test_restart_false_checkpoint_true",
@@ -15611,7 +15593,6 @@ class TestGOMCControlFileWriter(BaseTest):
             match=r"ERROR: There can only be 1 non-bonded type set to true.  Please set only one of the "
             "ParaTypeCHARMM, ParaTypeMie, ParaTypeMARTINI types to True in the input_variables_dict.",
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm,
                 "ethane_box_0_nb_test",

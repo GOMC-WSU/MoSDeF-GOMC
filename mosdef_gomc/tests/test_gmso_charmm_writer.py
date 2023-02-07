@@ -66,7 +66,6 @@ class TestCharmmWriterData(BaseTest):
             nonbondeds_read = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
-
                 if (
                     "! atom_types" in line
                     and "mass" in line
@@ -820,7 +819,6 @@ class TestCharmmWriterData(BaseTest):
             nonbondeds_read = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
-
                 if (
                     "! type_1" in line
                     and "ignored" in line
@@ -911,7 +909,6 @@ class TestCharmmWriterData(BaseTest):
             improper_read = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
-
                 if (
                     "! type_1" in line
                     and "type_2" in line
@@ -975,7 +972,6 @@ class TestCharmmWriterData(BaseTest):
             improper_read = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
-
                 if (
                     "! type_1" in line
                     and "type_2" in line
@@ -1034,7 +1030,6 @@ class TestCharmmWriterData(BaseTest):
             improper_read = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
-
                 if (
                     "! type_1" in line
                     and "type_2" in line
@@ -4468,7 +4463,6 @@ class TestCharmmWriterData(BaseTest):
             r"If you are providing and empty box, please do so by specifying and "
             r"mbuild Box \({}\)".format(type(Box(lengths=[1, 1, 1]))),
         ):
-
             specific_ff_to_residue(
                 empty_box,
                 forcefield_selection={"AAA": "trappe-ua"},
@@ -6139,7 +6133,6 @@ class TestCharmmWriterData(BaseTest):
             pdb_read = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
-
                 if "CRYST1" in line:
                     pdb_read = True
                     crystal_box_length_angles = [
@@ -6314,7 +6307,6 @@ class TestCharmmWriterData(BaseTest):
 
     # test methane UA pdb writer outputs in a slightly different format mbuild box construction
     def test_save_othoganol_methane_ua_using_molecule_name_pdb(self):
-
         methane_ua_bead_name = "_CH4"
         methane_molecule_name = "MET"
         methane = mb.Compound(name=methane_molecule_name)
@@ -6504,7 +6496,6 @@ class TestCharmmWriterData(BaseTest):
             pdb_read = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
-
                 if "CRYST1" in line:
                     pdb_read = True
                     crystal_box_length_angles = [
@@ -7916,7 +7907,6 @@ class TestCharmmWriterData(BaseTest):
             f"force fields and DOES NOT check that any or all of the bonded parameters have the same "
             f"or conflicting values. ",
         ):
-
             methane_box = mb.fill_box(
                 compound=[two_propanol_ua, alt_two_propanol_ua],
                 n_compounds=[1, 1],
@@ -7944,7 +7934,6 @@ class TestCharmmWriterData(BaseTest):
     def test_atom_type_style_general(
         self, two_propanol_ua, alt_two_propanol_ua
     ):
-
         box_0 = mb.fill_box(
             compound=[two_propanol_ua, alt_two_propanol_ua],
             n_compounds=[1, 1],
@@ -8238,7 +8227,6 @@ class TestCharmmWriterData(BaseTest):
     def test_atom_type_style_all_unique_diff_epsilon(
         self, two_propanol_ua, alt_two_propanol_ua
     ):
-
         box_0 = mb.fill_box(
             compound=[two_propanol_ua, alt_two_propanol_ua],
             n_compounds=[1, 1],
@@ -8532,7 +8520,6 @@ class TestCharmmWriterData(BaseTest):
     def test_atom_type_style_all_unique_diff_sigma(
         self, two_propanol_ua, alt_two_propanol_ua
     ):
-
         box_0 = mb.fill_box(
             compound=[two_propanol_ua, alt_two_propanol_ua],
             n_compounds=[1, 1],
@@ -8826,7 +8813,6 @@ class TestCharmmWriterData(BaseTest):
     def test_atom_type_style_all_unique_diff_mass(
         self, two_propanol_ua, alt_two_propanol_ua
     ):
-
         box_0 = mb.fill_box(
             compound=[two_propanol_ua, alt_two_propanol_ua],
             n_compounds=[1, 1],
@@ -9120,7 +9106,6 @@ class TestCharmmWriterData(BaseTest):
     def test_atom_type_style_all_unique_diff_Mie_n(
         self, two_propanol_ua, alt_two_propanol_ua
     ):
-
         box_0 = mb.fill_box(
             compound=[two_propanol_ua, alt_two_propanol_ua],
             n_compounds=[1, 1],

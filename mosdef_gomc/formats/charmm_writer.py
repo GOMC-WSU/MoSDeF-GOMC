@@ -1823,7 +1823,6 @@ class Charmm:
         self.combined_1_4_coul_dict_per_residue = {}
 
         if self.structure_box_1:
-
             print(
                 "GOMC FF writing each residues FF as a group for structure_box_0"
             )
@@ -2236,7 +2235,6 @@ class Charmm:
             for f, PSF_atom_iteration_0 in enumerate(
                 stuct_only_iteration.atoms
             ):
-
                 if f > 0:
                     if (
                         PSF_atom_iteration_0.residue.chain
@@ -2282,7 +2280,6 @@ class Charmm:
 
                 self.all_residue_names_List = residue_names_list
             else:
-
                 self.all_individual_atom_names_list = (
                     self.all_individual_atom_names_list
                     + individual_atom_names_list_iter
@@ -2351,7 +2348,6 @@ class Charmm:
             )
             raise TypeError(print_error_message)
         else:
-
             print("******************************")
             print("")
             print(
@@ -2748,7 +2744,6 @@ class Charmm:
                         "!atom_types \t\tKtheta\t\tTheta0\t\t\t  atoms_types_per_utilized_FF\n"
                     )
                     for params, idx in unique_angle_types.items():
-
                         if (
                             (self.gomc_fix_bonds_angles is not None)
                             and ((params[4] and params[5] and params[6]))
@@ -3568,7 +3563,6 @@ class Charmm:
             # ANGLES: Calculate the angle data
             output_write.write(first_indent % no_angles + " !NTHETA: angles\n")
             for i_angle, angle_iteration in enumerate(stuct_iteration.angles):
-
                 output_write.write(
                     (first_indent * 3)
                     % (
@@ -3668,7 +3662,6 @@ class Charmm:
             # DONOR: calculate the donor data
             output_write.write(first_indent % no_donors + " !NDON: donors\n")
             for donor_i, donor_iter in enumerate(stuct_iteration.donors):
-
                 output_write.write(
                     (first_indent * 2)
                     % (donor_iter.atom1.idx + 1, donor_iter.atom2.idx + 1)
@@ -3691,7 +3684,6 @@ class Charmm:
             for acceptor_i, acceptor_iter in enumerate(
                 stuct_iteration.acceptors
             ):
-
                 output_write.write(
                     (first_indent * 2)
                     % (acceptor_iter.atom1.idx + 1, acceptor_iter.atom2.idx + 1)
@@ -3710,7 +3702,6 @@ class Charmm:
             # NNB: calculate the NNB data
             output_write.write(first_indent % 0 + " !NNB\n\n")
             for nbb_i, atoms_iter in enumerate(stuct_iteration.atoms):
-
                 output_write.write(first_indent % 0)
                 if (nbb_i + 1) % 8 == 0:
                     output_write.write("\n")
@@ -3733,7 +3724,6 @@ class Charmm:
             )
             if stuct_iteration.groups is True:
                 for group_i, group_iter in enumerate(stuct_iteration.groups):
-
                     output_write.write(
                         (first_indent * 3)
                         % (
@@ -3995,7 +3985,6 @@ class Charmm:
                 raise ValueError(print_error_message)
 
             for coord_iter, atom_coordinates in enumerate(all_atom_coordinates):
-
                 for PDB_residue_count in stuct_only_iteration.residues:
                     segment_id = ""
                     atom_iteration = sorted(
@@ -4019,7 +4008,6 @@ class Charmm:
                         )
 
                 for v, atom_iter_1 in enumerate(stuct_only_iteration.atoms):
-
                     if v + 1 > max_no_atoms_in_base10:
                         atom_number = base10_to_base16_alph_num(v + 1)
 

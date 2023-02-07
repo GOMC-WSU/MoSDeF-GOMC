@@ -1080,7 +1080,6 @@ class Charmm:
         ff_filename=None,
         gmso_match_ff_by="molecule",
     ):
-
         # set all input variables to the class
         self.structure_box_0 = structure_box_0
         self.filename_box_0 = filename_box_0
@@ -1387,7 +1386,6 @@ class Charmm:
         self.improper_types_dict_per_residue = {}
 
         if self.structure_box_1:
-
             print(
                 "GOMC FF writing each residues FF as a group for structure_box_0"
             )
@@ -2618,7 +2616,6 @@ class Charmm:
                 self.segment_id_list_box_0 = segment_id_list
 
             else:
-
                 self.all_individual_atom_names_list = (
                     self.all_individual_atom_names_list
                     + individual_atom_names_list_iter
@@ -2691,7 +2688,6 @@ class Charmm:
             )
             raise TypeError(print_error_message)
         else:
-
             print("******************************")
             print("")
             print(
@@ -2728,7 +2724,6 @@ class Charmm:
 
             # Start writing the force field (.inp) file
             with open(self.ff_filename, "w") as data:
-
                 if self.structure_box_1:
                     data.write(
                         f"* {self.filename_box_0} and {self.filename_box_1} "
@@ -4033,7 +4028,6 @@ class Charmm:
 
                     # get the improper values in k = kcal/mol, n= integer and phi_eq = degrees
                     if improper_type_str_iter == "HarmonicImproperPotential":
-
                         """
                         # KEEP THIS FOR LATER
                         # this section of code is not currently will but will work when GMSO
@@ -4670,7 +4664,6 @@ class Charmm:
             for i_atom, PSF_atom_iteration_1 in enumerate(
                 stuct_iteration.sites
             ):
-
                 charge_iter = (
                     PSF_atom_iteration_1.atom_type.__dict__["charge_"].to("C")
                     / u.elementary_charge
@@ -4741,7 +4734,6 @@ class Charmm:
             # ANGLES: Calculate the angle data
             output_write.write(first_indent % no_angles + " !NTHETA: angles\n")
             for i_angle, angle_iteration in enumerate(stuct_iteration.angles):
-
                 output_write.write(
                     (first_indent * 3)
                     % (
