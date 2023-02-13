@@ -5,7 +5,6 @@ import numpy as np
 import pytest
 from foyer.forcefields import forcefields
 from mbuild import Box, Compound
-from mbuild.formats import charmm_writer
 from mbuild.lattice import load_cif
 from mbuild.utils.io import get_fn, has_foyer
 
