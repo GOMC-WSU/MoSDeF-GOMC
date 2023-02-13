@@ -15,7 +15,6 @@ def specific_ff_to_residue(
     reorder_res_in_pdb_psf=False,
     boxes_for_simulation=1,
 ):
-
     """
     Takes the mbuild Compound or mbuild Box structure and applies the selected
     force field to the corresponding residue via foyer.
@@ -299,7 +298,6 @@ def specific_ff_to_residue(
                 new_compound_iter.add(mb.compound.clone(structure))
 
             elif len(structure.children) > 0:
-
                 new_compound_iter.add(mb.compound.clone(structure))
 
         else:
@@ -327,7 +325,6 @@ def specific_ff_to_residue(
                                 if len(sub_child.children) == 0 and (
                                     child.name not in residues
                                 ):
-
                                     raise ValueError(
                                         print_error_message_all_res_not_specified
                                     )

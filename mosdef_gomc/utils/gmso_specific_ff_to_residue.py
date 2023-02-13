@@ -20,7 +20,6 @@ def specific_ff_to_residue(
     residues=None,
     boxes_for_simulation=1,
 ):
-
     """
     Takes the mbuild Compound or mbuild Box and applies the selected
     force field to the corresponding residue via foyer and GMSO.

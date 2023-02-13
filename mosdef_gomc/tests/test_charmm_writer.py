@@ -49,7 +49,6 @@ class TestCharmmWriterData(BaseTest):
             nonbondeds_read = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
-
                 if (
                     "!atom_types" in line
                     and "mass" in line
@@ -2376,7 +2375,6 @@ class TestCharmmWriterData(BaseTest):
 
     # test for error if trying to use  use_dihedrals and impropers in the dihedrals (i.e. only RB torsion allowed)
     def test_charmm_dihedral_reorder(self, ethyl_ether_gomc, methyl_ether_gomc):
-
         box_reservior_0 = mb.fill_box(
             compound=[ethyl_ether_gomc, methyl_ether_gomc],
             box=[10, 10, 10],
@@ -3433,7 +3431,6 @@ class TestCharmmWriterData(BaseTest):
             pdb_read = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
-
                 if "CRYST1" in line:
                     pdb_read = True
                     crystal_box_length_angles = [
