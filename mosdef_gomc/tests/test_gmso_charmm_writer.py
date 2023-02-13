@@ -4510,18 +4510,16 @@ class TestCharmmWriterData(BaseTest):
             forcefield_selection={
                 ethanol_gomc.name: "oplsaa",
                 ethane_gomc.name: "oplsaa",
-                # box_reservior_3.name: "oplsaa",
             },
             residues=[ethanol_gomc.name, ethane_gomc.name],
-            # residues=[box_reservior_3.name],
             boxes_for_simulation=1,
         )
 
         assert test_topology.n_sites == 17
-        assert test_electrostatics14Scale_dict == {"ETO": 0.5, "ETH": 0.5} or {"ETH": 0.5, "ETO": 0.5}
-        assert test_nonBonded14Scale_dict == {"ETO": 0.5, "ETH": 0.5} or {"ETH": 0.5, "ETO": 0.5}
+        assert test_electrostatics14Scale_dict == {"ETO": 0.5, "ETH": 0.5}
+        assert test_nonBonded14Scale_dict == {"ETO": 0.5, "ETH": 0.5} 
         assert test_residues_applied_list.sort() == ["ETO", "ETH"].sort()
-        
+
     def test_charmm_all_residues_not_in_dict_boxes_for_simulation_1(
         self, ethane_gomc, ethanol_gomc
     ):

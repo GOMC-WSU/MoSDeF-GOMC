@@ -2026,7 +2026,7 @@ class TestCharmmWriterData(BaseTest):
 
         assert (
             str(test_value_0)
-            == "<Structure 17 atoms; 2 residues; 15 bonds; PBC (orthogonal); parametrized>"
+            == "<Structure 17 atoms; 2 residues; 15 bonds; PBC (orthogonal); parameterized>"
         )
         assert test_value_1 == {"ETO": 0.5, "ETH": 0.5}
         assert test_value_2 == {"ETO": 0.5, "ETH": 0.5}
