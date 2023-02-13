@@ -329,7 +329,6 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
     def test_print_ensemble_info(self):
-
         try:
             gomc_control.print_required_input(description=True)
             gomc_control.print_required_input(description=False)
@@ -8619,7 +8618,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"object with one simulation boxes, and the {} ensemble only accepts "
             r"two boxes \(box 0 and box 1\).".format("GEMC_NVT", "GEMC_NVT"),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_one_box,
                 "test_charmm_object_has_proper_no_boxes_for_ensemble_part_9_1_box",
@@ -8636,7 +8634,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"object with one simulation boxes, and the {} ensemble only accepts "
             r"two boxes \(box 0 and box 1\).".format("GEMC_NPT", "GEMC_NPT"),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_one_box,
                 "test_charmm_object_has_proper_no_boxes_for_ensemble_part_9_1_box",
@@ -8653,7 +8650,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"object with one simulation boxes, and the {} ensemble only accepts "
             r"two boxes \(box 0 and box 1\).".format("GCMC", "GCMC"),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_one_box,
                 "test_charmm_object_has_proper_no_boxes_for_ensemble_part_9_1_box",
@@ -8670,7 +8666,6 @@ class TestGOMCControlFileWriter(BaseTest):
             r"object with two simulation boxes, and the {} ensemble only accepts "
             r"one box \(box 0\).".format("NVT", "NVT"),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_two_boxes,
                 "test_charmm_object_has_proper_no_boxes_for_ensemble_part_9_1_box",
@@ -8801,7 +8796,6 @@ class TestGOMCControlFileWriter(BaseTest):
         assert cell_vector_box_1_3_read == True
 
     def test_box_vector_too_many_char(self):
-
         methane = mb.Compound(name="MET")
         methane_child_bead = mb.Compound(name="_CH4")
         methane.add(methane_child_bead, inherit_periodicity=False)
@@ -8857,7 +8851,6 @@ class TestGOMCControlFileWriter(BaseTest):
             "or greater than {} characters."
             "".format(0, 16),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_bad_box_0,
                 "test_box_vector_too_many_char_box_0",
@@ -8874,7 +8867,6 @@ class TestGOMCControlFileWriter(BaseTest):
             "or greater than {} characters."
             "".format(1, 16),
         ):
-
             gomc_control.write_gomc_control_file(
                 charmm_bad_box_1,
                 "test_box_vector_too_many_char_box_1",
