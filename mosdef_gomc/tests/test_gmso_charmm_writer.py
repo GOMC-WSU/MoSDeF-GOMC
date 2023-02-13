@@ -4510,10 +4510,8 @@ class TestCharmmWriterData(BaseTest):
             forcefield_selection={
                 ethanol_gomc.name: "oplsaa",
                 ethane_gomc.name: "oplsaa",
-                # box_reservior_3.name: "oplsaa",
             },
             residues=[ethanol_gomc.name, ethane_gomc.name],
-            # residues=[box_reservior_3.name],
             boxes_for_simulation=1,
         )
 

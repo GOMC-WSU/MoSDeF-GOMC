@@ -5,10 +5,10 @@ import numpy as np
 import pytest
 from foyer.forcefields import forcefields
 from mbuild import Box, Compound
-from mbuild.formats import charmm_writer
 from mbuild.lattice import load_cif
 from mbuild.utils.io import get_fn, has_foyer
 
+from mosdef_gomc.formats import charmm_writer
 from mosdef_gomc.formats.charmm_writer import Charmm
 from mosdef_gomc.tests.base_test import BaseTest
 from mosdef_gomc.utils.conversion import (
@@ -2026,7 +2026,7 @@ class TestCharmmWriterData(BaseTest):
 
         assert (
             str(test_value_0)
-            == "<Structure 17 atoms; 2 residues; 15 bonds; PBC (orthogonal); parametrized>"
+            == "<Structure 17 atoms; 2 residues; 15 bonds; PBC (orthogonal); parameterized>"
         )
         assert test_value_1 == {"ETO": 0.5, "ETH": 0.5}
         assert test_value_2 == {"ETO": 0.5, "ETH": 0.5}
