@@ -1,17 +1,15 @@
 import mbuild as mb
 import numpy as np
 import pytest
-import unyt as u
-from forcefield_utilities.xml_loader import FoyerFFs
 from foyer.forcefields import forcefields
 from gmso import Topology
 from gmso.exceptions import GMSOError
 from gmso.external.convert_mbuild import from_mbuild, to_mbuild
-from gmso.parameterization import apply as gmso_apply
 from mbuild import Box, Compound
 from mbuild.lattice import load_cif
 from mbuild.utils.io import get_fn, has_foyer
-from unyt.dimensions import angle, length, pressure, temperature
+
+from mosdef_gomc.utils.io import get_mosdef_gomc_fn
 
 from mosdef_gomc.formats.gmso_charmm_writer import Charmm
 from mosdef_gomc.tests.base_test import BaseTest
@@ -24,8 +22,6 @@ from mosdef_gomc.utils.conversion import (
     base10_to_base54_alph_num,
     base10_to_base62_alph_num,
 )
-from mosdef_gomc.utils.gmso_specific_ff_to_residue import specific_ff_to_residue
-from mosdef_gomc.utils.io import get_mosdef_gomc_fn
 
 
 @pytest.mark.skipif(not has_foyer, reason="Foyer package not installed")
