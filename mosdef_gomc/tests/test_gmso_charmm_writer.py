@@ -1279,7 +1279,6 @@ class TestCharmmWriterData(BaseTest):
 
         assert charges_read
 
-    # Brad Crawford Notes: NEED TO REMOVE THE DOUBLE ["CH3", "CH", "600.40153", "1.54"],
     def test_save_charmm_ua_gomc_ff(self, two_propanol_ua):
         box_0 = mb.fill_box(
             compound=[two_propanol_ua], n_compounds=[1], box=[4, 4, 4]
