@@ -262,7 +262,7 @@ def specific_ff_to_residue(
             )
             raise TypeError(print_error_message)
         else:
-            initial_no_atoms = len(structure.to_parmed().atoms)
+            initial_no_atoms = structure.n_particles
 
     # calculate the initial number of atoms for later comparison
     if isinstance(structure, mb.Box):

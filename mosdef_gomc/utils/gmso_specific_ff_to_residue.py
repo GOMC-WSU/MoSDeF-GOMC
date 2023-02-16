@@ -445,7 +445,7 @@ def specific_ff_to_residue(
             raise TypeError(print_error_message)
 
         else:
-            initial_no_atoms = len(structure.to_parmed().atoms)
+            initial_no_atoms = structure.n_particles
             new_gmso_topology = mb_convert(structure, custom_groups=residues)
 
     elif isinstance(structure, mb.Box):
