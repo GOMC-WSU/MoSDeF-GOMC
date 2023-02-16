@@ -1599,8 +1599,7 @@ class TestCharmmWriterData(BaseTest):
         for test_base_26_iter in range(0, len(list_base_10_and_26)):
             test_10_iter = list_base_10_and_26[test_base_26_iter][0]
             test_26_iter = list_base_10_and_26[test_base_26_iter][1]
-            assert str(base10_to_base26_alph(
-                test_10_iter)) == str(test_26_iter)
+            assert str(base10_to_base26_alph(test_10_iter)) == str(test_26_iter)
 
         unique_entries_base_26_list = []
         for test_unique_base_26 in range(0, 26**2):
@@ -1642,8 +1641,7 @@ class TestCharmmWriterData(BaseTest):
         for test_base_52_iter in range(0, len(list_base_10_and_52)):
             test_10_iter = list_base_10_and_52[test_base_52_iter][0]
             test_52_iter = list_base_10_and_52[test_base_52_iter][1]
-            assert str(base10_to_base52_alph(
-                test_10_iter)) == str(test_52_iter)
+            assert str(base10_to_base52_alph(test_10_iter)) == str(test_52_iter)
 
         unique_entries_base_52_list = []
         for test_unique_base_52 in range(0, 52**2):
@@ -2658,8 +2656,7 @@ class TestCharmmWriterData(BaseTest):
         with pytest.raises(
             ValueError,
             match=r"ERROR: Please ensure that all the residue names in the "
-            r"{} list are also in the residues list.".format(
-                "gomc_fix_angles"),
+            r"{} list are also in the residues list.".format("gomc_fix_angles"),
         ):
             Charmm(
                 two_propanol_ua,
@@ -3476,11 +3473,9 @@ class TestCharmmWriterData(BaseTest):
                     for f_i in range(0, no_O_atoms):
                         atom_type_res_part_2_list.append(["0.00", "1.00", "O"])
                     for f_i in range(no_O_atoms, no_O_atoms + no_Si_atoms):
-                        atom_type_res_part_2_list.append(
-                            ["0.00", "1.00", "SI"])
+                        atom_type_res_part_2_list.append(["0.00", "1.00", "SI"])
 
-                    assert out_gomc[i].split(
-                    )[0:7] == crystal_box_length_angles
+                    assert out_gomc[i].split()[0:7] == crystal_box_length_angles
 
                     for j in range(0, len(atom_type_res_part_1_list)):
                         assert (
@@ -3604,11 +3599,9 @@ class TestCharmmWriterData(BaseTest):
 
                     atom_type_res_part_2_list = []
                     for f_i in range(0, no_methane_atoms):
-                        atom_type_res_part_2_list.append(
-                            ["0.00", "0.00", "EP"])
+                        atom_type_res_part_2_list.append(["0.00", "0.00", "EP"])
 
-                    assert out_gomc[i].split(
-                    )[0:7] == crystal_box_length_angles
+                    assert out_gomc[i].split()[0:7] == crystal_box_length_angles
 
                     for j in range(0, len(atom_type_res_part_1_list)):
                         assert (
