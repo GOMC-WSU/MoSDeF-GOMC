@@ -16,6 +16,8 @@ MoSDeF-GOMC developers:
 
 **Justin Gilmer** - Developer
 
+**Clare McCabe** - Advisor
+
 **Peter T. Cummings** - Advisor
 
 **Jeffrey Potoff** - Advisor and maintainer

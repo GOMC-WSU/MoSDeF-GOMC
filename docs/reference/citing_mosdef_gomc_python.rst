@@ -17,7 +17,7 @@ If you use this code for your research, please cite for following sources:
 .. code-block:: bibtex
 
     @Inbook{MOSDEF_GOMC_PYTHON_2022,
-	author      = "Crawford, Brad  and Timalsina, Umesh and Quach, Co and Craven, Nicholas and Gilmer, Justin and Cummings, Peter T. and  Potoff, Jeffrey",
+	author      = "Crawford, Brad  and Timalsina, Umesh and Quach, Co and Craven, Nicholas and Gilmer, Justin and McCabe, Clare and Cummings, Peter T. and  Potoff, Jeffrey",
 	title       = "MoSDeF-GOMC: Python software for the creation of scientific workflows for the Monte Carlo simulation engine GOMC",
 	year        = "2022",
 	publisher   = "Github",

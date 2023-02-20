@@ -146,7 +146,7 @@ project = "MoSDeF-GOMC"
 author = (
     "Crawford, Brad  and Timalsina, Umesh and Quach, Co "
     "and Craven, Nicholas and Gilmer, Justin "
-    "and Cummings, Peter T. and  Potoff, Jeffrey"
+    "and McCabe, Clare and Cummings, Peter T. and  Potoff, Jeffrey"
 )
 copyright = "2022"
 
