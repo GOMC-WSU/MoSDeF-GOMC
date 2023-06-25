@@ -3,6 +3,7 @@ import os
 
 # import signac
 import xml.etree.ElementTree as ET
+
 import sympy
 import unyt as u
 
@@ -48,7 +49,6 @@ def evaluate_nonbonded_lj_format_with_scaler(new_lj_form, base_lj_form):
             ],
             [eqn_ratio, Rmin, two],
         )
-               
 
         form_scalar = float(list(values)[0][0])
         form_output = "LJ"
