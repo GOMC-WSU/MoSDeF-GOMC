@@ -596,6 +596,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "RestartFreq": False,
                 "CheckpointFreq": False,
                 "CoordinatesFreq": False,
+                "DCDFreq": False,
                 "ConsoleFreq": False,
                 "BlockAverageFreq": False,
                 "HistogramFreq": False,
@@ -825,6 +826,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 elif line.startswith("CoordinatesFreq "):
                     variables_read_dict["CoordinatesFreq"] = True
                     split_line = line.split()
+                    assert split_line[1] == "False"
+                    assert split_line[2] == "1"
+
+                elif line.startswith("DCDFreq "):
+                    variables_read_dict["DCDFreq"] = True
+                    split_line = line.split()
                     assert split_line[1] == "True"
                     assert split_line[2] == "1"
 
@@ -951,6 +958,7 @@ class TestGOMCControlFileWriter(BaseTest):
             "RestartFreq": True,
             "CheckpointFreq": True,
             "CoordinatesFreq": True,
+            "DCDFreq": True,
             "ConsoleFreq": True,
             "BlockAverageFreq": True,
             "HistogramFreq": True,
@@ -1014,6 +1022,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "RestartFreq": False,
                 "CheckpointFreq": False,
                 "CoordinatesFreq": False,
+                "DCDFreq": False,
                 "ConsoleFreq": False,
                 "BlockAverageFreq": False,
                 "HistogramFreq": False,
@@ -1133,6 +1142,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 elif line.startswith("CoordinatesFreq "):
                     variables_read_dict["CoordinatesFreq"] = True
                     split_line = line.split()
+                    assert split_line[1] == "False"
+                    assert split_line[2] == "100"
+
+                elif line.startswith("DCDFreq "):
+                    variables_read_dict["DCDFreq"] = True
+                    split_line = line.split()
                     assert split_line[1] == "True"
                     assert split_line[2] == "100"
 
@@ -1193,6 +1208,7 @@ class TestGOMCControlFileWriter(BaseTest):
             "RestartFreq": True,
             "CheckpointFreq": True,
             "CoordinatesFreq": True,
+            "DCDFreq": True,
             "ConsoleFreq": True,
             "BlockAverageFreq": True,
             "HistogramFreq": True,
@@ -1259,6 +1275,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "RestartFreq": False,
                 "CheckpointFreq": False,
                 "CoordinatesFreq": False,
+                "DCDFreq": False,
                 "ConsoleFreq": False,
                 "BlockAverageFreq": False,
                 "HistogramFreq": False,
@@ -1422,6 +1439,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 elif line.startswith("CoordinatesFreq "):
                     variables_read_dict["CoordinatesFreq"] = True
                     split_line = line.split()
+                    assert split_line[1] == "False"
+                    assert split_line[2] == "10000"
+
+                elif line.startswith("DCDFreq "):
+                    variables_read_dict["DCDFreq"] = True
+                    split_line = line.split()
                     assert split_line[1] == "True"
                     assert split_line[2] == "10000"
 
@@ -1488,6 +1511,7 @@ class TestGOMCControlFileWriter(BaseTest):
             "RestartFreq": True,
             "CheckpointFreq": True,
             "CoordinatesFreq": True,
+            "DCDFreq": True,
             "ConsoleFreq": True,
             "BlockAverageFreq": True,
             "HistogramFreq": True,
@@ -1759,7 +1783,8 @@ class TestGOMCControlFileWriter(BaseTest):
                 "OutputName": "test_out",
                 "RestartFreq": [False, 50],
                 "CheckpointFreq": [False, 50],
-                "CoordinatesFreq": [False, 50],
+                "CoordinatesFreq": [True, 50],
+                "DCDFreq": [False, 50],
                 "ConsoleFreq": [False, 500],
                 "BlockAverageFreq": [False, 50],
                 "HistogramFreq": [False, 50],
@@ -1842,6 +1867,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "RestartFreq": False,
                 "CheckpointFreq": False,
                 "CoordinatesFreq": False,
+                "DCDFreq": False,
                 "ConsoleFreq": False,
                 "BlockAverageFreq": False,
                 "HistogramFreq": False,
@@ -2160,6 +2186,12 @@ class TestGOMCControlFileWriter(BaseTest):
                 elif line.startswith("CoordinatesFreq "):
                     variables_read_dict["CoordinatesFreq"] = True
                     split_line = line.split()
+                    assert split_line[1] == "True"
+                    assert split_line[2] == "50"
+
+                elif line.startswith("DCDFreq "):
+                    variables_read_dict["DCDFreq"] = True
+                    split_line = line.split()
                     assert split_line[1] == "False"
                     assert split_line[2] == "50"
 
@@ -2301,6 +2333,7 @@ class TestGOMCControlFileWriter(BaseTest):
             "RestartFreq": True,
             "CheckpointFreq": True,
             "CoordinatesFreq": True,
+            "DCDFreq": True,
             "ConsoleFreq": True,
             "BlockAverageFreq": True,
             "HistogramFreq": True,
@@ -8555,6 +8588,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "AdjSteps": 2,
                 "EqSteps": 3,
                 "CoordinatesFreq": [True, 4],
+                "DCDFreq": [True, 4],
                 "RestartFreq": [True, 5],
                 "CheckpointFreq": [True, 5],
                 "ConsoleFreq": [True, 7],
@@ -8571,6 +8605,7 @@ class TestGOMCControlFileWriter(BaseTest):
                 "AdjSteps": False,
                 "EqSteps": False,
                 "CoordinatesFreq": False,
+                "DCDFreq": False,
                 "RestartFreq": False,
                 "CheckpointFreq": False,
                 "ConsoleFreq": False,
@@ -8604,6 +8639,12 @@ class TestGOMCControlFileWriter(BaseTest):
 
                 elif line.startswith("CoordinatesFreq "):
                     variables_read_dict["CoordinatesFreq"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+                    assert split_line[2] == "4"
+
+                elif line.startswith("DCDFreq "):
+                    variables_read_dict["DCDFreq"] = True
                     split_line = line.split()
                     assert split_line[1] == "True"
                     assert split_line[2] == "4"
@@ -8688,6 +8729,7 @@ class TestGOMCControlFileWriter(BaseTest):
             "AdjSteps": True,
             "EqSteps": True,
             "CoordinatesFreq": True,
+            "DCDFreq": True,
             "RestartFreq": True,
             "CheckpointFreq": True,
             "ConsoleFreq": True,
@@ -9079,7 +9121,8 @@ class TestGOMCControlFileWriter(BaseTest):
             binVelocities_box_1="../test_files/NVT_ethane_box_1.vel",
             input_variables_dict={
                 "VDWGeometricSigma": True,
-                "DCDFreq": [True, 1000],
+                "CoordinatesFreq": [True, 1000],
+                "DCDFreq": [False, 1000],
             },
         )
 
@@ -9088,6 +9131,7 @@ class TestGOMCControlFileWriter(BaseTest):
         ) as fp:
             variables_read_dict = {
                 "VDWGeometricSigma": False,
+                "CoordinatesFreq": False,
                 "DCDFreq": False,
                 "Coordinates_box_0": False,
                 "Structure_box_0": False,
@@ -9112,10 +9156,16 @@ class TestGOMCControlFileWriter(BaseTest):
                     split_line = line.split()
                     assert split_line[1] == "True"
 
+                elif line.startswith("CoordinatesFreq "):
+                    variables_read_dict["CoordinatesFreq"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+                    assert split_line[2] == "1000"
+
                 elif line.startswith("DCDFreq "):
                     variables_read_dict["DCDFreq"] = True
                     split_line = line.split()
-                    assert split_line[1] == "True"
+                    assert split_line[1] == "False"
                     assert split_line[2] == "1000"
 
                 elif line.startswith("Coordinates 0 "):
@@ -9185,6 +9235,7 @@ class TestGOMCControlFileWriter(BaseTest):
         assert variables_read_dict == {
             "Restart": True,
             "VDWGeometricSigma": True,
+            "CoordinatesFreq": True,
             "DCDFreq": True,
             "Coordinates_box_0": True,
             "Structure_box_0": True,

@@ -1024,11 +1024,8 @@ def _get_default_variables_dict():
         "CBMC_Dih": 50,
         # Control file (.conf file ) output controls/parameters
         "OutputName": "Output_data",
-        "CoordinatesFreq": [True, 1000000],
-        "DCDFreq": [
-            False,
-            1000000,
-        ],  # set to False until this is in the new official GOMC software release
+        "CoordinatesFreq": [False, 1000000],
+        "DCDFreq": [True, 1000000],
         "RestartFreq": [True, 1000000],
         "CheckpointFreq": [True, 1000000],
         "ConsoleFreq": [True, 10000],
@@ -1797,7 +1794,7 @@ class GOMCControl:
         The UNIQUE STRING NAME, WITH NO SPACES, which is used for the
         output block average, PDB, and PSF file names.
     CoordinatesFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
-        default = [True, 1M] or [True , set via formula based on the number of RunSteps or M max]
+        default = [False, 1M] or [False , set via formula based on the number of RunSteps or M max]
         Controls output of PDB file (coordinates). If bool is True, this
         enables outputting the coordinate files at the integer frequency
         (set steps_per_data_output_int), while "False" disables outputting
@@ -7169,15 +7166,13 @@ class GOMCControl:
                 self.CoordinatesFreq[1],
             )
         )
-        # set this only true if use dcd is true, until the DCDFreq is in a official release of GOMC
-        if self.DCDFreq[0] is True:
-            data_control_file.write(
-                "{:25s} {:10s} {}\n".format(
-                    "DCDFreq",
-                    str(self.DCDFreq[0]),
-                    self.DCDFreq[1],
-                )
+        data_control_file.write(
+            "{:25s} {:10s} {}\n".format(
+                "DCDFreq",
+                str(self.DCDFreq[0]),
+                self.DCDFreq[1],
             )
+        )
         data_control_file.write(
             "{:25s} {:10s} {}\n".format(
                 "ConsoleFreq", str(self.ConsoleFreq[0]), self.ConsoleFreq[1]
@@ -8906,7 +8901,7 @@ def write_gomc_control_file(
         The UNIQUE STRING NAME, WITH NO SPACES, which is used for the
         output block average, PDB, and PSF file names.
     CoordinatesFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
-        default = [True, 1M] or [True , set via formula based on the number of RunSteps or M max]
+        default = [False, 1M] or [False , set via formula based on the number of RunSteps or M max]
         Controls output of PDB file (coordinates). If bool is True, this
         enables outputting the coordinate files at the integer frequency
         (set steps_per_data_output_int), while "False" disables outputting
