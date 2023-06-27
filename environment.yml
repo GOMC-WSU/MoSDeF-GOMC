@@ -15,10 +15,12 @@ dependencies:
   - pytest
   - pytest-cov
   - sympy
-  - python>=3.8,<=3.9
+  - symengine
+  - python-symengine
+  - python>=3.8
   - forcefield-utilities=0.2.1
-  - foyer=0.11.3
-  - gmso=0.9.1
+  - foyer>=0.11.3
+  - gmso>=0.9.1
   - mbuild>=0.16.0
   - pre-commit
   - sphinx
