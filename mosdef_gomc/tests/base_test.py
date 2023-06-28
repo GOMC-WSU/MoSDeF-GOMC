@@ -61,7 +61,7 @@ class BaseTest:
 
                 CH3_1_1 = mb.Particle(pos=[0.2, 0.0, 0.0], name="_CH3")
                 HC_1_1 = mb.Particle(pos=[0.4, 0.0, 0.0], name="_HC")
-                O_1_1 = mb.Particle(pos=[0.8, 0.0, 0.0], name="O", element="0")
+                O_1_1 = mb.Particle(pos=[0.8, 0.0, 0.0], name="O", element="O")
                 H_1_1 = mb.Particle(pos=[1.0, 0.0, 0.0], name="H", element="H")
                 CH3_1_2 = mb.Particle(pos=[0.6, 0.0, 0.0], name="_CH3")
                 self.add([CH3_1_1, HC_1_1, O_1_1, H_1_1, CH3_1_2])
