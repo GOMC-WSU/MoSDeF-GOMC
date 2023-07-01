@@ -1,4 +1,4 @@
-name: mosdef_gomc
+name: mosdef_gomc_docs
 channels:
   - conda-forge
   - defaults
@@ -8,16 +8,21 @@ dependencies:
   - ipython
   - numpydoc
   - mock
-  - sphinx_rtd_theme
+  - sphinx_rad_theme
   - nbsphinx
   - sphinxcontrib
   - pycifrw
+  - pytest
+  - pytest-cov
   - sympy
-  - python>=3.8,<=3.9
-  - forcefield-utilities=0.2.1
-  - foyer=0.11.3
-  - gmso=0.9.1
-  - mbuild=0.15.1
+  - symengine
+  - python-symengine
+  - python>=3.9,<=3.10
+  - forcefield-utilities>=0.2.1
+  - foyer>=0.11.3
+  - gmso>=0.9.1
+  - mbuild>=0.16.0
+  - pre-commit
   - sphinx
   - pip
   - pip:

@@ -50,7 +50,7 @@ To check all the file, you can run::
 Supported Python Versions
 -------------------------
 
-Python 3.9 are officially supported and tested during development and with the final product.
+Python 3.9 and 3.10 are officially supported and tested during development and with the final product.
 Python versions older than 3.9 may work, but there is no guarantee.
 
 Testing your installation
