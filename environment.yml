@@ -23,7 +23,7 @@ dependencies:
   - gmso>=0.9.1
   - mbuild>=0.16.0
   - pre-commit
-  - sphinx-6.1.1
+  - sphinx=6.2.1
   - pip
   - pip:
       - bump2version
