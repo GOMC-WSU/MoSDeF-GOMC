@@ -28,9 +28,9 @@ If you use this code for your research, please cite for following sources:
 	doi = {10.1021/acs.jcim.2c01498},
     	note ={PMID: 36791286},
 
-	url = { 
+	url = {
         https://doi.org/10.1021/acs.jcim.2c01498
-    
+
 	},
 	}
 
