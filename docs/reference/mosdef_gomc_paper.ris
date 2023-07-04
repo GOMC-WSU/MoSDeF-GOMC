@@ -1,0 +1,27 @@
+TY  - JOUR
+T1  - MoSDeF-GOMC: Python Software for the Creation of Scientific Workflows for the Monte Carlo Simulation Engine GOMC
+AU  - Crawford, Brad
+AU  - Timalsina, Umesh
+AU  - Quach, Co D.
+AU  - Craven, Nicholas C.
+AU  - Gilmer, Justin B.
+AU  - McCabe, Clare
+AU  - Cummings, Peter T.
+AU  - Potoff, Jeffrey J.
+Y1  - 2023/02/27
+PY  - 2023
+DA  - 2023/02/27
+N1  - doi: 10.1021/acs.jcim.2c01498
+DO  - 10.1021/acs.jcim.2c01498
+T2  - Journal of Chemical Information and Modeling
+JF  - Journal of Chemical Information and Modeling
+JO  - J. Chem. Inf. Model.
+SP  - 1218
+EP  - 1228
+VL  - 63
+IS  - 4
+PB  - American Chemical Society
+SN  - 1549-9596
+M3  - doi: 10.1021/acs.jcim.2c01498
+UR  - https://doi.org/10.1021/acs.jcim.2c01498
+ER  -
