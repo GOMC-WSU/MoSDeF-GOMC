@@ -58,7 +58,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     needs: Mambaforge-pytest
     name: 'Build Docker Image'
-    if: ${{ false }} 
+    if: ${{ false }}
 
     steps:
       - name: Set up Docker Buildx
