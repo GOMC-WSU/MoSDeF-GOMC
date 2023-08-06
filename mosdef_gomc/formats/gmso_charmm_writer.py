@@ -4,6 +4,7 @@ from warnings import warn
 
 import gmso
 import numpy as np
+import scipy
 import unyt as u
 from mbuild.box import Box
 from mbuild.compound import Compound
@@ -30,7 +31,6 @@ from mosdef_gomc.utils.gmso_equation_compare import (
     get_atom_type_expressions_and_scalars,
 )
 from mosdef_gomc.utils.gmso_specific_ff_to_residue import specific_ff_to_residue
-
 
 def _check_convert_bond_k_constant_units(
     bond_class_or_type_input_str,
@@ -253,6 +253,75 @@ def _LJ_sigma_to_r_min_div_2(sigma):
 
     return r_min_div_2
 
+
+def _Exp6_Rmin_to_sigma(sigma, Rmin, alpha):
+    """Get equation to convert Rmin to sigma for the Exponential-6 (Exp6) potential energy equation.
+
+    Parameters
+    ----------
+    sigma: variable for find root
+        The sigma variable that will be solve for the non-bonded Exp6 potential
+        energy equation via the epsilon, Rmin, and alpha parameters.
+    Rmin: int or float
+        The Rmin value for the non-bonded Exp6 potential energy equation.
+    alpha: int or float
+        The alpha value for the non-bonded Exp6 potential energy equation.
+
+    Returns
+    ----------
+    exp6_eqn_with_sigma_only_variable: equation
+        The Exp6 potential energy equation with sigma as the only variable.
+        The other variables (Rmin and alpha) are entered as constants,
+        as epsilon is not required.
+    """
+    exp6_eqn_with_sigma_only_variable = \
+            alpha / (alpha - 6) * (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma) ** 6)
+
+    return exp6_eqn_with_sigma_only_variable
+
+
+def _Exp6_Rmin_to_sigma_solver(
+        Rmin_actual,
+        alpha_actual,
+        Rmin_fraction_for_sigma_findroot=0.95
+):
+    """
+        Numerically solve the sigma value in non-bonded Exp6 potential (using epsilon, r_min, and alpha).
+
+    Parameters
+    ----------
+    Rmin_actual: variable
+        The Rmin value for the non-bonded Exp6 potential energy equation.
+    alpha_actual: int or float
+        The alpha value for the non-bonded Exp6 potential energy equation.
+    Rmin_fraction_for_sigma_findroot: float, default=0.95
+        The fraction of the r_min value used to provide the starting input
+        to the numerical solver (find root/scipy.optimize).
+        This must be less the r_min, but not too much less than r_min,
+        or it will find a non-logical root, due to the Exp6 potential's
+        unrealistic other root at low atomic radii.
+
+    Returns
+    ----------
+    sigma_calculated: float
+        The numerically solved sigma value for the non-bonded Exp6 potential energy equation.
+    """
+    exp6_sigma_solver = scipy.optimize.root(
+        lambda sigma: _Exp6_Rmin_to_sigma(
+            sigma,
+            Rmin_actual,
+            alpha_actual
+        ),
+        Rmin_actual * Rmin_fraction_for_sigma_findroot)
+
+    sigma_calculated = exp6_sigma_solver.x[0]
+
+    # check for errors
+    if exp6_sigma_solver.message != 'The solution converged.' \
+            or sigma_calculated >= Rmin_actual:
+        raise ValueError("ERROR: The Exp6 potential Rmin --> sigma converter failed.")
+
+    return sigma_calculated
 
 def unique_atom_naming(
     topology, residue_id_list, residue_names_list, bead_to_atom_name_dict=None
@@ -499,16 +568,16 @@ class Charmm:
         * Energy units = Lennard-Jones (LJ) -> kcal/mol, Mie and Exp-6 (Buckingham) -> Kelvin (K)
         * Harmonic bonds: Kb = Energy units, b0 = Angstroms
         * Harmonic angles: Ktheta = (Energy units)/rad**2 , Theta0 = degrees
-        * Dihedral angles Harmonic (not unavailable): Ktheta = Energy units, n (LJ) = 0 (unitless interger), delta = degrees
-        * Dihedral angles: Periodic: Ktheta = Energy units, n (unitless interger) -> n (LJ) = 1-5 and n (Mie or Buckingham) = 0-5, delta = degrees
-        * Improper angles Harmonic (not unavailable): Ktheta = Energy units, n (LJ) = 0 (unitless interger), delta = degrees
-        * Improper angles: Periodic: Ktheta = Energy units, n = 1-5 (unitless interger), delta = degrees
+        * Dihedral angles Harmonic (not unavailable): Ktheta = Energy units, n (LJ) = 0 (unitless integer), delta = degrees
+        * Dihedral angles: Periodic: Ktheta = Energy units, n (unitless integer) -> n (LJ) = 1-5 and n (Mie or Buckingham) = 0-5, delta = degrees
+        * Improper angles Harmonic (not unavailable): Ktheta = Energy units, n (LJ) = 0 (unitless integer), delta = degrees
+        * Improper angles: Periodic: Ktheta = Energy units, n = 1-5 (unitless integer), delta = degrees
         * Lennard-Jones (LJ)-NONBONDED: epsilon = Energy units, Rmin/2 = Angstroms
-        * Mie-NONBONDED: epsilon = Energy units, sigma = Angstroms, n = interger (unitless)
-        * Buckingham-NONBONDED (not unavailable): epsilon = Energy units, sigma = Angstroms, n = interger (unitless)
+        * Mie-NONBONDED: epsilon = Energy units, sigma = Angstroms, n = integer (unitless)
+        * Exp6-NONBONDED: epsilon = Energy units, sigma = Angstroms (FF XMLs in Rmin), alpha = integer (unitless)
         * Lennard-Jones (LJ)-NBFIX (not unavailable): epsilon = Energy units, Rmin = Angstroms
         * Mie-NBFIX (not unavailable): same as Mie-NONBONDED
-        * Buckingham-NBFIX (not unavailable): same as Buckingham-NONBONDED
+        * Exp6-NBFIX (not unavailable): same as Exp6-NONBONDED
 
     Note: The ``Charmm`` object is only compatible with molecules with a single residue (single residue name).
 
@@ -959,6 +1028,16 @@ class Charmm:
         The uniquely numbered atom type (key) and it's non-bonded sigma coefficient in
         angstroms (value). The atom type is defined by the AtomClass_ResidueName
         (Example of a carbon atom in an ethane molecule, AtomClass_ResidueName --> CT_ETH).
+    mie_n_atom_type_dict: dict {str: float, int, or None}
+        The uniquely numbered atom type (key) and it's non-bonded unitless n coefficient (value).
+        The atom type is defined by the AtomClass_ResidueName
+        (Example of a carbon atom in an ethane molecule, AtomClass_ResidueName --> CT_ETH).
+        NOTE: The value is None if a Mie FF is not used.
+    exp6_alpha_atom_type_dict: dict {str: float, int, or None}
+        The uniquely numbered atom type (key) and it's non-bonded unitless alpha coefficient (value).
+        The atom type is defined by the AtomClass_ResidueName
+        (Example of a carbon atom in an ethane molecule, AtomClass_ResidueName --> CT_ETH).
+        NOTE: The value is None if a Exp6 FF is not used.
     nonbonded_1_4_dict: dict {str: float or int}
         The uniquely numbered atom type (key) and it's non-bonded 1-4 scaling factor (value).
         The atom type is defined by the AtomClass_ResidueName
@@ -1059,8 +1138,23 @@ class Charmm:
     has the same residue name, and the residue name is specific to that molecule type.
     For example: a protein molecule with many residue names is not currently supported,
     but is planned to be supported in the future.
-    """
 
+    GOMC standard LJ form = epsilon * ( (Rmin/r)**12 - 2*(Rmin/r)**6 )
+    ---------> = 4*epsilon * ( (sigma/r)**12 - (sigma/r)**6 ), when converted to sigmas
+    Both forms above are accepted and compared automatically, but all input FFs have to be of the above
+    input forms, aside from the whole potential energy scaling factor.
+
+    GOMC standard Mie form = (n/(n-m)) * (n/m)**(m/(n-m)) * epsilon * ((sigma/r)**n - (sigma/r)**m)
+    where m = 6 --> (n/(n-6)) * (n/6)**(6/(n-6)) * epsilon * ((sigma/r)**n - (sigma/r)**6)
+    The above form is accepted but only if all input FFs have the same form,
+    aside from the whole potential energy scaling factor.
+
+    GOMC standard Exp-6 form =
+    alpha*epsilon/(alpha -6) * Exp( alpha*(1-r/Rmin) - (Rmin/r)**6 ), where r >= Rmax
+    infinity , where r < Rmax
+    The above form is accepted but only if all input FFs have the same form,
+    aside from the whole potential energy scaling factor.
+    """
     def __init__(
         self,
         structure_box_0,
@@ -2002,7 +2096,7 @@ class Charmm:
         # The above form is accepted but only if all input FFs have the same form,
         # aside from the whole potential energy scaling factor.
 
-        # GOMC standard Buckingham (Exp-6) form =
+        # GOMC standard Exp-6 form =
         # alpha*epsilon/(alpha -6) * Exp( alpha*(1-r/Rmin) - (Rmin/r)**6 ), where r >= Rmax
         # infinity , where r < Rmax
         # The above form is accepted but only if all input FFs have the same form,
@@ -2060,21 +2154,31 @@ class Charmm:
                 "equation to the Mie potential form (see the GOMC manual)."
             )
 
+        # calculate epsilons form LJ, Mie, and Exp6 forms
         epsilons_kcal_per_mol = np.array(
             [
                 site.atom_type.parameters["epsilon"]
-                .to("kcal/mol", equivalence="thermal")
-                .to_value()
+                    .to("kcal/mol", equivalence="thermal")
+                    .to_value()
                 for site in self.topology_selection.sites
             ]
         )
-        sigmas_angstrom = np.array(
+        self.epsilon_kcal_per_mol_atom_class_dict = dict(
             [
-                site.atom_type.parameters["sigma"].to("angstrom").to_value()
-                for site in self.topology_selection.sites
+                (atom_class, epsilon)
+                for atom_class, epsilon in zip(
+                self.classes, epsilons_kcal_per_mol
+            )
+            ]
+        )
+        self.epsilon_kcal_per_mol_atom_type_dict = dict(
+            [
+                (atom_type, epsilon)
+                for atom_type, epsilon in zip(self.types, epsilons_kcal_per_mol)
             ]
         )
 
+        # calculate the Mie FF expression and push LJ to Mie if a mix of both
         if self.utilized_NB_expression == "Mie":
             mie_n = []
             # The Mie m-constant must be six (m=6) for GOMC, per the general GMSO format
@@ -2135,33 +2239,126 @@ class Charmm:
             self.mie_n_atom_type_dict = None
             self.mie_n_atom_class_dict = None
 
-        self.epsilon_kcal_per_mol_atom_type_dict = dict(
-            [
-                (atom_type, epsilon)
-                for atom_type, epsilon in zip(self.types, epsilons_kcal_per_mol)
-            ]
-        )
-        self.epsilon_kcal_per_mol_atom_class_dict = dict(
-            [
-                (atom_class, epsilon)
-                for atom_class, epsilon in zip(
-                    self.classes, epsilons_kcal_per_mol
-                )
-            ]
-        )
-        self.sigma_angstrom_atom_type_dict = dict(
-            [
-                (atom_type, sigma)
-                for atom_type, sigma in zip(self.types, sigmas_angstrom)
-            ]
-        )
+        # get the sigma values for the LJ and Mie forms calculate sigmas based on FF type
+        sigmas_angstrom = []
+        if self.utilized_NB_expression in ["LJ", "Mie"]:
+            for site in self.topology_selection.sites:
+                sigmas_angstrom.append(site.atom_type.parameters["sigma"].to("angstrom").to_value())
 
-        self.sigma_angstrom_atom_class_dict = dict(
-            [
-                (atom_class, sigma)
-                for atom_class, sigma in zip(self.classes, sigmas_angstrom)
-            ]
-        )
+            # List the sigma values for the LJ and Mie FF types
+            self.sigma_angstrom_atom_type_dict = dict(
+                [
+                    (atom_type, sigma)
+                    for atom_type, sigma in zip(self.types, sigmas_angstrom)
+                ]
+            )
+            self.sigma_angstrom_atom_class_dict = dict(
+                [
+                    (atom_class, sigma)
+                    for atom_class, sigma in zip(self.classes, sigmas_angstrom)
+                ]
+            )
+
+        # get the sigma values for the Exp6 forms calculate sigmas based on FF type
+        elif self.utilized_NB_expression in ["Exp6"]:
+            for site in self.topology_selection.sites:
+                atom_type_residue_iter = f"{site.__dict__['residue_name_']}_{site.atom_type.__dict__['name_']}"
+                nonbonded_expresseion_iter = (
+                    self.atom_type_experssion_and_scalar_combined[
+                        atom_type_residue_iter
+                    ]["expression_form"]
+                )
+            # Brad note: start here next time
+            # get the exp6 alpha values
+            exp6_alpha_unitless = np.array(
+                [
+                    site.atom_type.parameters["alpha"]
+                        .to("dimensionless")
+                        .to_value()
+                    for site in self.topology_selection.sites
+                ]
+            )
+            self.exp6_alpha_atom_class_dict = dict(
+                [
+                    (atom_class, alpha)
+                    for atom_class, alpha in zip(
+                    self.classes, exp6_alpha_unitless
+                )
+                ]
+            )
+            self.exp6_alpha_atom_type_dict = dict(
+                [
+                    (atom_type, alpha)
+                    for atom_type, alpha in zip(
+                    self.types, exp6_alpha_unitless)
+                ]
+            )
+
+            # get the Rmin from the Exp6 solutions
+            exp6_r_min_angstrom = np.array(
+                [
+                    site.atom_type.parameters["Rmin"]
+                        .to("angstrom")
+                        .to_value()
+                    for site in self.topology_selection.sites
+                ]
+            )
+
+            self.exp6_r_min_angstrom_atom_class_dict = dict(
+                [
+                    (atom_class, r_min)
+                    for atom_class, r_min in zip(
+                    self.classes, exp6_r_min_angstrom
+                )
+                ]
+            )
+            self.exp6_r_min_angstrom_atom_type_dict = dict(
+                [
+                    (atom_type, r_min)
+                    for atom_type, r_min in zip(
+                    self.types, exp6_r_min_angstrom)
+                ]
+            )
+
+            # Get the Exp6 sigma atom_class_dict by looping the other atom_class_dict dictionaries.
+            # Use the Exp6 alpha and Rmin values to numerically convert Rmin --> Sigma.
+            # There is no analytical conversion.
+            self.sigma_angstrom_atom_class_dict = {}
+            for exp6_key, exp6_value in self.exp6_r_min_angstrom_atom_class_dict.items():
+                r_min_exp6_iter = exp6_value
+
+                # get the corresponding alpha for Exp6
+                alpha_exp6_iter = self.exp6_alpha_atom_class_dict[exp6_key]
+
+                # use scipy to numerically solve for sigma for atom class dict
+                exp6_sigma_iter = _Exp6_Rmin_to_sigma_solver(
+                    r_min_exp6_iter,
+                    alpha_exp6_iter
+                )
+
+                self.sigma_angstrom_atom_class_dict.update(
+                    {exp6_key: exp6_sigma_iter}
+                )
+
+            # Get the Exp6 sigma atom_type_dict by looping the other atom_type_dict dictionaries.
+            # Use the Exp6 alpha and Rmin values to numerically convert Rmin --> Sigma.
+            # There is no analytical conversion.
+            self.sigma_angstrom_atom_type_dict = {}
+            for exp6_key, exp6_value in self.exp6_r_min_angstrom_atom_type_dict.items():
+                r_min_exp6_iter = exp6_value
+
+                # get the corresponding alpha for Exp6
+                alpha_exp6_iter = self.exp6_alpha_atom_type_dict[exp6_key]
+
+                # use scipy to numerically solve for sigma for atom type dict
+                exp6_sigma_iter = _Exp6_Rmin_to_sigma_solver(
+                    r_min_exp6_iter,
+                    alpha_exp6_iter
+                )
+
+                self.sigma_angstrom_atom_type_dict.update(
+                    {exp6_key: exp6_sigma_iter}
+                )
 
         # Determine if we can use MOSDEF (foyer/gmso) atom classes or traditional CHARMM atom types,
         # instead of using MOSDEF (foyer/gmso) atom names.  MOSDEF (foyer/gmso) atom names usages for the
@@ -2202,6 +2399,7 @@ class Charmm:
         atom_class_only_sigma_dict = {}
         atom_class_only_mass_dict = {}
         atom_class_only_mie_n_dict = {}
+        atom_class_only_exp6_alpha_dict = {}
         for atom_type_key_iter in list(self.atom_type_info_dict.keys()):
             atom_class_j_iter = self.atom_type_info_dict[atom_type_key_iter][
                 "atomclass_"
@@ -2285,7 +2483,7 @@ class Charmm:
                         != atom_class_only_mie_n_dict[atom_class_j_iter]
                     ):
                         if atom_class_conficts_str == "":
-                            atom_class_conficts_str = f"{'mie_nn'}"
+                            atom_class_conficts_str = f"{'mie_n'}"
                         else:
                             atom_class_conficts_str = (
                                 f"{atom_class_conficts_str}, {'mie_n'}"
@@ -2300,6 +2498,33 @@ class Charmm:
                 except:
                     atom_class_only_mie_n_dict.update(
                         {atom_class_j_iter: atom_class_mie_n_iter}
+                    )
+
+            if self.utilized_NB_expression == "Exp6":
+                atom_class_exp6_alpha_iter = self.exp6_alpha_atom_class_dict[
+                    atom_class_residue_j_iter
+                ]
+                try:
+                    if (
+                        atom_class_exp6_alpha_iter
+                        != atom_class_only_exp6_alpha_dict[atom_class_j_iter]
+                    ):
+                        if atom_class_conficts_str == "":
+                            atom_class_conficts_str = f"{'alpha'}"
+                        else:
+                            atom_class_conficts_str = (
+                                f"{atom_class_conficts_str}, {'alpha'}"
+                            )
+
+                        print_error = (
+                            f"ERROR: Only the same Exp6 alpha values are permitted for an atom class. "
+                            f"The {atom_class_exp6_alpha_iter} atom class has different alpha values"
+                        )
+                        raise ValueError(print_error)
+
+                except:
+                    atom_class_only_exp6_alpha_dict.update(
+                        {atom_class_j_iter: atom_class_exp6_alpha_iter}
                     )
 
             if atom_class_conficts_str != "":
@@ -4304,7 +4529,7 @@ class Charmm:
                 epsilon_kcal_per_mol_round_decimals = 10
                 epsilon_Kelvin_round_decimals = 6
                 sigma_round_decimals = 10
-                mie_n_round_decimals = 8
+                mie_n_or_exp6_alpha_round_decimals = 8
 
                 if self.utilized_NB_expression == "LJ":
                     data.write("\n")
@@ -4397,29 +4622,55 @@ class Charmm:
                             )
                         )
 
-                elif self.utilized_NB_expression == "Mie":
-                    data.write("\n")
-                    data.write("NONBONDED_MIE\n")
-                    data.write("! \n")
-                    data.write(
-                        "! V(Mie) = (n/(n-6)) * (n/6)**(6/(n-6)) * Epsilon * ((sig/r)**n - (sig/r)**6)\n"
-                    )
-                    data.write("! \n")
+                elif self.utilized_NB_expression in ["Mie", "Exp6"]:
 
-                    data.write(
-                        "! {:8s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
-                        "".format(
-                            "type_1",
-                            "epsilon",
-                            "sigma",
-                            "n",
-                            "epsilon,1-4",
-                            "sigma,1-4",
-                            "n,1-4",
-                            "extended_type_1",
-                            "extended_type_2",
+                    if self.utilized_NB_expression == "Mie":
+                        data.write("\n")
+                        data.write("NONBONDED_MIE\n")
+                        data.write("! \n")
+                        data.write(
+                            "! V(Mie) = (n/(n-6)) * (n/6)**(6/(n-6)) * Epsilon * ((sig/r)**n - (sig/r)**6)\n"
                         )
-                    )
+                        data.write("! \n")
+
+                        data.write(
+                            "! {:8s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
+                            "".format(
+                                "type_1",
+                                "epsilon",
+                                "sigma",
+                                "n",
+                                "epsilon,1-4",
+                                "sigma,1-4",
+                                "n,1-4",
+                                "extended_type_1",
+                                "extended_type_2",
+                            )
+                        )
+
+                    elif self.utilized_NB_expression == "Exp6":
+                        data.write("\n")
+                        data.write("NONBONDED_MIE\n")
+                        data.write("! \n")
+                        data.write(
+                            "! V(Exp6) = epsilon*alpha/(alpha-6) * (6/alpha*exp(alpha*(1-r/Rmin)) - (Rmin/r)**6)\n"
+                        )
+                        data.write("! \n")
+
+                        data.write(
+                            "! {:8s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
+                            "".format(
+                                "type_1",
+                                "epsilon",
+                                "sigma",
+                                "alpha",
+                                "epsilon,1-4",
+                                "sigma,1-4",
+                                "alpha,1-4",
+                                "extended_type_1",
+                                "extended_type_2",
+                            )
+                        )
 
                     for (
                         class_x,
@@ -4451,6 +4702,12 @@ class Charmm:
                             epsilon_kcal_per_mol, "kcal/mol"
                         ).to_value("K", equivalence="thermal")
 
+                        # select Mie n values or Exp6 alpha values
+                        if self.utilized_NB_expression == "Mie":
+                            mie_n_or_exp6_alpha_atom_type_value = self.mie_n_atom_type_dict[class_x]
+                        elif self.utilized_NB_expression == "Exp6":
+                            mie_n_or_exp6_alpha_atom_type_value = self.exp6_alpha_atom_type_dict[class_x]
+
                         data.write(
                             nb_format.format(
                                 str(
@@ -4474,8 +4731,8 @@ class Charmm:
                                 ),
                                 str(
                                     np.round(
-                                        self.mie_n_atom_type_dict[class_x],
-                                        decimals=mie_n_round_decimals,
+                                        mie_n_or_exp6_alpha_atom_type_value,
+                                        decimals=mie_n_or_exp6_alpha_round_decimals,
                                     )
                                 ),
                                 str(
@@ -4498,23 +4755,14 @@ class Charmm:
                                 ),
                                 str(
                                     np.round(
-                                        self.mie_n_atom_type_dict[class_x],
-                                        decimals=mie_n_round_decimals,
+                                        mie_n_or_exp6_alpha_atom_type_value,
+                                        decimals=mie_n_or_exp6_alpha_round_decimals,
                                     )
                                 ),
                                 str(class_x),
                                 str(class_x),
                             )
                         )
-
-                elif self.utilized_NB_expression == "Exp6":
-                    printed_output = (
-                        "ERROR: Currently the 'Exp6' potential (self.utilized_NB_expression) "
-                        "is not supported in this MoSDeF GOMC parameter writer\n"
-                    )
-                    data.write(printed_output)
-                    print_error_message = printed_output
-                    raise ValueError(print_error_message)
 
                 else:
                     printed_output = (

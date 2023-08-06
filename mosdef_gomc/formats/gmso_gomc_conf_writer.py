@@ -369,6 +369,8 @@ def _get_all_possible_input_variables(description=False):
         "defaults to geometric via MoSDeF's default setting of VDWGeometricSigma is True, "
         "which uses the arithmetic mean when combining Lennard-Jones or "
         "VDW sigma parameters for different atom types."
+        "NOTE: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2."
+        "NOTE: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5."
         "".format(_get_default_variables_dict()["VDWGeometricSigma"]),
         "useConstantArea": "Simulation info (only GEMC_NPT and NPT): boolean: default = {}. "
         "Changes the volume of the simulation box by fixing the cross-sectional "
@@ -1737,6 +1739,8 @@ class GOMCControl:
         defaults to geometric via MoSDeF's default setting of VDWGeometricSigma is True,
         which uses the arithmetic mean when combining Lennard-Jones or "
         VDW sigma parameters for different atom types.
+        NOTE: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
+        NOTE: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
     useConstantArea: boolean,  default = False
         Changes the volume of the simulation box by fixing the cross-sectional
         area (x-y plane). If True, the volume will change only in z axis,
@@ -2400,6 +2404,9 @@ class GOMCControl:
 
     Note: all of the move fractions must sum to 1, or the control file
     writer will fail.
+
+    Note: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
+    Note: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
 
     The input variables (input_variables_dict) and text extracted with permission from
     the GOMC manual version 2.60. Some of the text was modified from its original version.
@@ -8844,6 +8851,8 @@ def write_gomc_control_file(
         defaults to geometric via MoSDeF's default setting of VDWGeometricSigma is True,
         which uses the arithmetic mean when combining Lennard-Jones or "
         VDW sigma parameters for different atom types.
+        NOTE: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
+        NOTE: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
     useConstantArea: boolean,  default = False
         Changes the volume of the simulation box by fixing the cross-sectional
         area (x-y plane). If True, the volume will change only in z axis,
@@ -9509,6 +9518,9 @@ def write_gomc_control_file(
 
     Note: all of the move fractions must sum to 1, or the control file
     writer will fail.
+
+    Note: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
+    Note: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
 
     The input variables (input_variables_dict) and text extracted with permission from
     the GOMC manual version 2.60. Some of the text was modified from its original version.

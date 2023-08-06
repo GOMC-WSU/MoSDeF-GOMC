@@ -1,0 +1,103 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ForceField name="Exp6 hexane - This is for testing only and not for use for simulations " version="0.0.1">
+  <FFMetaData electrostatics14Scale="0.0" nonBonded14Scale="0.0" combiningRule="lorentz">
+    <Units energy="kcal/mol" mass="amu" charge="elementary_charge" distance="angstrom"/>
+  </FFMetaData>
+  <AtomTypes expression="epsilon*alpha/(alpha-6) * (6/alpha*exp(alpha*(1-r/Rmin)) - (Rmin/r)**6)">
+    <ParametersUnitDef parameter="epsilon" unit="K"/>
+    <ParametersUnitDef parameter="Rmin" unit="angstrom"/>
+    <ParametersUnitDef parameter="alpha" unit="dimensionless"/>
+    <AtomType name="CH3_sp3" atomclass="CH3" element="_CH3" charge="0.0" mass="15.03500" definition="[_CH3;X1][_CH3,_CH2]"  description="Alkane CH3" doi="10.1021/jp984742e and 10.1021/jp972543+" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="98"/>
+        <Parameter name="Rmin" value="4.0941137"/>
+        <Parameter name="alpha" value="16"/>
+      </Parameters>
+    </AtomType>
+    <AtomType name="CH2_sp3" atomclass="CH2" element="_CH2" charge="0.0" mass="14.02700" definition="[_CH2;X2]([_CH3,_CH2])[_CH3,_CH2]" description="Alkane CH2" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="98"/>
+        <Parameter name="Rmin" value="4.0941137"/>
+        <Parameter name="alpha" value="16"/>
+      </Parameters>
+    </AtomType>
+  </AtomTypes>
+  <BondTypes expression="k * (r-r_eq)**2">
+    <ParametersUnitDef parameter="r_eq" unit="angstrom"/>
+    <ParametersUnitDef parameter="k" unit="K/angstrom**2"/>
+    <BondType name="BondType_Harmonic_CH3_CH3" class1="CH3" class2="CH3">
+      <Parameters>
+        <Parameter name="k" value="604267.555311465"/>
+        <Parameter name="r_eq" value="1.839"/>
+      </Parameters>
+    </BondType>
+    <BondType name="BondType_Harmonic_CH3_CH2" class1="CH3" class2="CH2">
+      <Parameters>
+        <Parameter name="k" value="604267.555311465"/>
+        <Parameter name="r_eq" value="1.687"/>
+      </Parameters>
+    </BondType>
+    <BondType name="BondType_Harmonic_CH2_CH2" class1="CH2" class2="CH2">
+      <Parameters>
+        <Parameter name="k" value="604267.555311465"/>
+        <Parameter name="r_eq" value="1.535"/>
+      </Parameters>
+    </BondType>
+  </BondTypes>
+  <AngleTypes expression="k * (theta - theta_eq)**2">
+    <ParametersUnitDef parameter="theta_eq" unit="degree"/>
+    <ParametersUnitDef parameter="k" unit="K/radian**2"/>
+    <AngleType name="AngleType_Harmonic_CH3_CH2_CH2" class1="CH3" class2="CH2" class3="CH3">
+      <Parameters>
+        <Parameter name="k" value="62500"/>
+        <Parameter name="theta_eq" value="114"/>
+      </Parameters>
+    </AngleType>
+   <AngleType name="AngleType_Harmonic_CH3_CH2_CH3" class1="CH2" class2="CH2" class3="CH3">
+      <Parameters>
+        <Parameter name="k" value="62500"/>
+        <Parameter name="theta_eq" value="114"/>
+      </Parameters>
+    </AngleType>
+    <AngleType name="AngleType_Harmonic_CH2_CH2_CH2" class1="CH2" class2="CH2" class3="CH2">
+      <Parameters>
+        <Parameter name="k" value="62500"/>
+        <Parameter name="theta_eq" value="114"/>
+      </Parameters>
+    </AngleType>
+  </AngleTypes>
+  <DihedralTypes expression="0.5 * k0 + 0.5 * k1 * (1 + cos(phi)) + 0.5 * k2 * (1 - cos(2*phi)) + 0.5 * k3 * (1 + cos(3*phi)) + 0.5 * k4 * (1 - cos(4*phi))">
+    <ParametersUnitDef parameter="k0" unit="K"/>
+    <ParametersUnitDef parameter="k1" unit="K"/>
+    <ParametersUnitDef parameter="k2" unit="K"/>
+    <ParametersUnitDef parameter="k3" unit="K"/>
+    <ParametersUnitDef parameter="k4" unit="K"/>
+    <DihedralType name="DihedralType_RB_Proper_CH3_CH2_CH2_CH3" class1="CH3" class2="CH2" class3="CH2" class4="CH3">
+      <Parameters>
+        <Parameter name="k0" value="0.0"/>
+        <Parameter name="k1" value="355.03"/>
+        <Parameter name="k2" value="-68.19"/>
+        <Parameter name="k3" value="791.32"/>
+        <Parameter name="k4" value="0.0"/>
+      </Parameters>
+    </DihedralType>
+    <DihedralType name="DihedralType_RB_Proper_CH3_CH2_CH2_CH2" class1="CH3" class2="CH2" class3="CH2" class4="CH2">
+      <Parameters>
+        <Parameter name="k0" value="0.0"/>
+        <Parameter name="k1" value="355.03"/>
+        <Parameter name="k2" value="-68.19"/>
+        <Parameter name="k3" value="791.32"/>
+        <Parameter name="k4" value="0.0"/>
+      </Parameters>
+    </DihedralType>
+    <DihedralType name="DihedralType_RB_Proper_CH2_CH2_CH2_CH2" class1="CH2" class2="CH2" class3="CH2" class4="CH2">
+      <Parameters>
+        <Parameter name="k0" value="0.0"/>
+        <Parameter name="k1" value="355.03"/>
+        <Parameter name="k2" value="-68.19"/>
+        <Parameter name="k3" value="791.32"/>
+        <Parameter name="k4" value="0.0"/>
+      </Parameters>
+    </DihedralType>
+  </DihedralTypes>
+</ForceField>
