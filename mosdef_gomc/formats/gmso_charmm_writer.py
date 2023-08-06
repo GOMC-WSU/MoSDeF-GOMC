@@ -32,6 +32,7 @@ from mosdef_gomc.utils.gmso_equation_compare import (
 )
 from mosdef_gomc.utils.gmso_specific_ff_to_residue import specific_ff_to_residue
 
+
 def _check_convert_bond_k_constant_units(
     bond_class_or_type_input_str,
     bond_energy_input_unyt,
@@ -274,16 +275,17 @@ def _Exp6_Rmin_to_sigma(sigma, Rmin, alpha):
         The other variables (Rmin and alpha) are entered as constants,
         as epsilon is not required.
     """
-    exp6_eqn_with_sigma_only_variable = \
-            alpha / (alpha - 6) * (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma) ** 6)
+    exp6_eqn_with_sigma_only_variable = (
+        alpha
+        / (alpha - 6)
+        * (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma) ** 6)
+    )
 
     return exp6_eqn_with_sigma_only_variable
 
 
 def _Exp6_Rmin_to_sigma_solver(
-        Rmin_actual,
-        alpha_actual,
-        Rmin_fraction_for_sigma_findroot=0.95
+    Rmin_actual, alpha_actual, Rmin_fraction_for_sigma_findroot=0.95
 ):
     """
         Numerically solve the sigma value in non-bonded Exp6 potential (using epsilon, r_min, and alpha).
@@ -307,21 +309,23 @@ def _Exp6_Rmin_to_sigma_solver(
         The numerically solved sigma value for the non-bonded Exp6 potential energy equation.
     """
     exp6_sigma_solver = scipy.optimize.root(
-        lambda sigma: _Exp6_Rmin_to_sigma(
-            sigma,
-            Rmin_actual,
-            alpha_actual
-        ),
-        Rmin_actual * Rmin_fraction_for_sigma_findroot)
+        lambda sigma: _Exp6_Rmin_to_sigma(sigma, Rmin_actual, alpha_actual),
+        Rmin_actual * Rmin_fraction_for_sigma_findroot,
+    )
 
     sigma_calculated = exp6_sigma_solver.x[0]
 
     # check for errors
-    if exp6_sigma_solver.message != 'The solution converged.' \
-            or sigma_calculated >= Rmin_actual:
-        raise ValueError("ERROR: The Exp6 potential Rmin --> sigma converter failed.")
+    if (
+        exp6_sigma_solver.message != "The solution converged."
+        or sigma_calculated >= Rmin_actual
+    ):
+        raise ValueError(
+            "ERROR: The Exp6 potential Rmin --> sigma converter failed."
+        )
 
     return sigma_calculated
+
 
 def unique_atom_naming(
     topology, residue_id_list, residue_names_list, bead_to_atom_name_dict=None
@@ -1155,6 +1159,7 @@ class Charmm:
     The above form is accepted but only if all input FFs have the same form,
     aside from the whole potential energy scaling factor.
     """
+
     def __init__(
         self,
         structure_box_0,
@@ -2158,8 +2163,8 @@ class Charmm:
         epsilons_kcal_per_mol = np.array(
             [
                 site.atom_type.parameters["epsilon"]
-                    .to("kcal/mol", equivalence="thermal")
-                    .to_value()
+                .to("kcal/mol", equivalence="thermal")
+                .to_value()
                 for site in self.topology_selection.sites
             ]
         )
@@ -2167,8 +2172,8 @@ class Charmm:
             [
                 (atom_class, epsilon)
                 for atom_class, epsilon in zip(
-                self.classes, epsilons_kcal_per_mol
-            )
+                    self.classes, epsilons_kcal_per_mol
+                )
             ]
         )
         self.epsilon_kcal_per_mol_atom_type_dict = dict(
@@ -2243,7 +2248,9 @@ class Charmm:
         sigmas_angstrom = []
         if self.utilized_NB_expression in ["LJ", "Mie"]:
             for site in self.topology_selection.sites:
-                sigmas_angstrom.append(site.atom_type.parameters["sigma"].to("angstrom").to_value())
+                sigmas_angstrom.append(
+                    site.atom_type.parameters["sigma"].to("angstrom").to_value()
+                )
 
             # List the sigma values for the LJ and Mie FF types
             self.sigma_angstrom_atom_type_dict = dict(
@@ -2273,8 +2280,8 @@ class Charmm:
             exp6_alpha_unitless = np.array(
                 [
                     site.atom_type.parameters["alpha"]
-                        .to("dimensionless")
-                        .to_value()
+                    .to("dimensionless")
+                    .to_value()
                     for site in self.topology_selection.sites
                 ]
             )
@@ -2282,24 +2289,21 @@ class Charmm:
                 [
                     (atom_class, alpha)
                     for atom_class, alpha in zip(
-                    self.classes, exp6_alpha_unitless
-                )
+                        self.classes, exp6_alpha_unitless
+                    )
                 ]
             )
             self.exp6_alpha_atom_type_dict = dict(
                 [
                     (atom_type, alpha)
-                    for atom_type, alpha in zip(
-                    self.types, exp6_alpha_unitless)
+                    for atom_type, alpha in zip(self.types, exp6_alpha_unitless)
                 ]
             )
 
             # get the Rmin from the Exp6 solutions
             exp6_r_min_angstrom = np.array(
                 [
-                    site.atom_type.parameters["Rmin"]
-                        .to("angstrom")
-                        .to_value()
+                    site.atom_type.parameters["Rmin"].to("angstrom").to_value()
                     for site in self.topology_selection.sites
                 ]
             )
@@ -2308,15 +2312,14 @@ class Charmm:
                 [
                     (atom_class, r_min)
                     for atom_class, r_min in zip(
-                    self.classes, exp6_r_min_angstrom
-                )
+                        self.classes, exp6_r_min_angstrom
+                    )
                 ]
             )
             self.exp6_r_min_angstrom_atom_type_dict = dict(
                 [
                     (atom_type, r_min)
-                    for atom_type, r_min in zip(
-                    self.types, exp6_r_min_angstrom)
+                    for atom_type, r_min in zip(self.types, exp6_r_min_angstrom)
                 ]
             )
 
@@ -2324,7 +2327,10 @@ class Charmm:
             # Use the Exp6 alpha and Rmin values to numerically convert Rmin --> Sigma.
             # There is no analytical conversion.
             self.sigma_angstrom_atom_class_dict = {}
-            for exp6_key, exp6_value in self.exp6_r_min_angstrom_atom_class_dict.items():
+            for (
+                exp6_key,
+                exp6_value,
+            ) in self.exp6_r_min_angstrom_atom_class_dict.items():
                 r_min_exp6_iter = exp6_value
 
                 # get the corresponding alpha for Exp6
@@ -2332,8 +2338,7 @@ class Charmm:
 
                 # use scipy to numerically solve for sigma for atom class dict
                 exp6_sigma_iter = _Exp6_Rmin_to_sigma_solver(
-                    r_min_exp6_iter,
-                    alpha_exp6_iter
+                    r_min_exp6_iter, alpha_exp6_iter
                 )
 
                 self.sigma_angstrom_atom_class_dict.update(
@@ -2344,7 +2349,10 @@ class Charmm:
             # Use the Exp6 alpha and Rmin values to numerically convert Rmin --> Sigma.
             # There is no analytical conversion.
             self.sigma_angstrom_atom_type_dict = {}
-            for exp6_key, exp6_value in self.exp6_r_min_angstrom_atom_type_dict.items():
+            for (
+                exp6_key,
+                exp6_value,
+            ) in self.exp6_r_min_angstrom_atom_type_dict.items():
                 r_min_exp6_iter = exp6_value
 
                 # get the corresponding alpha for Exp6
@@ -2352,8 +2360,7 @@ class Charmm:
 
                 # use scipy to numerically solve for sigma for atom type dict
                 exp6_sigma_iter = _Exp6_Rmin_to_sigma_solver(
-                    r_min_exp6_iter,
-                    alpha_exp6_iter
+                    r_min_exp6_iter, alpha_exp6_iter
                 )
 
                 self.sigma_angstrom_atom_type_dict.update(
@@ -4623,7 +4630,6 @@ class Charmm:
                         )
 
                 elif self.utilized_NB_expression in ["Mie", "Exp6"]:
-
                     if self.utilized_NB_expression == "Mie":
                         data.write("\n")
                         data.write("NONBONDED_MIE\n")
@@ -4704,9 +4710,13 @@ class Charmm:
 
                         # select Mie n values or Exp6 alpha values
                         if self.utilized_NB_expression == "Mie":
-                            mie_n_or_exp6_alpha_atom_type_value = self.mie_n_atom_type_dict[class_x]
+                            mie_n_or_exp6_alpha_atom_type_value = (
+                                self.mie_n_atom_type_dict[class_x]
+                            )
                         elif self.utilized_NB_expression == "Exp6":
-                            mie_n_or_exp6_alpha_atom_type_value = self.exp6_alpha_atom_type_dict[class_x]
+                            mie_n_or_exp6_alpha_atom_type_value = (
+                                self.exp6_alpha_atom_type_dict[class_x]
+                            )
 
                         data.write(
                             nb_format.format(

@@ -12,7 +12,7 @@ from mbuild.utils.io import get_fn, has_foyer
 from mosdef_gomc.formats.gmso_charmm_writer import (
     Charmm,
     _Exp6_Rmin_to_sigma,
-    _Exp6_Rmin_to_sigma_solver
+    _Exp6_Rmin_to_sigma_solver,
 )
 from mosdef_gomc.tests.base_test import BaseTest
 from mosdef_gomc.utils.conversion import (
@@ -9850,26 +9850,18 @@ class TestCharmmWriterData(BaseTest):
     """
 
     def test_Exp6_Rmin_to_sigma_solver(
-            self,
+        self,
     ):
-        exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(
-            4.0941137,
-            16
-        )
+        exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(4.0941137, 16)
 
         assert np.isclose(exp6_sigma_value, 3.6790000166)
 
-    def test_Exp6_Rmin_to_sigma_solver_failing_values(
-            self, two_propanol_ua
-    ):
+    def test_Exp6_Rmin_to_sigma_solver_failing_values(self, two_propanol_ua):
         with pytest.raises(
-                ValueError,
-                match=f"ERROR: The Exp6 potential Rmin --> sigma converter failed.",
+            ValueError,
+            match=f"ERROR: The Exp6 potential Rmin --> sigma converter failed.",
         ):
-            exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(
-                4.0941137,
-                0.1
-            )
+            exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(4.0941137, 0.1)
 
     def test_save_Exp6_gomc_ff(self, hexane_ua):
         box_0 = mb.fill_box(
@@ -9881,7 +9873,9 @@ class TestCharmmWriterData(BaseTest):
             "exp6_data",
             ff_filename="exp6_data",
             residues=[hexane_ua.name],
-            forcefield_selection=get_mosdef_gomc_fn("gmso_hexane_Exp6_periodic_dihedral_ua_K_energy_units.xml"),
+            forcefield_selection=get_mosdef_gomc_fn(
+                "gmso_hexane_Exp6_periodic_dihedral_ua_K_energy_units.xml"
+            ),
             atom_type_naming_style="general",
         )
         charmm.write_inp()
@@ -9895,9 +9889,9 @@ class TestCharmmWriterData(BaseTest):
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
                 if (
-                        "! atom_types" in line
-                        and "mass" in line
-                        and "atomClass_ResidueName" in line
+                    "! atom_types" in line
+                    and "mass" in line
+                    and "atomClass_ResidueName" in line
                 ):
                     masses_read = True
                     assert len(out_gomc[i + 1].split("!")[0].split()) == 3
@@ -9916,12 +9910,12 @@ class TestCharmmWriterData(BaseTest):
                     assert out_gomc[i + 2].split()[4:5] == ["HEX_CH2_sp3"]
 
                 elif (
-                        "! type_1" in line
-                        and "type_2" in line
-                        and "Kb" in line
-                        and "b0" in line
-                        and "extended_type_1" in line
-                        and "extended_type_2" in line
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "Kb" in line
+                    and "b0" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
                 ):
                     bonds_read = True
                     bond_types = [
@@ -9931,39 +9925,39 @@ class TestCharmmWriterData(BaseTest):
                     assert len(out_gomc[i + 1].split("!")[0].split()) == 4
                     assert len(out_gomc[i + 2].split("!")[0].split()) == 4
                     if (
+                        out_gomc[i + 1].split("!")[0].split()[0:4]
+                        == bond_types[0]
+                    ):
+                        assert (
                             out_gomc[i + 1].split("!")[0].split()[0:4]
                             == bond_types[0]
-                    ):
-                        assert (
-                                out_gomc[i + 1].split("!")[0].split()[0:4]
-                                == bond_types[0]
                         )
                         assert (
-                                out_gomc[i + 2].split("!")[0].split()[0:4]
-                                == bond_types[1]
+                            out_gomc[i + 2].split("!")[0].split()[0:4]
+                            == bond_types[1]
                         )
                     elif (
-                            out_gomc[i + 1].split("!")[0].split()[0:4]
-                            == bond_types[1]
+                        out_gomc[i + 1].split("!")[0].split()[0:4]
+                        == bond_types[1]
                     ):
                         assert (
-                                out_gomc[i + 1].split("!")[0].split()[0:4]
-                                == bond_types[1]
+                            out_gomc[i + 1].split("!")[0].split()[0:4]
+                            == bond_types[1]
                         )
                         assert (
-                                out_gomc[i + 2].split("!")[0].split()[0:4]
-                                == bond_types[0]
+                            out_gomc[i + 2].split("!")[0].split()[0:4]
+                            == bond_types[0]
                         )
 
                 elif (
-                        "! type_1 " in line
-                        and "type_2" in line
-                        and "type_3" in line
-                        and "Ktheta" in line
-                        and "Theta0" in line
-                        and "extended_type_1" in line
-                        and "extended_type_2" in line
-                        and "extended_type_3" in line
+                    "! type_1 " in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "Ktheta" in line
+                    and "Theta0" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
                 ):
                     angles_read = True
                     angle_types = [
@@ -9973,42 +9967,42 @@ class TestCharmmWriterData(BaseTest):
                     assert len(out_gomc[i + 1].split("!")[0].split()) == 5
                     assert len(out_gomc[i + 2].split("!")[0].split()) == 5
                     if (
+                        out_gomc[i + 1].split("!")[0].split()[0:5]
+                        == angle_types[0]
+                    ):
+                        assert (
                             out_gomc[i + 1].split("!")[0].split()[0:5]
                             == angle_types[0]
-                    ):
-                        assert (
-                                out_gomc[i + 1].split("!")[0].split()[0:5]
-                                == angle_types[0]
                         )
                         assert (
-                                out_gomc[i + 2].split("!")[0].split()[0:5]
-                                == angle_types[1]
+                            out_gomc[i + 2].split("!")[0].split()[0:5]
+                            == angle_types[1]
                         )
                     elif (
-                            out_gomc[i + 1].split("!")[0].split()[0:4]
-                            == angle_types[1]
+                        out_gomc[i + 1].split("!")[0].split()[0:4]
+                        == angle_types[1]
                     ):
                         assert (
-                                out_gomc[i + 1].split("!")[0].split()[0:5]
-                                == angle_types[1]
+                            out_gomc[i + 1].split("!")[0].split()[0:5]
+                            == angle_types[1]
                         )
                         assert (
-                                out_gomc[i + 2].split("!")[0].split()[0:5]
-                                == angle_types[0]
+                            out_gomc[i + 2].split("!")[0].split()[0:5]
+                            == angle_types[0]
                         )
 
                 elif (
-                        "! type_1" in line
-                        and "type_2" in line
-                        and "type_3" in line
-                        and "type_4" in line
-                        and "Kchi" in line
-                        and "n" in line
-                        and "delta" in line
-                        and "extended_type_1" in line
-                        and "extended_type_2" in line
-                        and "extended_type_3" in line
-                        and "extended_type_4" in line
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "type_4" in line
+                    and "Kchi" in line
+                    and "n" in line
+                    and "delta" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                    and "extended_type_4" in line
                 ):
                     dihedrals_read = True
                     dihed_types = [
@@ -10016,7 +10010,6 @@ class TestCharmmWriterData(BaseTest):
                         ["CH3", "CH2", "CH2", "CH2", "-177.515", "1", "180.0"],
                         ["CH3", "CH2", "CH2", "CH2", "34.095", "2", "0.0"],
                         ["CH3", "CH2", "CH2", "CH2", "-395.66", "3", "180.0"],
-
                         ["CH2", "CH2", "CH2", "CH2", "1078.16", "0", "90.0"],
                         ["CH2", "CH2", "CH2", "CH2", "-177.515", "1", "180.0"],
                         ["CH2", "CH2", "CH2", "CH2", "34.095", "2", "0.0"],
@@ -10024,23 +10017,23 @@ class TestCharmmWriterData(BaseTest):
                     ]
                     for j in range(0, len(dihed_types)):
                         assert (
-                                len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
                         )
                         assert (
-                                out_gomc[i + 1 + j].split("!")[0].split()[0:7]
-                                == dihed_types[j]
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == dihed_types[j]
                         )
 
                 elif (
-                        "! type_1" in line
-                        and "epsilon" in line
-                        and "sigma" in line
-                        and "alpha" in line
-                        and "epsilon,1-4" in line
-                        and "sigma,1-4" in line
-                        and "alpha,1-4" in line
-                        and "extended_type_1" in line
-                        and "extended_type_2" in line
+                    "! type_1" in line
+                    and "epsilon" in line
+                    and "sigma" in line
+                    and "alpha" in line
+                    and "epsilon,1-4" in line
+                    and "sigma,1-4" in line
+                    and "alpha,1-4" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
                 ):
                     nonbondeds_read = True
                     nb_types = [
@@ -10066,11 +10059,11 @@ class TestCharmmWriterData(BaseTest):
 
                     for j in range(0, len(nb_types)):
                         assert (
-                                len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
                         )
                         assert (
-                                out_gomc[i + 1 + j].split("!")[0].split()[0:7]
-                                == nb_types[j]
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == nb_types[j]
                         )
 
                 else:
@@ -10081,5 +10074,3 @@ class TestCharmmWriterData(BaseTest):
         assert angles_read
         assert dihedrals_read
         assert nonbondeds_read
-
-
