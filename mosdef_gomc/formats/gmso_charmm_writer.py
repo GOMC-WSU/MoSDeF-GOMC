@@ -258,6 +258,10 @@ def _LJ_sigma_to_r_min_div_2(sigma):
 def _Exp6_Rmin_to_sigma(sigma, Rmin, alpha):
     """Get equation to convert Rmin to sigma for the Exponential-6 (Exp6) potential energy equation.
 
+    .. math::
+    Exp6_{potential} &= epsilon * alpha / (alpha - 6) *
+                     &= (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma)**6)
+
     Parameters
     ----------
     sigma: variable for find root
@@ -288,7 +292,11 @@ def _Exp6_Rmin_to_sigma_solver(
     Rmin_actual, alpha_actual, Rmin_fraction_for_sigma_findroot=0.95
 ):
     """
-        Numerically solve the sigma value in non-bonded Exp6 potential (using epsilon, r_min, and alpha).
+    Numerically solve the sigma value in non-bonded Exp6 potential (using epsilon, r_min, and alpha).
+
+    .. math::
+    Exp6_{potential} &= epsilon * alpha / (alpha - 6) *
+                     &= (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma)**6)
 
     Parameters
     ----------
@@ -299,7 +307,7 @@ def _Exp6_Rmin_to_sigma_solver(
     Rmin_fraction_for_sigma_findroot: float, default=0.95
         The fraction of the r_min value used to provide the starting input
         to the numerical solver (find root/scipy.optimize).
-        This must be less the r_min, but not too much less than r_min,
+        This must be less than r_min, but not too much less than r_min,
         or it will find a non-logical root, due to the Exp6 potential's
         unrealistic other root at low atomic radii.
 
@@ -325,6 +333,83 @@ def _Exp6_Rmin_to_sigma_solver(
         )
 
     return sigma_calculated
+
+def _Exp6_sigma_to_Rmin(Rmin, sigma, alpha):
+    """Get equation to convert Rmin to sigma for the Exponential-6 (Exp6) potential energy equation.
+
+    .. math::
+    Exp6_{potential} &= epsilon * alpha / (alpha - 6) *
+                     &= (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma)**6)
+
+    Parameters
+    ----------
+    Rmin: variable for find root
+        The Rmin variable that will be solve for the non-bonded Exp6 potential
+        energy equation via the epsilon, Rmin, and alpha parameters.
+    sigma: int or float
+        The sigma value for the non-bonded Exp6 potential energy equation.
+    alpha: int or float
+        The alpha value for the non-bonded Exp6 potential energy equation.
+
+    Returns
+    ----------
+    exp6_eqn_with_r_min_only_variable: equation
+        The Exp6 potential energy equation with Rmin as the only variable.
+        The other variables (sigma and alpha) are entered as constants,
+        as epsilon is not required.
+    """
+    exp6_eqn_with_r_min_only_variable = (
+            1 / (1 - 6 / alpha) * (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma)**6)
+    )
+
+    return exp6_eqn_with_r_min_only_variable
+
+
+def _Exp6_sigma_to_Rmin_solver(
+    sigma_actual, alpha_actual, sigma_fraction_for_Rmin_findroot=1.05
+):
+    """
+    Numerically solve the sigma value in non-bonded Exp6 potential (using epsilon, r_min, and alpha).
+
+    .. math::
+    Exp6_{potential} &= epsilon * alpha / (alpha - 6) *
+                     &= (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma)**6)
+
+    Parameters
+    ----------
+    sigma_actual: variable
+        The sigma value for the non-bonded Exp6 potential energy equation.
+    alpha_actual: int or float
+        The alpha value for the non-bonded Exp6 potential energy equation.
+    sigma_fraction_for_Rmin_findroot: float, default=0.95
+        The fraction of the sigma value used to provide the starting input
+        to the numerical solver (find root/scipy.optimize).
+        This must be greater than sigma, but not too much greater than sigma,
+        or it will find a non-logical root, due to the Exp6 potential's
+        convergence to zero (0) at large atomic radii.
+
+    Returns
+    ----------
+    Rmin_calculated: float
+        The numerically solved Rmin value for the non-bonded Exp6 potential energy equation.
+    """
+    exp6_Rmin_solver = scipy.optimize.root(
+        lambda Rmin: _Exp6_sigma_to_Rmin(Rmin, sigma_actual, alpha_actual),
+        sigma_actual * sigma_fraction_for_Rmin_findroot,
+    )
+
+    Rmin_calculated = exp6_Rmin_solver.x[0]
+
+    # check for errors
+    if (
+        exp6_Rmin_solver.message != "The solution converged."
+        or Rmin_calculated <= sigma_actual
+    ):
+        raise ValueError(
+            "ERROR: The Exp6 potential sigma --> Rmin converter failed."
+        )
+
+    return Rmin_calculated
 
 
 def unique_atom_naming(

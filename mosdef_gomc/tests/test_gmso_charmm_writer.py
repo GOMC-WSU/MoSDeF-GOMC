@@ -13,6 +13,8 @@ from mosdef_gomc.formats.gmso_charmm_writer import (
     Charmm,
     _Exp6_Rmin_to_sigma,
     _Exp6_Rmin_to_sigma_solver,
+    _Exp6_sigma_to_Rmin,
+    _Exp6_sigma_to_Rmin_solver
 )
 from mosdef_gomc.tests.base_test import BaseTest
 from mosdef_gomc.utils.conversion import (
@@ -9853,15 +9855,49 @@ class TestCharmmWriterData(BaseTest):
         self,
     ):
         exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(4.0941137, 16)
-
         assert np.isclose(exp6_sigma_value, 3.6790000166)
 
-    def test_Exp6_Rmin_to_sigma_solver_failing_values(self, two_propanol_ua):
+    def test_Exp6_Rmin_to_sigma_solver_failing_values_large_alpha(self):
         with pytest.raises(
             ValueError,
             match=f"ERROR: The Exp6 potential Rmin --> sigma converter failed.",
         ):
-            exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(4.0941137, 0.1)
+            exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(4.0941137, 1000000.0)
+
+    def test_Exp6_Rmin_to_sigma_solver_failing_values_sigma_greater_than_Rmin(self):
+        with pytest.raises(
+                ValueError,
+                match=f"ERROR: The Exp6 potential Rmin --> sigma converter failed.",
+        ):
+            exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(4.0941137,
+                                                          16,
+                                                          Rmin_fraction_for_sigma_findroot=1.1
+                                                          )
+
+    def test_Exp6_sigma_to_Rmin_solver(
+        self,
+    ):
+        exp6_Rmin_value = _Exp6_sigma_to_Rmin_solver(3.6790000166, 16)
+
+        assert np.isclose(exp6_Rmin_value, 4.0941137)
+
+    def test_Exp6_sigma_to_Rmin_solver_failing_values_small_alpha(self):
+        with pytest.raises(
+            ValueError,
+            match=f"ERROR: The Exp6 potential sigma --> Rmin converter failed.",
+        ):
+            exp6_Rmin_value = _Exp6_sigma_to_Rmin_solver(3.6790000166, 0.01)
+
+    def test_Exp6_sigma_to_Rmin_solver_failing_values_Rmin_greater_than_sigma(self):
+        with pytest.raises(
+            ValueError,
+            match=f"ERROR: The Exp6 potential sigma --> Rmin converter failed.",
+        ):
+            exp6_Rmin_value = _Exp6_sigma_to_Rmin_solver(
+                3.6790000166,
+                0.1,
+                sigma_fraction_for_Rmin_findroot=0.1
+            )
 
     def test_save_Exp6_gomc_ff(self, hexane_ua):
         box_0 = mb.fill_box(
