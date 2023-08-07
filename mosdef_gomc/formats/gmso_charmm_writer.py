@@ -334,6 +334,7 @@ def _Exp6_Rmin_to_sigma_solver(
 
     return sigma_calculated
 
+
 def _Exp6_sigma_to_Rmin(Rmin, sigma, alpha):
     """Get equation to convert Rmin to sigma for the Exponential-6 (Exp6) potential energy equation.
 
@@ -359,7 +360,9 @@ def _Exp6_sigma_to_Rmin(Rmin, sigma, alpha):
         as epsilon is not required.
     """
     exp6_eqn_with_r_min_only_variable = (
-            1 / (1 - 6 / alpha) * (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma)**6)
+        1
+        / (1 - 6 / alpha)
+        * (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma) ** 6)
     )
 
     return exp6_eqn_with_r_min_only_variable
