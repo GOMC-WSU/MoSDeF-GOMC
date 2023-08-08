@@ -16,9 +16,9 @@
     </AtomType>
     <AtomType name="CH2_sp3" atomclass="CH2" element="_CH2" charge="0.0" mass="14.02700" definition="[_CH2;X2]([_CH3,_CH2])[_CH3,_CH2]" description="Alkane CH2" overrides="">
       <Parameters>
-        <Parameter name="epsilon" value="98"/>
-        <Parameter name="Rmin" value="4.0941137"/>
-        <Parameter name="alpha" value="16"/>
+        <Parameter name="epsilon" value="98.2"/>
+        <Parameter name="Rmin" value="5.0941137"/>
+        <Parameter name="alpha" value="16.2"/>
       </Parameters>
     </AtomType>
   </AtomTypes>
