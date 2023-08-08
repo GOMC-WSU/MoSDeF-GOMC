@@ -31,9 +31,6 @@ from mosdef_gomc.utils.io import get_mosdef_gomc_fn
 
 @pytest.mark.skipif(not has_foyer, reason="Foyer package not installed")
 class TestCharmmWriterData(BaseTest):
-    """"""
-
-    '''
     def test_save(self, ethane_gomc):
         box_0 = mb.fill_box(
             compound=[ethane_gomc], n_compounds=[1], box=[4, 4, 4]
@@ -9853,7 +9850,6 @@ class TestCharmmWriterData(BaseTest):
     # ***************************
     # ***************************
     """
-    '''
 
     def test_Exp6_Rmin_to_sigma_solver(self):
         exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(4.0941137, 16)
@@ -10135,12 +10131,12 @@ class TestCharmmWriterData(BaseTest):
                         ],
                         [
                             "CH2",
-                            "98.0",
-                            "3.6790000166",
-                            "16.0",
+                            "98.2",
+                            "4.5818082699",
+                            "16.2",
                             "0.0",
-                            "3.6790000166",
-                            "16.0",
+                            "4.5818082699",
+                            "16.2",
                         ],
                     ]
 
