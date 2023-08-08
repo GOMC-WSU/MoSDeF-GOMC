@@ -31,7 +31,8 @@ from mosdef_gomc.utils.io import get_mosdef_gomc_fn
 
 @pytest.mark.skipif(not has_foyer, reason="Foyer package not installed")
 class TestCharmmWriterData(BaseTest):
-    ''''''
+    """"""
+
     '''
     def test_save(self, ethane_gomc):
         box_0 = mb.fill_box(
@@ -9860,21 +9861,21 @@ class TestCharmmWriterData(BaseTest):
 
     def test_Exp6_Rmin_to_sigma_solver_failing_alpha_equal_6(self):
         with pytest.raises(
-                ValueError,
-                match=f"ERROR: The Exp6 potential Rmin --> sigma converter failed. "
-                      f"The Exp6 potential values can not be Rmin = 0 or alpha = 6, "
-                      f"as it divides by zero. "
-                      f"The entered values are Rmin = 4.0941137 and alpha = 6.",
+            ValueError,
+            match=f"ERROR: The Exp6 potential Rmin --> sigma converter failed. "
+            f"The Exp6 potential values can not be Rmin = 0 or alpha = 6, "
+            f"as it divides by zero. "
+            f"The entered values are Rmin = 4.0941137 and alpha = 6.",
         ):
             exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(4.0941137, 6)
 
     def test_Exp6_Rmin_to_sigma_solver_failing_Rmin_equal_0(self):
         with pytest.raises(
-                ValueError,
-                match=f"ERROR: The Exp6 potential Rmin --> sigma converter failed. "
-                      f"The Exp6 potential values can not be Rmin = 0 or alpha = 6, "
-                      f"as it divides by zero. "
-                      f"The entered values are Rmin = 0 and alpha = 16.",
+            ValueError,
+            match=f"ERROR: The Exp6 potential Rmin --> sigma converter failed. "
+            f"The Exp6 potential values can not be Rmin = 0 or alpha = 6, "
+            f"as it divides by zero. "
+            f"The entered values are Rmin = 0 and alpha = 16.",
         ):
             exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(0, 16)
 
@@ -9882,11 +9883,10 @@ class TestCharmmWriterData(BaseTest):
         with pytest.raises(
             ValueError,
             match="ERROR: The Exp6 potential Rmin --> sigma converter failed. "
-                  "It did not converge, sigma_calculated >= Rmin_actual, or "
-                  "another issue.",
+            "It did not converge, sigma_calculated >= Rmin_actual, or "
+            "another issue.",
         ):
             exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(4.0941137, 1000000.0)
-
 
     def test_Exp6_Rmin_to_sigma_solver_failing_values_sigma_greater_than_Rmin(
         self,
@@ -9894,8 +9894,8 @@ class TestCharmmWriterData(BaseTest):
         with pytest.raises(
             ValueError,
             match="ERROR: The Exp6 potential Rmin --> sigma converter failed. "
-                  "It did not converge, sigma_calculated >= Rmin_actual, or "
-                  "another issue.",
+            "It did not converge, sigma_calculated >= Rmin_actual, or "
+            "another issue.",
         ):
             exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(
                 4.0941137, 16, Rmin_fraction_for_sigma_findroot=1.1
@@ -9910,21 +9910,21 @@ class TestCharmmWriterData(BaseTest):
 
     def test_Exp6_sigma_to_Rmin_solver_failing_alpha_equal_6(self):
         with pytest.raises(
-                ValueError,
-                match=f"ERROR: The Exp6 potential sigma --> Rmin converter failed. "
-                      f"The Exp6 potential values can not be sigma = 0 or alpha = 6, "
-                      f"as it divides by zero. "
-                      f"The entered values are sigma = 4.0941137 and alpha = 6.",
+            ValueError,
+            match=f"ERROR: The Exp6 potential sigma --> Rmin converter failed. "
+            f"The Exp6 potential values can not be sigma = 0 or alpha = 6, "
+            f"as it divides by zero. "
+            f"The entered values are sigma = 4.0941137 and alpha = 6.",
         ):
             exp6_Rmin_value = _Exp6_sigma_to_Rmin_solver(4.0941137, 6)
 
     def test_Exp6_sigma_to_Rmin_solver_failing_sigma_equal_0(self):
         with pytest.raises(
-                ValueError,
-                match=f"ERROR: The Exp6 potential sigma --> Rmin converter failed. "
-                      f"The Exp6 potential values can not be sigma = 0 or alpha = 6, "
-                      f"as it divides by zero. "
-                      f"The entered values are sigma = 0 and alpha = 16.",
+            ValueError,
+            match=f"ERROR: The Exp6 potential sigma --> Rmin converter failed. "
+            f"The Exp6 potential values can not be sigma = 0 or alpha = 6, "
+            f"as it divides by zero. "
+            f"The entered values are sigma = 0 and alpha = 16.",
         ):
             exp6_Rmin_value = _Exp6_sigma_to_Rmin_solver(0, 16)
 
@@ -9932,8 +9932,8 @@ class TestCharmmWriterData(BaseTest):
         with pytest.raises(
             ValueError,
             match=f"ERROR: The Exp6 potential sigma --> Rmin converter failed. "
-                  "It did not converge, Rmin_calculated <= sigma_actual, or "
-                  "another issue.",
+            "It did not converge, Rmin_calculated <= sigma_actual, or "
+            "another issue.",
         ):
             exp6_Rmin_value = _Exp6_sigma_to_Rmin_solver(3.6790000166, 0.01)
 
@@ -9943,8 +9943,8 @@ class TestCharmmWriterData(BaseTest):
         with pytest.raises(
             ValueError,
             match=f"ERROR: The Exp6 potential sigma --> Rmin converter failed. "
-                  "It did not converge, Rmin_calculated <= sigma_actual, or "
-                  "another issue.",
+            "It did not converge, Rmin_calculated <= sigma_actual, or "
+            "another issue.",
         ):
             exp6_Rmin_value = _Exp6_sigma_to_Rmin_solver(
                 3.6790000166, 0.1, sigma_fraction_for_Rmin_findroot=0.1
