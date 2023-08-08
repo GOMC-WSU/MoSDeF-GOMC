@@ -316,6 +316,13 @@ def _Exp6_Rmin_to_sigma_solver(
     sigma_calculated: float
         The numerically solved sigma value for the non-bonded Exp6 potential energy equation.
     """
+    if alpha_actual == 6 or Rmin_actual == 0:
+        raise ValueError(
+            f"ERROR: The Exp6 potential Rmin --> sigma converter failed. "
+            f"The Exp6 potential values can not be Rmin = 0 or alpha = 6, "
+            f"as it divides by zero. "
+            f"The entered values are Rmin = {Rmin_actual} and alpha = {alpha_actual}."
+        )
     exp6_sigma_solver = scipy.optimize.root(
         lambda sigma: _Exp6_Rmin_to_sigma(sigma, Rmin_actual, alpha_actual),
         Rmin_actual * Rmin_fraction_for_sigma_findroot,
@@ -329,11 +336,12 @@ def _Exp6_Rmin_to_sigma_solver(
         or sigma_calculated >= Rmin_actual
     ):
         raise ValueError(
-            "ERROR: The Exp6 potential Rmin --> sigma converter failed."
+            "ERROR: The Exp6 potential Rmin --> sigma converter failed. "
+            "It did not converge, sigma_calculated >= Rmin_actual, or "
+            "another issue."
         )
 
     return sigma_calculated
-
 
 def _Exp6_sigma_to_Rmin(Rmin, sigma, alpha):
     """Get equation to convert Rmin to sigma for the Exponential-6 (Exp6) potential energy equation.
@@ -360,9 +368,7 @@ def _Exp6_sigma_to_Rmin(Rmin, sigma, alpha):
         as epsilon is not required.
     """
     exp6_eqn_with_r_min_only_variable = (
-        1
-        / (1 - 6 / alpha)
-        * (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma) ** 6)
+            1 / (1 - 6 / alpha) * (6 / alpha * np.exp(alpha * (1 - sigma / Rmin)) - (Rmin / sigma)**6)
     )
 
     return exp6_eqn_with_r_min_only_variable
@@ -396,6 +402,14 @@ def _Exp6_sigma_to_Rmin_solver(
     Rmin_calculated: float
         The numerically solved Rmin value for the non-bonded Exp6 potential energy equation.
     """
+    if alpha_actual == 6 or sigma_actual == 0:
+        raise ValueError(
+            f"ERROR: The Exp6 potential sigma --> Rmin converter failed. "
+            f"The Exp6 potential values can not be sigma = 0 or alpha = 6, "
+            f"as it divides by zero. "
+            f"The entered values are sigma = {sigma_actual} and alpha = {alpha_actual}."
+        )
+
     exp6_Rmin_solver = scipy.optimize.root(
         lambda Rmin: _Exp6_sigma_to_Rmin(Rmin, sigma_actual, alpha_actual),
         sigma_actual * sigma_fraction_for_Rmin_findroot,
@@ -409,11 +423,12 @@ def _Exp6_sigma_to_Rmin_solver(
         or Rmin_calculated <= sigma_actual
     ):
         raise ValueError(
-            "ERROR: The Exp6 potential sigma --> Rmin converter failed."
+            "ERROR: The Exp6 potential sigma --> Rmin converter failed. "
+            "It did not converge, Rmin_calculated <= sigma_actual, or "
+            "another issue."
         )
 
     return Rmin_calculated
-
 
 def unique_atom_naming(
     topology, residue_id_list, residue_names_list, bead_to_atom_name_dict=None
