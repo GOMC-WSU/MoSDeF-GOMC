@@ -47,5 +47,4 @@ The MoSDeF-GOMC package is also available via conda, but conda has had some issu
 
 `conda create --name mosdef_gomc -c conda-forge mosdef-gomc python=3.10`
 
- NOTE: conda has had some issues pulling the most recent packages, so a mamba installation is recommended.  
-
+ NOTE: conda has had some issues pulling the most recent packages, so a mamba installation is recommended.
