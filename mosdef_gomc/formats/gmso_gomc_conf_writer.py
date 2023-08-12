@@ -212,7 +212,7 @@ def _get_all_possible_input_variables(description=False):
         "ParaTypeCHARMM or ParaTypeMie is detected."
         "".format(_get_default_variables_dict()["ParaTypeCHARMM"]),
         "ParaTypeMie": "Simulation info (all ensembles): boolean, default = {}. "
-        "True if a Mie forcefield type, False otherwise."
+        "True if a Mie or Exp6 forcefield types, False otherwise."
         "Note: This is changed by the MoSDeF-GOMC Charmm object if the "
         "ParaTypeCHARMM or ParaTypeMie is detected."
         "".format(_get_default_variables_dict()["ParaTypeMie"]),
@@ -295,7 +295,7 @@ def _get_all_possible_input_variables(description=False):
         "further in the Intermolecular energy and "
         "Virial calculation section. \n"
         '\t\t\t\t\t\t\t\t\t\t\t\t\t --- "EXP6":   Non-bonded dispersion interaction energy and force '
-        "calculated based on exp-6 (Buckingham potential) equation. This option is currently not available.\n"
+        "calculated based on exp-6 equation. \n"
         '\t\t\t\t\t\t\t\t\t\t\t\t\t --- "SHIFT":  This option forces the potential energy to be '
         "zero at Rcut distance.  \n"
         '\t\t\t\t\t\t\t\t\t\t\t\t\t --- "SWITCH": This option smoothly forces the potential '
@@ -369,6 +369,8 @@ def _get_all_possible_input_variables(description=False):
         "defaults to geometric via MoSDeF's default setting of VDWGeometricSigma is True, "
         "which uses the arithmetic mean when combining Lennard-Jones or "
         "VDW sigma parameters for different atom types."
+        "NOTE: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2."
+        "NOTE: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5."
         "".format(_get_default_variables_dict()["VDWGeometricSigma"]),
         "useConstantArea": "Simulation info (only GEMC_NPT and NPT): boolean: default = {}. "
         "Changes the volume of the simulation box by fixing the cross-sectional "
@@ -1599,7 +1601,7 @@ class GOMCControl:
         Note: This is changed by the MoSDeF-GOMC Charmm object if the
         ParaTypeCHARMM or ParaTypeMie is detected.
     ParaTypeMie: boolean, default = False
-        True if a Mie forcefield type, False otherwise.
+        True if a Mie or Exp6 forcefield types, False otherwise.
         Note: This is changed by the MoSDeF-GOMC Charmm object if the "
         ParaTypeCHARMM or ParaTypeMie is detected.
     ParaTypeMARTINI: boolean, default = False
@@ -1674,7 +1676,7 @@ class GOMCControl:
         and Virial calculation section.
 
         ---   "EXP6":   Non-bonded dispersion interaction energy and force calculated
-        based on exp-6 (Buckingham potential) equation. This option is currently not available.
+        based on exp-6 equation.
 
         ---  "SHIFT":   This option forces the potential energy to be zero at Rcut distance.
 
@@ -1737,6 +1739,8 @@ class GOMCControl:
         defaults to geometric via MoSDeF's default setting of VDWGeometricSigma is True,
         which uses the arithmetic mean when combining Lennard-Jones or "
         VDW sigma parameters for different atom types.
+        NOTE: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
+        NOTE: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
     useConstantArea: boolean,  default = False
         Changes the volume of the simulation box by fixing the cross-sectional
         area (x-y plane). If True, the volume will change only in z axis,
@@ -2401,6 +2405,9 @@ class GOMCControl:
     Note: all of the move fractions must sum to 1, or the control file
     writer will fail.
 
+    Note: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
+    Note: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
+
     The input variables (input_variables_dict) and text extracted with permission from
     the GOMC manual version 2.60. Some of the text was modified from its original version.
     Cite: Potoff, Jeffrey; Schwiebert, Loren; et. al. GOMC Documentation.
@@ -2968,19 +2975,24 @@ class GOMCControl:
         self.ParaTypeCHARMM = default_input_variables_dict["ParaTypeCHARMM"]
         self.ParaTypeMie = default_input_variables_dict["ParaTypeMie"]
         self.ParaTypeMARTINI = default_input_variables_dict["ParaTypeMARTINI"]
+        self.Potential = default_input_variables_dict["Potential"]
         if self.utilized_NB_expression == "LJ":
             self.ParaTypeCHARMM = True
             self.ParaTypeMie = False
             self.ParaTypeMARTINI = False
+            self.Potential = "VDW"
 
         elif self.utilized_NB_expression == "Mie":
             self.ParaTypeCHARMM = False
             self.ParaTypeMie = True
             self.ParaTypeMARTINI = False
+            self.Potential = "VDW"
 
         elif self.utilized_NB_expression == "Exp6":
-            print_error = f"ERROR: The non-bonded expression does not currently work for the Exp6 potential."
-            raise ValueError(print_error)
+            self.ParaTypeCHARMM = False
+            self.ParaTypeMie = True
+            self.ParaTypeMARTINI = False
+            self.Potential = "EXP6"
 
         else:
             print_error = (
@@ -3011,7 +3023,6 @@ class GOMCControl:
         self.LRC = default_input_variables_dict["LRC"]
         self.IPC = default_input_variables_dict["IPC"]
         self.Exclude = default_input_variables_dict["Exclude"]
-        self.Potential = default_input_variables_dict["Potential"]
         self.Rswitch = default_input_variables_dict["Rswitch"].to_value(
             "angstrom"
         )
@@ -5727,13 +5738,6 @@ class GOMCControl:
                 "as the LRC=False when the Potential is VDW or EXP6."
             )
             warn(print_warning_message)
-
-        # if potential is EXP6 fail as not currently avaialbe
-        if self.Potential == "EXP6":
-            print_warning = (
-                "WARNING: The Potential = EXP6 is not currently available."
-            )
-            warn(print_warning)
 
         # check to make sure the VDW FF (ParaTypeCHARMM) is not true for multiple ones
         # (i.e., ParaTypeCHARMM, ParaTypeMie, ParaTypeMARTINI)
@@ -8707,7 +8711,7 @@ def write_gomc_control_file(
         Note: This is changed by the MoSDeF-GOMC Charmm object if the
         ParaTypeCHARMM or ParaTypeMie is detected.
     ParaTypeMie: boolean, default = False
-        True if a Mie forcefield type, False otherwise.
+        True if a Mie or Exp6 forcefield types, False otherwise.
         Note: This is changed by the MoSDeF-GOMC Charmm object if the "
         ParaTypeCHARMM or ParaTypeMie is detected.
     ParaTypeMARTINI: boolean, default = False
@@ -8781,7 +8785,7 @@ def write_gomc_control_file(
         and Virial calculation section.
 
         ---   "EXP6":   Non-bonded dispersion interaction energy and force calculated
-        based on exp-6 (Buckingham potential) equation. This option is currently not available.
+        based on exp-6 equation.
 
         ---  "SHIFT":   This option forces the potential energy to be zero at Rcut distance.
 
@@ -8844,6 +8848,8 @@ def write_gomc_control_file(
         defaults to geometric via MoSDeF's default setting of VDWGeometricSigma is True,
         which uses the arithmetic mean when combining Lennard-Jones or "
         VDW sigma parameters for different atom types.
+        NOTE: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
+        NOTE: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
     useConstantArea: boolean,  default = False
         Changes the volume of the simulation box by fixing the cross-sectional
         area (x-y plane). If True, the volume will change only in z axis,
@@ -9509,6 +9515,9 @@ def write_gomc_control_file(
 
     Note: all of the move fractions must sum to 1, or the control file
     writer will fail.
+
+    Note: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
+    Note: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
 
     The input variables (input_variables_dict) and text extracted with permission from
     the GOMC manual version 2.60. Some of the text was modified from its original version.

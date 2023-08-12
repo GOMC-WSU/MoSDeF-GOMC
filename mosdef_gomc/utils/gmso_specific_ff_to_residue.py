@@ -649,17 +649,6 @@ def specific_ff_to_residue(
         else:
             molecules_atom_number_list.append({atom_iter_k})
 
-    """
-    build_molecule_list_time_end = time.time()
-    final_build_molecule_list_time_s = build_molecule_list_time_end - build_molecule_list_time_start
-    final_build_molecule_list_time_min = (final_build_molecule_list_time_s) / 60
-    final_build_molecule_list_time_hr = (final_build_molecule_list_time_s) / 60 / 60
-
-    print(f"final_build_molecule_list_time_s = {final_build_molecule_list_time_s}")
-    print(f"final_build_molecule_list_time_min = {final_build_molecule_list_time_min}")
-    print(f"final_build_molecule_list_time_hr = {final_build_molecule_list_time_hr}")
-    """
-
     # create a molecule number to atom number dict
     # Example:  {molecule_number_x: {atom_number_1, ..., atom_number_y}, ...}
     for molecule_iter in range(0, len(molecules_atom_number_list)):

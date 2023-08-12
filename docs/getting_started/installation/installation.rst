@@ -8,7 +8,13 @@ Install with `mamba <https://github.com/mamba-org/mamba>`_ (Recommended)
 ------------------------------------------------------------------------
 ::
 
-    $ mamba install -c conda-forge mosdef-gomc
+    $ conda create --name mosdef_gomc python=3.10
+
+    $ conda activate mosdef_gomc
+
+    $ conda install -c conda-forge mamba
+
+    $ mamba install -c conda-forge mosdef-gomc python=3.10
 
 
 Install with `conda <https://repo.anaconda.com/miniconda/>`_
@@ -17,6 +23,8 @@ Install with `conda <https://repo.anaconda.com/miniconda/>`_
 
     $ conda install -c conda-forge mosdef-gomc
 
+
+NOTE: conda has had some issues pulling the most recent packages, so a mamba installation is recommended.
 
 Install an editable version from the source code
 ------------------------------------------------

@@ -197,3 +197,88 @@ class BaseTest:
                 self.energy_minimize(forcefield="trappe-ua", steps=10**9)
 
         return AltTwoPropanolUA()
+
+    @pytest.fixture
+    def hexane_ua(self):
+        class HexaneUA(mb.Compound):
+            def __init__(self):
+                super(HexaneUA, self).__init__()
+                self.name = "HEX"
+
+                CH3_1_1 = mb.Particle(pos=[0.17, 0.0, 0.0], name="_CH3")
+                CH2_1_2 = mb.Particle(pos=[0.34, 0.0, 0.0], name="_CH2")
+                CH2_1_3 = mb.Particle(pos=[0.51, 0.0, 0.0], name="_CH2")
+                CH2_1_4 = mb.Particle(pos=[0.68, 0.0, 0.0], name="_CH2")
+                CH2_1_5 = mb.Particle(pos=[0.85, 0.0, 0.0], name="_CH2")
+                CH3_1_6 = mb.Particle(pos=[1.02, 0.0, 0.0], name="_CH3")
+                self.add([CH3_1_1, CH2_1_2, CH2_1_3, CH2_1_4, CH2_1_5, CH3_1_6])
+
+                port_R_CH3_1_1 = mb.Port(
+                    anchor=CH3_1_1, orientation=[0.1, 0, 0], separation=0.05
+                )
+                port_L_CH2_1_2 = mb.Port(
+                    anchor=CH2_1_2, orientation=[-0.1, 0, 0], separation=0.05
+                )
+                port_R_CH2_1_2 = mb.Port(
+                    anchor=CH2_1_2, orientation=[0.1, 0, 0], separation=0.05
+                )
+                port_L_CH2_1_3 = mb.Port(
+                    anchor=CH2_1_3, orientation=[-0.1, 0, 0], separation=0.05
+                )
+                port_R_CH2_1_3 = mb.Port(
+                    anchor=CH2_1_3, orientation=[0.1, 0, 0], separation=0.05
+                )
+                port_L_CH2_1_4 = mb.Port(
+                    anchor=CH2_1_4, orientation=[-0.1, 0, 0], separation=0.05
+                )
+                port_R_CH2_1_4 = mb.Port(
+                    anchor=CH2_1_4, orientation=[0.1, 0, 0], separation=0.05
+                )
+                port_L_CH2_1_5 = mb.Port(
+                    anchor=CH2_1_5, orientation=[-0.1, 0, 0], separation=0.05
+                )
+                port_R_CH2_1_5 = mb.Port(
+                    anchor=CH2_1_5, orientation=[0.1, 0, 0], separation=0.05
+                )
+                port_L_CH3_1_6 = mb.Port(
+                    anchor=CH3_1_6, orientation=[-0.1, 0, 0], separation=0.05
+                )
+
+                self.add(port_R_CH3_1_1, label="port_R_CH3_1_1")
+                self.add(port_L_CH2_1_2, label="port_L_CH2_1_2")
+                self.add(port_R_CH2_1_2, label="port_R_CH2_1_2")
+                self.add(port_L_CH2_1_3, label="port_L_CH2_1_3")
+                self.add(port_R_CH2_1_3, label="port_R_CH2_1_3")
+                self.add(port_L_CH2_1_4, label="port_L_CH2_1_4")
+                self.add(port_R_CH2_1_4, label="port_R_CH2_1_4")
+                self.add(port_L_CH2_1_5, label="port_L_CH2_1_5")
+                self.add(port_R_CH2_1_5, label="port_R_CH2_1_5")
+                self.add(port_L_CH3_1_6, label="port_L_CH3_1_6")
+
+                mb.force_overlap(
+                    move_this=CH2_1_2,
+                    from_positions=self["port_L_CH2_1_2"],
+                    to_positions=self["port_R_CH3_1_1"],
+                )
+                mb.force_overlap(
+                    move_this=CH2_1_3,
+                    from_positions=self["port_L_CH2_1_3"],
+                    to_positions=self["port_R_CH2_1_2"],
+                )
+                mb.force_overlap(
+                    move_this=CH2_1_4,
+                    from_positions=self["port_L_CH2_1_4"],
+                    to_positions=self["port_R_CH2_1_3"],
+                )
+                mb.force_overlap(
+                    move_this=CH2_1_5,
+                    from_positions=self["port_L_CH2_1_5"],
+                    to_positions=self["port_R_CH2_1_4"],
+                )
+                mb.force_overlap(
+                    move_this=CH3_1_6,
+                    from_positions=self["port_L_CH3_1_6"],
+                    to_positions=self["port_R_CH2_1_5"],
+                )
+
+        return HexaneUA()

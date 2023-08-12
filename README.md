@@ -32,14 +32,19 @@ The MoSDeF-GOMC documentation is located [here](https://mosdef-gomc.readthedocs.
 
 ### Installation
 
-The MoSDeF-GOMC package is available via conda:
+The recommended MoSDeF-GOMC package installation is with [mamba](https://github.com/mamba-org/mamba):
 
-`conda create --name mosdef_gomc -c conda-forge mosdef-gomc`
+`conda create --name mosdef_gomc python=3.10`
 
-There is currently an issue building MoSDeF-GOMC version 1.0.0 with conda or conda-forge not pulling the latest conda build version. To rectify this, the user can run the additional command below or install using mamba because mamba is using the correct build:
+`conda activate mosdef_gomc`
 
-`conda install -c conda-forge sympy=1.10 garnett gsd pycifrw`
-
-The MoSDeF-GOMC package is available via conda or mamba:
+`conda install -c conda-forge mamba`
 
 `mamba install -c conda-forge mosdef-gomc`
+
+
+The MoSDeF-GOMC package is also available via conda, but conda has had some issues pulling the most recent packages (user beware):
+
+`conda create --name mosdef_gomc -c conda-forge mosdef-gomc python=3.10`
+
+ NOTE: conda has had some issues pulling the most recent packages, so a mamba installation is recommended.
