@@ -4647,7 +4647,7 @@ class Charmm:
 
                 if self.utilized_NB_expression == "LJ":
                     data.write("\n")
-                    data.write("NONBONDED\n")
+                    data.write("NONBONDED * LJ\n")
                     data.write("! \n")
                     data.write(
                         "! V(Lennard-Jones) = Epsilon,i,j[(Rmin,i,j/ri,j)**12 - 2(Rmin,i,j/ri,j)**6]\n"
@@ -4739,7 +4739,8 @@ class Charmm:
                 elif self.utilized_NB_expression in ["Mie", "Exp6"]:
                     if self.utilized_NB_expression == "Mie":
                         data.write("\n")
-                        data.write("NONBONDED_MIE\n")
+                        data.write("NONBONDED_MIE * Mie\n")
+
                         data.write("! \n")
                         data.write(
                             "! V(Mie) = (n/(n-6)) * (n/6)**(6/(n-6)) * Epsilon * ((sig/r)**n - (sig/r)**6)\n"
@@ -4763,7 +4764,7 @@ class Charmm:
 
                     elif self.utilized_NB_expression == "Exp6":
                         data.write("\n")
-                        data.write("NONBONDED_MIE\n")
+                        data.write("NONBONDED_MIE * Exp6\n")
                         data.write("! \n")
                         data.write(
                             "! V(Exp6) = epsilon*alpha/(alpha-6) * (6/alpha*exp(alpha*(1-r/Rmin)) - (Rmin/r)**6)\n"

@@ -15721,32 +15721,163 @@ class TestGOMCControlFileWriter(BaseTest):
                 input_variables_dict={"ParaTypeMARTINI": True},
             )
 
-    # test non-bonded setting errors for Mie
-    def test_potential_exp6_not_available(self, ethane_gomc):
-        with pytest.warns(
-            UserWarning,
-            match=r"WARNING: The Potential = EXP6 is not currently available.",
-        ):
-            test_box_ethane_gomc = mb.fill_box(
-                compound=[ethane_gomc], n_compounds=[1], box=[1, 1, 1]
-            )
+    # Test the Exp6 potential gomc input file (.conf file), overriding ParaTypeMie and Potential
+    # Note: ParaTypeMie should not exist as it is overridden by ParaTypeCHARMM
+    def test_exp6_with_exp6_conf_config_overriding_ParaTypeMie_and_Potential(self, hexane_ua):
 
-            charmm = Charmm(
-                test_box_ethane_gomc,
-                "test_potential_exp6_not_available",
-                structure_box_1=None,
-                filename_box_1=None,
-                ff_filename="test_potential_exp6_not_available",
-                residues=[ethane_gomc.name],
-                forcefield_selection="oplsaa",
-            )
+        test_box_hexane_ua_gomc = mb.fill_box(
+            compound=[hexane_ua], n_compounds=[1], box=[1, 1, 1]
+        )
 
-            gomc_control.write_gomc_control_file(
-                charmm,
-                "test_potential_exp6_not_available",
-                "NVT",
-                1000,
-                300 * u.K,
-                check_input_files_exist=False,
-                input_variables_dict={"Potential": "EXP6"},
-            )
+        charmm = Charmm(
+            test_box_hexane_ua_gomc,
+            "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential",
+            structure_box_1=None,
+            filename_box_1=None,
+            ff_filename="charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential",
+            residues=[hexane_ua.name],
+            forcefield_selection=get_mosdef_gomc_fn("gmso_hexane_Exp6_periodic_dihedral_ua_K_energy_units.xml"),
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+        )
+
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential",
+            "NVT",
+            1000,
+            300 * u.K,
+            check_input_files_exist=False,
+            input_variables_dict={"ParaTypeCHARMM": True, "Potential": "VDW"},
+        )
+
+        with open("charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.conf", "r") as fp:
+            variables_read_dict = {
+                "ParaTypeMie": False,
+                "ParaTypeCHARMM": False,
+                "Parameters": False,
+                "Coordinates_box_0": False,
+                "Structure_box_0": False,
+                "Potential": False,
+            }
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if line.startswith("ParaTypeCHARMM "):
+                    variables_read_dict["ParaTypeCHARMM"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+
+                # checking to see if it exists ParaTypeMie, as it should not exist
+                elif line.startswith("ParaTypeMie "):
+                    variables_read_dict["ParaTypeMie"] = True
+
+                elif line.startswith("Parameters "):
+                    variables_read_dict["Parameters"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.inp"
+
+                elif line.startswith("Coordinates 0 "):
+                    variables_read_dict["Coordinates_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.pdb"
+
+                elif line.startswith("Structure 0 "):
+                    variables_read_dict["Structure_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.psf"
+
+                elif line.startswith("Potential "):
+                    variables_read_dict["Potential"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "VDW"
+
+                else:
+                    pass
+
+        # Note: ParaTypeMie should not exist as it is overridden by ParaTypeCHARMM
+        print(f" variables_read_dict = {variables_read_dict}")
+        assert variables_read_dict == {
+            "ParaTypeMie": False,
+            "ParaTypeCHARMM": True,
+            "Parameters": True,
+            "Coordinates_box_0": True,
+            "Structure_box_0": True,
+            "Potential": True,
+        }
+
+    # Test the Exp6 potential gomc input file (.conf file)
+    def test_exp6_with_exp6_conf_config(self, hexane_ua):
+
+        test_box_hexane_ua_gomc = mb.fill_box(
+            compound=[hexane_ua], n_compounds=[1], box=[1, 1, 1]
+        )
+
+        charmm = Charmm(
+            test_box_hexane_ua_gomc,
+            "charmm_data_Exp6_UA",
+            structure_box_1=None,
+            filename_box_1=None,
+            ff_filename="charmm_data_Exp6_UA",
+            residues=[hexane_ua.name],
+            forcefield_selection=get_mosdef_gomc_fn("gmso_hexane_Exp6_periodic_dihedral_ua_K_energy_units.xml"),
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+        )
+
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "charmm_data_Exp6_UA",
+            "NVT",
+            1000,
+            300 * u.K,
+            check_input_files_exist=False,
+            input_variables_dict={},
+        )
+
+        with open("charmm_data_Exp6_UA.conf", "r") as fp:
+            variables_read_dict = {
+                "ParaTypeMie": False,
+                "Parameters": False,
+                "Coordinates_box_0": False,
+                "Structure_box_0": False,
+                "Potential": False,
+            }
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if line.startswith("ParaTypeMie "):
+                    variables_read_dict["ParaTypeMie"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+
+                elif line.startswith("Parameters "):
+                    variables_read_dict["Parameters"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "charmm_data_Exp6_UA.inp"
+
+                elif line.startswith("Coordinates 0 "):
+                    variables_read_dict["Coordinates_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "charmm_data_Exp6_UA.pdb"
+
+                elif line.startswith("Structure 0 "):
+                    variables_read_dict["Structure_box_0"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "0"
+                    assert split_line[2] == "charmm_data_Exp6_UA.psf"
+
+                elif line.startswith("Potential "):
+                    variables_read_dict["Potential"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "EXP6"
+
+                else:
+                    pass
+
+        assert variables_read_dict == {
+            "ParaTypeMie": True,
+            "Parameters": True,
+            "Coordinates_box_0": True,
+            "Structure_box_0": True,
+            "Potential": True,
+        }
