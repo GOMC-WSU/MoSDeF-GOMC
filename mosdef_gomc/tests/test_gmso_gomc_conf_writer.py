@@ -15723,8 +15723,9 @@ class TestGOMCControlFileWriter(BaseTest):
 
     # Test the Exp6 potential gomc input file (.conf file), overriding ParaTypeMie and Potential
     # Note: ParaTypeMie should not exist as it is overridden by ParaTypeCHARMM
-    def test_exp6_with_exp6_conf_config_overriding_ParaTypeMie_and_Potential(self, hexane_ua):
-
+    def test_exp6_with_exp6_conf_config_overriding_ParaTypeMie_and_Potential(
+        self, hexane_ua
+    ):
         test_box_hexane_ua_gomc = mb.fill_box(
             compound=[hexane_ua], n_compounds=[1], box=[1, 1, 1]
         )
@@ -15736,7 +15737,9 @@ class TestGOMCControlFileWriter(BaseTest):
             filename_box_1=None,
             ff_filename="charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential",
             residues=[hexane_ua.name],
-            forcefield_selection=get_mosdef_gomc_fn("gmso_hexane_Exp6_periodic_dihedral_ua_K_energy_units.xml"),
+            forcefield_selection=get_mosdef_gomc_fn(
+                "gmso_hexane_Exp6_periodic_dihedral_ua_K_energy_units.xml"
+            ),
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
         )
 
@@ -15750,7 +15753,9 @@ class TestGOMCControlFileWriter(BaseTest):
             input_variables_dict={"ParaTypeCHARMM": True, "Potential": "VDW"},
         )
 
-        with open("charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.conf", "r") as fp:
+        with open(
+            "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.conf", "r"
+        ) as fp:
             variables_read_dict = {
                 "ParaTypeMie": False,
                 "ParaTypeCHARMM": False,
@@ -15773,19 +15778,28 @@ class TestGOMCControlFileWriter(BaseTest):
                 elif line.startswith("Parameters "):
                     variables_read_dict["Parameters"] = True
                     split_line = line.split()
-                    assert split_line[1] == "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.inp"
+                    assert (
+                        split_line[1]
+                        == "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.inp"
+                    )
 
                 elif line.startswith("Coordinates 0 "):
                     variables_read_dict["Coordinates_box_0"] = True
                     split_line = line.split()
                     assert split_line[1] == "0"
-                    assert split_line[2] == "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.pdb"
+                    assert (
+                        split_line[2]
+                        == "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.pdb"
+                    )
 
                 elif line.startswith("Structure 0 "):
                     variables_read_dict["Structure_box_0"] = True
                     split_line = line.split()
                     assert split_line[1] == "0"
-                    assert split_line[2] == "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.psf"
+                    assert (
+                        split_line[2]
+                        == "charmm_data_Exp6_UA_overriding_ParaTypeMie_and_Potential.psf"
+                    )
 
                 elif line.startswith("Potential "):
                     variables_read_dict["Potential"] = True
@@ -15808,7 +15822,6 @@ class TestGOMCControlFileWriter(BaseTest):
 
     # Test the Exp6 potential gomc input file (.conf file)
     def test_exp6_with_exp6_conf_config(self, hexane_ua):
-
         test_box_hexane_ua_gomc = mb.fill_box(
             compound=[hexane_ua], n_compounds=[1], box=[1, 1, 1]
         )
@@ -15820,7 +15833,9 @@ class TestGOMCControlFileWriter(BaseTest):
             filename_box_1=None,
             ff_filename="charmm_data_Exp6_UA",
             residues=[hexane_ua.name],
-            forcefield_selection=get_mosdef_gomc_fn("gmso_hexane_Exp6_periodic_dihedral_ua_K_energy_units.xml"),
+            forcefield_selection=get_mosdef_gomc_fn(
+                "gmso_hexane_Exp6_periodic_dihedral_ua_K_energy_units.xml"
+            ),
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
         )
 

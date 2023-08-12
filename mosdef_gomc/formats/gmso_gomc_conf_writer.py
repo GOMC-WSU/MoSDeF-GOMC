@@ -3227,7 +3227,6 @@ class GOMCControl:
                     all_input_var_case_unspec_to_spec_dict[key_lower]
                 ] = input_variables_dict.pop(input_var_dict_orig_keys_list[z_j])
 
-
         # check that the coulombic 1-4 scalar is: 0 =< 1-4 scalar <=1
         if (
             (
@@ -5739,7 +5738,6 @@ class GOMCControl:
                 "as the LRC=False when the Potential is VDW or EXP6."
             )
             warn(print_warning_message)
-
 
         # check to make sure the VDW FF (ParaTypeCHARMM) is not true for multiple ones
         # (i.e., ParaTypeCHARMM, ParaTypeMie, ParaTypeMARTINI)
