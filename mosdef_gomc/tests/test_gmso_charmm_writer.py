@@ -10157,3 +10157,264 @@ class TestCharmmWriterData(BaseTest):
         assert angles_read
         assert dihedrals_read
         assert nonbondeds_read
+
+    # test the Exp6 eqn when it is 2x higher than the standard
+    def test_save_Exp6_eqn_times_2_gomc_ff(self, hexane_ua):
+        box_0 = mb.fill_box(
+            compound=[hexane_ua], n_compounds=[2], box=[4, 4, 4]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "test_save_Exp6_eqn_times_2_gomc_ff",
+            ff_filename="test_save_Exp6_eqn_times_2_gomc_ff",
+            residues=[hexane_ua.name],
+            forcefield_selection=get_mosdef_gomc_fn(
+                "gmso_hexane_Exp6_eqn_times_2_periodic_dihedral_ua_K_energy.xml"
+            ),
+            atom_type_naming_style="general",
+        )
+        charmm.write_inp()
+
+        with open("test_save_Exp6_eqn_times_2_gomc_ff.inp", "r") as fp:
+            nonbondeds_read = False
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if (
+                    "! type_1" in line
+                    and "epsilon" in line
+                    and "sigma" in line
+                    and "alpha" in line
+                    and "epsilon,1-4" in line
+                    and "sigma,1-4" in line
+                    and "alpha,1-4" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                ):
+                    nonbondeds_read = True
+                    nb_types = [
+                        [
+                            "CH3",
+                            "196.0",
+                            "3.6790000166",
+                            "16.0",
+                            "0.0",
+                            "3.6790000166",
+                            "16.0",
+                        ],
+                        [
+                            "CH2",
+                            "196.4",
+                            "4.5818082699",
+                            "16.2",
+                            "0.0",
+                            "4.5818082699",
+                            "16.2",
+                        ],
+                    ]
+
+                    for j in range(0, len(nb_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == nb_types[j]
+                        )
+
+                else:
+                    pass
+
+        assert nonbondeds_read
+
+    # test the LJ equation when it is 2x higher than the standard
+    def test_save_charmm_water_LJ_eqn_times_2(
+            self, water
+    ):
+        box_0 = mb.fill_box(
+            compound=[water], n_compounds=[1], box=[5, 4, 3]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "ctest_save_charmm_water_LJ_eqn_times_2",
+            ff_filename="test_save_charmm_water_LJ_eqn_times_2",
+            residues=[water.name],
+            forcefield_selection={
+                water.name: get_mosdef_gomc_fn(
+                    "gmso_spce_water_LJ_eqn_times_2_one_for_nb_and_coul__lorentz_combining.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            gomc_fix_bonds_angles=[water.name],
+            atom_type_naming_style="general",
+        )
+        charmm.write_inp()
+
+        with open("test_save_charmm_water_LJ_eqn_times_2.inp", "r") as fp:
+            nonbondeds_read = False
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if (
+                        "! type_1" in line
+                        and "ignored" in line
+                        and "epsilon" in line
+                        and "Rmin/2" in line
+                        and "ignored" in line
+                        and "epsilon,1-4" in line
+                        and "Rmin/2,1-4" in line
+                        and "extended_type_1" in line
+                        and "extended_type_2" in line
+                ):
+                    nonbondeds_read = True
+                    nb_types = [
+                        [
+                            "OW",
+                            "0.0",
+                            "-0.3108001912",
+                            "1.7766160931",
+                            "0.0",
+                            "-0.3108001912",
+                            "1.7766160931",
+                        ],
+                        [
+                            "HW",
+                            "0.0",
+                            "-0.0",
+                            "0.5612310242",
+                            "0.0",
+                            "-0.0",
+                            "0.5612310242",
+                        ],
+                    ]
+
+                    for j in range(0, len(nb_types)):
+                        assert (
+                                len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                        )
+                        assert (
+                                out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                                == nb_types[j]
+                        )
+
+                else:
+                    pass
+
+        assert nonbondeds_read
+
+    # test the Mie equation when it is 2x higher than the standard
+    def test_save_charmm_Mie_eqn_times_2(self, water, two_propanol_ua):
+        box_0 = mb.fill_box(
+            compound=[water, two_propanol_ua], n_compounds=[1, 1], box=[5, 4, 3]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "test_save_charmm_mie_LJ_eqn_times_2",
+            ff_filename="test_save_charmm_mie_LJ_eqn_times_2",
+            residues=[water.name, two_propanol_ua.name],
+            forcefield_selection={
+                water.name: get_mosdef_gomc_fn(
+                    "gmso_spce_water__lorentz_combining.xml"
+                ),
+                two_propanol_ua.name: get_mosdef_gomc_fn(
+                    "gmso_two_propanol_Mie_eqn_time_2_ua.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            gomc_fix_bonds_angles=[water.name],
+            atom_type_naming_style="general",
+        )
+        charmm.write_inp()
+
+        with open("test_save_charmm_mie_LJ_eqn_times_2.inp", "r") as fp:
+            nonbondeds_read = False
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if (
+                    "! type_1" in line
+                    and "epsilon" in line
+                    and "sigma" in line
+                    and "n" in line
+                    and "epsilon,1-4" in line
+                    and "sigma,1-4" in line
+                    and "n,1-4" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                ):
+                    nonbondeds_read = True
+                    nb_types = [
+                        [
+                            "OW",
+                            "78.200368",
+                            "3.16557",
+                            "12.0",
+                            "0.0",
+                            "3.16557",
+                            "12.0",
+                        ],
+                        [
+                            "HW",
+                            "0.0",
+                            "1.0",
+                            "12.0",
+                            "0.0",
+                            "1.0",
+                            "12.0",
+                        ],
+                        [
+                            "CH3",
+                            "196.000011",
+                            "3.751",
+                            "11.0",
+                            "0.0",
+                            "3.751",
+                            "11.0",
+                        ],
+                        [
+                            "CH",
+                            "20.000001",
+                            "4.681",
+                            "12.0",
+                            "0.0",
+                            "4.681",
+                            "12.0",
+                        ],
+                        [
+                            "O",
+                            "186.000011",
+                            "3.021",
+                            "13.0",
+                            "0.0",
+                            "3.021",
+                            "13.0",
+                        ],
+                        [
+                            "H",
+                            "0.0",
+                            "0.0",
+                            "14.0",
+                            "0.0",
+                            "0.0",
+                            "14.0",
+                        ],
+                    ]
+
+                    for j in range(0, len(nb_types)):
+                        print('**************')
+                        print(f'output = {out_gomc[i + 1 + j].split("!")[0].split()[0:7]}')
+                        print('**************')
+                        print(f'std = {nb_types[j]}')
+                        print('**************')
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == nb_types[j]
+                        )
+
+                else:
+                    pass
+
+        assert nonbondeds_read

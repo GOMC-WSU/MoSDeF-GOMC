@@ -2267,11 +2267,14 @@ class Charmm:
             )
 
         # calculate epsilons form LJ, Mie, and Exp6 forms
+        # Also, scale the epsilon based on the gmso equation input scaler, compared to the standard form
         epsilons_kcal_per_mol = np.array(
             [
                 site.atom_type.parameters["epsilon"]
                 .to("kcal/mol", equivalence="thermal")
-                .to_value()
+                .to_value() * self.atom_type_experssion_and_scalar_combined[
+                    f'{site.__dict__["residue_name_"]}_{site.atom_type.__dict__["name_"]}']['expression_scalar'
+                ]
                 for site in self.topology_selection.sites
             ]
         )
@@ -4685,6 +4688,7 @@ class Charmm:
                             scalar_used_binary = 0
                         else:
                             scalar_used_binary = 1
+
 
                         data.write(
                             nb_format.format(
