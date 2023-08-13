@@ -2272,9 +2272,10 @@ class Charmm:
             [
                 site.atom_type.parameters["epsilon"]
                 .to("kcal/mol", equivalence="thermal")
-                .to_value() * self.atom_type_experssion_and_scalar_combined[
-                    f'{site.__dict__["residue_name_"]}_{site.atom_type.__dict__["name_"]}']['expression_scalar'
-                ]
+                .to_value()
+                * self.atom_type_experssion_and_scalar_combined[
+                    f'{site.__dict__["residue_name_"]}_{site.atom_type.__dict__["name_"]}'
+                ]["expression_scalar"]
                 for site in self.topology_selection.sites
             ]
         )
@@ -4688,7 +4689,6 @@ class Charmm:
                             scalar_used_binary = 0
                         else:
                             scalar_used_binary = 1
-
 
                         data.write(
                             nb_format.format(

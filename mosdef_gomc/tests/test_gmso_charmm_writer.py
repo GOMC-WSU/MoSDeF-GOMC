@@ -10228,12 +10228,8 @@ class TestCharmmWriterData(BaseTest):
         assert nonbondeds_read
 
     # test the LJ equation when it is 2x higher than the standard
-    def test_save_charmm_water_LJ_eqn_times_2(
-            self, water
-    ):
-        box_0 = mb.fill_box(
-            compound=[water], n_compounds=[1], box=[5, 4, 3]
-        )
+    def test_save_charmm_water_LJ_eqn_times_2(self, water):
+        box_0 = mb.fill_box(compound=[water], n_compounds=[1], box=[5, 4, 3])
 
         charmm = Charmm(
             box_0,
@@ -10256,15 +10252,15 @@ class TestCharmmWriterData(BaseTest):
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
                 if (
-                        "! type_1" in line
-                        and "ignored" in line
-                        and "epsilon" in line
-                        and "Rmin/2" in line
-                        and "ignored" in line
-                        and "epsilon,1-4" in line
-                        and "Rmin/2,1-4" in line
-                        and "extended_type_1" in line
-                        and "extended_type_2" in line
+                    "! type_1" in line
+                    and "ignored" in line
+                    and "epsilon" in line
+                    and "Rmin/2" in line
+                    and "ignored" in line
+                    and "epsilon,1-4" in line
+                    and "Rmin/2,1-4" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
                 ):
                     nonbondeds_read = True
                     nb_types = [
@@ -10290,11 +10286,11 @@ class TestCharmmWriterData(BaseTest):
 
                     for j in range(0, len(nb_types)):
                         assert (
-                                len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
                         )
                         assert (
-                                out_gomc[i + 1 + j].split("!")[0].split()[0:7]
-                                == nb_types[j]
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == nb_types[j]
                         )
 
                 else:
@@ -10401,11 +10397,13 @@ class TestCharmmWriterData(BaseTest):
                     ]
 
                     for j in range(0, len(nb_types)):
-                        print('**************')
-                        print(f'output = {out_gomc[i + 1 + j].split("!")[0].split()[0:7]}')
-                        print('**************')
-                        print(f'std = {nb_types[j]}')
-                        print('**************')
+                        print("**************")
+                        print(
+                            f'output = {out_gomc[i + 1 + j].split("!")[0].split()[0:7]}'
+                        )
+                        print("**************")
+                        print(f"std = {nb_types[j]}")
+                        print("**************")
                         assert (
                             len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
                         )
