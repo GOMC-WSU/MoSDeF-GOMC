@@ -31,7 +31,7 @@
       </Parameters>
     </AtomType>
   </AtomTypes>
-  <BondTypes expression="k/2 * (r-r_eq)**2">
+  <BondTypes expression="k * (r-r_eq)**2">
     <ParametersUnitDef parameter="r_eq" unit="nm"/>
     <ParametersUnitDef parameter="k" unit="kJ/mol/nm**2"/>
     <BondType name="BondType_Harmonic_CH3_CH" class1="CH3" class2="CH">
@@ -53,7 +53,7 @@
       </Parameters>
     </BondType>
   </BondTypes>
-  <AngleTypes expression="k/2 * (theta - theta_eq)**2">
+  <AngleTypes expression="k * (theta - theta_eq)**2">
     <ParametersUnitDef parameter="theta_eq" unit="radian"/>
     <ParametersUnitDef parameter="k" unit="kJ/mol/radian**2"/>
     <AngleType name="AngleType_Harmonic_CH3_CH_CH3" class1="CH3" class2="CH" class3="CH3">
@@ -75,19 +75,30 @@
       </Parameters>
     </AngleType>
   </AngleTypes>
-  <DihedralTypes expression="0.5 * k0 + 0.5 * k1 * (1 + cos(phi)) + 0.5 * k2 * (1 - cos(2*phi)) + 0.5 * k3 * (1 + cos(3*phi)) + 0.5 * k4 * (1 - cos(4*phi))">
-    <ParametersUnitDef parameter="k0" unit="kJ/mol"/>
-    <ParametersUnitDef parameter="k1" unit="kJ/mol"/>
-    <ParametersUnitDef parameter="k2" unit="kJ/mol"/>
-    <ParametersUnitDef parameter="k3" unit="kJ/mol"/>
-    <ParametersUnitDef parameter="k4" unit="kJ/mol"/>
+  <DihedralTypes expression="k * (1 + cos(n * phi - phi_eq))">
+    <ParametersUnitDef parameter="k" unit="kJ/mol"/>
+    <ParametersUnitDef parameter="n" unit="dimensionless"/>
+    <ParametersUnitDef parameter="phi_eq" unit="radian"/>
     <DihedralType name="DihedralType_RB_Proper_CH3_CH_O_H" class1="CH3" class2="CH" class3="O" class4="H">
       <Parameters>
-        <Parameter name="k0" value="3.59118"/>
-        <Parameter name="k1" value="3.281385"/>
-        <Parameter name="k2" value="0.52315"/>
-        <Parameter name="k3" value="-2.892105"/>
-        <Parameter name="k4" value="0.0"/>
+        <Parameter name="n">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>2.70802</Value>
+          <Value>-1.6406925</Value>
+          <Value>-0.261575</Value>
+          <Value>1.4460525</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>1.570796326794897</Value>
+          <Value>3.141592653589793</Value>
+          <Value>0.0</Value>
+          <Value>3.141592653589793</Value>
+        </Parameter>
       </Parameters>
     </DihedralType>
   </DihedralTypes>

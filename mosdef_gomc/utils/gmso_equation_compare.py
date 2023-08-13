@@ -101,6 +101,7 @@ def evaluate_nonbonded_mie_format_with_scaler(new_mie_form, base_mie_form):
             ],
             [eqn_ratio],
         )
+
         form_scalar = float(list(values)[0][0])
         form_output = "Mie"
 
@@ -373,6 +374,7 @@ def evaluate_harmonic_bond_format_with_scaler(new_bond_form, base_bond_form):
 
         form_scalar = float(list(values)[0][0])
         form_output = "HarmonicBondPotential"
+
     except:
         form_scalar = None
         form_output = None

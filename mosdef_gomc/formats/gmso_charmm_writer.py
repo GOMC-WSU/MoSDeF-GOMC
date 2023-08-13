@@ -3485,11 +3485,38 @@ class Charmm:
 
                     dihedral_type_str_iter = None
                     dihedral_eqn_scalar_iter = None
+
+                    # Check if OPLSTorsionPotential with 0.5
+                    # NOTE: It does not compare if 0.5 and 1/2 (rounding error)
                     if (
                         dihedral_type_str_iter is None
                         and dihedral_eqn_scalar_iter is None
                     ):
-                        # Check if OPLSTorsionPotential
+                        # Check if OPLSTorsionPotential with 0.5
+                        # NOTE: It does not compare if 0.5 and 1/2 (rounding error)
+                        OPLSTorsionPotential_form_with_scalar = (
+                            "1/2 * k0 + "
+                            "1/2 * k1 * (1 + cos(phi)) + "
+                            "1/2 * k2 * (1 - cos(2*phi)) + "
+                            "1/2 * k3 * (1 + cos(3*phi)) + "
+                            "1/2 * k4 * (1 - cos(4*phi))"
+                        )
+                        [
+                            dihedral_type_str_iter,
+                            dihedral_eqn_scalar_iter,
+                        ] = evaluate_OPLS_torsion_format_with_scaler(
+                            dihedral_type_x.expression,
+                            OPLSTorsionPotential_form_with_scalar,
+                        )
+
+                    # Check if OPLSTorsionPotential with 0.5
+                    # NOTE: It does not compare if 0.5 and 1/2 (rounding error)
+                    if (
+                        dihedral_type_str_iter is None
+                        and dihedral_eqn_scalar_iter is None
+                    ):
+                        # Check if OPLSTorsionPotential with 0.5
+                        # note it does not compare if 0.5 and 1/2 (rounding error)
                         OPLSTorsionPotential_form_with_scalar = (
                             "0.5 * k0 + "
                             "0.5 * k1 * (1 + cos(phi)) + "

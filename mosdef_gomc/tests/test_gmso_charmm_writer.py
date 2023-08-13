@@ -6453,7 +6453,7 @@ class TestCharmmWriterData(BaseTest):
                         "gmso_spce_water_bad_charges__lorentz_combining.xml"
                     ),
                     two_propanol_ua.name: get_mosdef_gomc_fn(
-                        "gmso_two_propanol_periodic_dihedrals_ua.xml"
+                        "gmso_two_propanol_periodic_dihedrals_ua_all_bond_angles_dihedrals_k_times_half.xml"
                     ),
                 },
             )
@@ -6485,14 +6485,14 @@ class TestCharmmWriterData(BaseTest):
                         "gmso_spce_water_bad_charges__lorentz_combining.xml"
                     ),
                     two_propanol_ua.name: get_mosdef_gomc_fn(
-                        "gmso_two_propanol_periodic_dihedrals_ua.xml"
+                        "gmso_two_propanol_periodic_dihedrals_ua_all_bond_angles_dihedrals_k_times_half.xml"
                     ),
                 },
             )
 
     # **** testing the different dihedral types produce the same values and work properly ****
-    # test the gmso RB dihderal input
-    def test_save_gmso_RB_dihedral_gomc_ff(self, two_propanol_ua):
+    # test the gmso RB dihderal input with 1 times the RB torsion values
+    def test_save_gmso_RB_dihedral_times_1_gomc_ff(self, two_propanol_ua):
         box_0 = mb.fill_box(
             compound=[two_propanol_ua], n_compounds=[1], box=[4, 4, 4]
         )
@@ -6504,7 +6504,7 @@ class TestCharmmWriterData(BaseTest):
             residues=[two_propanol_ua.name],
             forcefield_selection={
                 two_propanol_ua.name: get_mosdef_gomc_fn(
-                    "gmso_two_propanol_RB_dihedrals_ua.xml"
+                    "gmso_two_propanol_RB_dihedrals_times_1_ua.xml"
                 ),
             },
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
@@ -6549,8 +6549,66 @@ class TestCharmmWriterData(BaseTest):
 
         assert dihedrals_read
 
-    # test the gmso OPLS dihderal input
-    def test_save_gmso_OPLS_dihedral_gomc_ff(self, two_propanol_ua):
+    # test the gmso RB dihderal input with 2 times the RB torsion values
+    def test_save_gmso_RB_dihedral_times_2_gomc_ff(self, two_propanol_ua):
+        box_0 = mb.fill_box(
+            compound=[two_propanol_ua], n_compounds=[1], box=[4, 4, 4]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "gmso_RB_dihedral_gomc",
+            ff_filename="gmso_RB_dihedral_gomc",
+            residues=[two_propanol_ua.name],
+            forcefield_selection={
+                two_propanol_ua.name: get_mosdef_gomc_fn(
+                    "gmso_two_propanol_RB_dihedrals_times_2_ua.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            atom_type_naming_style="general",
+        )
+        charmm.write_inp()
+
+        with open("gmso_RB_dihedral_gomc.inp", "r") as fp:
+            dihedrals_read = False
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if (
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "type_4" in line
+                    and "Kchi" in line
+                    and "n" in line
+                    and "delta" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                    and "extended_type_4" in line
+                ):
+                    dihedrals_read = True
+                    dihedral_types = [
+                        ["CH3", "CH", "O", "H", "-0.78427", "1", "180.0"],
+                        ["CH3", "CH", "O", "H", "-0.125036", "2", "0.0"],
+                        ["CH3", "CH", "O", "H", "0.69123", "3", "180.0"],
+                    ]
+                    for j in range(0, len(dihedral_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == dihedral_types[j]
+                        )
+
+                else:
+                    pass
+
+        assert dihedrals_read
+
+    # test the gmso OPLS dihderal input with 0.5 times 1 OPLS torsion values
+    def test_save_gmso_OPLS_dihedral_0_5_times_1_gomc_ff(self, two_propanol_ua):
         box_0 = mb.fill_box(
             compound=[two_propanol_ua], n_compounds=[1], box=[4, 4, 4]
         )
@@ -6562,7 +6620,7 @@ class TestCharmmWriterData(BaseTest):
             residues=[two_propanol_ua.name],
             forcefield_selection={
                 two_propanol_ua.name: get_mosdef_gomc_fn(
-                    "gmso_two_propanol_OPLS_dihedrals_ua.xml"
+                    "gmso_two_propanol_OPLS_dihedrals_0_5_times_1_ua.xml"
                 ),
             },
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
@@ -6607,20 +6665,20 @@ class TestCharmmWriterData(BaseTest):
 
         assert dihedrals_read
 
-    # test the gmso periodic dihderal input
-    def test_save_gmso_periodic_dihedral_gomc_ff(self, two_propanol_ua):
+    # test the gmso OPLS dihderal input with 0.5 times 2 OPLS torsion values
+    def test_save_gmso_OPLS_dihedral_0_5_times_2_gomc_ff(self, two_propanol_ua):
         box_0 = mb.fill_box(
             compound=[two_propanol_ua], n_compounds=[1], box=[4, 4, 4]
         )
 
         charmm = Charmm(
             box_0,
-            "gmso_periodic_dihedral_gomc",
-            ff_filename="gmso_periodic_dihedral_gomc",
+            "gmso_OPLS_dihedral_gomc",
+            ff_filename="gmso_OPLS_dihedral_gomc",
             residues=[two_propanol_ua.name],
             forcefield_selection={
                 two_propanol_ua.name: get_mosdef_gomc_fn(
-                    "gmso_two_propanol_periodic_dihedrals_ua.xml"
+                    "gmso_two_propanol_OPLS_dihedrals_0_5_times_2_ua.xml"
                 ),
             },
             bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
@@ -6628,7 +6686,67 @@ class TestCharmmWriterData(BaseTest):
         )
         charmm.write_inp()
 
-        with open("gmso_periodic_dihedral_gomc.inp", "r") as fp:
+        with open("gmso_OPLS_dihedral_gomc.inp", "r") as fp:
+            dihedrals_read = False
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if (
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "type_4" in line
+                    and "Kchi" in line
+                    and "n" in line
+                    and "delta" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                    and "extended_type_4" in line
+                ):
+                    dihedrals_read = True
+                    dihedral_types = [
+                        ["CH3", "CH", "O", "H", "-0.78427", "1", "180.0"],
+                        ["CH3", "CH", "O", "H", "-0.125036", "2", "0.0"],
+                        ["CH3", "CH", "O", "H", "0.69123", "3", "180.0"],
+                    ]
+                    for j in range(0, len(dihedral_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == dihedral_types[j]
+                        )
+
+                else:
+                    pass
+
+        assert dihedrals_read
+
+    # test the gmso OPLS dihderal input with half times 1 OPLS torsion values
+    def test_save_gmso_OPLS_dihedral_half_times_1_gomc_ff(
+        self, two_propanol_ua
+    ):
+        box_0 = mb.fill_box(
+            compound=[two_propanol_ua], n_compounds=[1], box=[4, 4, 4]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "gmso_OPLS_dihedral_gomc",
+            ff_filename="gmso_OPLS_dihedral_gomc",
+            residues=[two_propanol_ua.name],
+            forcefield_selection={
+                two_propanol_ua.name: get_mosdef_gomc_fn(
+                    "gmso_two_propanol_OPLS_dihedrals_half_times_1_ua.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            atom_type_naming_style="general",
+        )
+        charmm.write_inp()
+
+        with open("gmso_OPLS_dihedral_gomc.inp", "r") as fp:
             dihedrals_read = False
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
@@ -6663,6 +6781,398 @@ class TestCharmmWriterData(BaseTest):
                 else:
                     pass
 
+        assert dihedrals_read
+
+    # test the gmso OPLS dihderal input with 0.5 times 2 OPLS torsion values
+    def test_save_gmso_OPLS_dihedral_half_times_2_gomc_ff(
+        self, two_propanol_ua
+    ):
+        box_0 = mb.fill_box(
+            compound=[two_propanol_ua], n_compounds=[1], box=[4, 4, 4]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "gmso_OPLS_dihedral_gomc",
+            ff_filename="gmso_OPLS_dihedral_gomc",
+            residues=[two_propanol_ua.name],
+            forcefield_selection={
+                two_propanol_ua.name: get_mosdef_gomc_fn(
+                    "gmso_two_propanol_OPLS_dihedrals_half_times_2_ua.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            atom_type_naming_style="general",
+        )
+        charmm.write_inp()
+
+        with open("gmso_OPLS_dihedral_gomc.inp", "r") as fp:
+            dihedrals_read = False
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if (
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "type_4" in line
+                    and "Kchi" in line
+                    and "n" in line
+                    and "delta" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                    and "extended_type_4" in line
+                ):
+                    dihedrals_read = True
+                    dihedral_types = [
+                        ["CH3", "CH", "O", "H", "-0.78427", "1", "180.0"],
+                        ["CH3", "CH", "O", "H", "-0.125036", "2", "0.0"],
+                        ["CH3", "CH", "O", "H", "0.69123", "3", "180.0"],
+                    ]
+                    for j in range(0, len(dihedral_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == dihedral_types[j]
+                        )
+
+                else:
+                    pass
+
+        assert dihedrals_read
+
+    # test the gmso periodic dihderal input add k (bonds, angles, dihedrals times 1/2)
+    def test_save_gmso_periodic_dihedral_gomc_ff_all_ks_times_half(
+        self, two_propanol_ua
+    ):
+        box_0 = mb.fill_box(
+            compound=[two_propanol_ua], n_compounds=[1], box=[4, 4, 4]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "gmso_periodic_dihedral_gomc",
+            ff_filename="gmso_periodic_dihedral_gomc",
+            residues=[two_propanol_ua.name],
+            forcefield_selection={
+                two_propanol_ua.name: get_mosdef_gomc_fn(
+                    "gmso_two_propanol_periodic_dihedrals_ua_all_bond_angles_dihedrals_k_times_half.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            atom_type_naming_style="general",
+        )
+        charmm.write_inp()
+
+        with open("gmso_periodic_dihedral_gomc.inp", "r") as fp:
+            masses_read = False
+            bonds_read = False
+            angles_read = False
+            dihedrals_read = False
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if (
+                    "! atom_types" in line
+                    and "mass" in line
+                    and "atomClass_ResidueName" in line
+                ):
+                    masses_read = True
+                    atom_types_1 = [
+                        ["*", "CH3", "15.035"],
+                        ["*", "CH", "13.019"],
+                        ["*", "O", "15.9994"],
+                        ["*", "H", "1.008"],
+                    ]
+                    atom_types_2 = [
+                        ["POL_CH3_sp3"],
+                        ["POL_CH_O"],
+                        ["POL_O"],
+                        ["POL_H"],
+                    ]
+
+                    for j in range(0, len(atom_types_1)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 3
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:3]
+                            == atom_types_1[j]
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split()[4:5] == atom_types_2[j]
+                        )
+
+                elif (
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "Kb" in line
+                    and "b0" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                ):
+                    bonds_read = True
+                    bond_types = [
+                        ["CH3", "CH", "600.40153", "1.54"],
+                        ["CH", "O", "600.40153", "1.43"],
+                        ["O", "H", "600.40153", "0.945"],
+                    ]
+                    total_bonds_evaluated = []
+                    total_bonds_evaluated_reorg = []
+                    for j in range(0, len(bond_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 4
+                        )
+
+                        if (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:4]
+                            == bond_types[0]
+                            or bond_types[1]
+                            or bond_types[2]
+                        ):
+                            total_bonds_evaluated.append(
+                                out_gomc[i + 1 + j].split("!")[0].split()[0:4]
+                            )
+                    for k in range(0, len(bond_types)):
+                        if bond_types[k] in total_bonds_evaluated:
+                            total_bonds_evaluated_reorg.append(bond_types[k])
+                    assert total_bonds_evaluated_reorg == bond_types
+
+                elif (
+                    "! type_1 " in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "Ktheta" in line
+                    and "Theta0" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                ):
+                    angles_read = True
+                    angle_types = [
+                        ["CH3", "CH", "O", "50.077544", "109.469889"],
+                        ["CH3", "CH", "CH3", "62.10013", "112.000071"],
+                        ["CH", "O", "H", "55.045554", "108.499872"],
+                    ]
+                    total_angles_evaluated = []
+                    total_angles_evaluated_reorg = []
+                    for j in range(0, len(angle_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 5
+                        )
+                        if (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:5]
+                            == angle_types[0]
+                            or angle_types[1]
+                            or angle_types[2]
+                        ):
+                            total_angles_evaluated.append(
+                                out_gomc[i + 1 + j].split("!")[0].split()[0:5]
+                            )
+                    for k in range(0, len(angle_types)):
+                        if angle_types[k] in total_angles_evaluated:
+                            total_angles_evaluated_reorg.append(angle_types[k])
+
+                    assert total_angles_evaluated_reorg == angle_types
+
+                elif (
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "type_4" in line
+                    and "Kchi" in line
+                    and "n" in line
+                    and "delta" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                    and "extended_type_4" in line
+                ):
+                    dihedrals_read = True
+                    dihedral_types = [
+                        ["CH3", "CH", "O", "H", "-0.196067", "1", "180.0"],
+                        ["CH3", "CH", "O", "H", "-0.031259", "2", "0.0"],
+                        ["CH3", "CH", "O", "H", "0.172807", "3", "180.0"],
+                    ]
+                    for j in range(0, len(dihedral_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == dihedral_types[j]
+                        )
+
+        assert masses_read
+        assert bonds_read
+        assert angles_read
+        assert dihedrals_read
+
+    # test the gmso periodic dihderal input add k (bonds, angles, dihedrals times 1)
+    def test_save_gmso_periodic_dihedral_gomc_ff_all_ks_times_1(
+        self, two_propanol_ua
+    ):
+        box_0 = mb.fill_box(
+            compound=[two_propanol_ua], n_compounds=[1], box=[4, 4, 4]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "gmso_periodic_dihedral_gomc",
+            ff_filename="gmso_periodic_dihedral_gomc",
+            residues=[two_propanol_ua.name],
+            forcefield_selection={
+                two_propanol_ua.name: get_mosdef_gomc_fn(
+                    "gmso_two_propanol_periodic_dihedrals_ua_all_bond_angles_dihedrals_k_times_1.xml"
+                ),
+            },
+            bead_to_atom_name_dict={"_CH3": "C", "_CH2": "C", "_HC": "C"},
+            atom_type_naming_style="general",
+        )
+        charmm.write_inp()
+
+        with open("gmso_periodic_dihedral_gomc.inp", "r") as fp:
+            masses_read = False
+            bonds_read = False
+            angles_read = False
+            dihedrals_read = False
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if (
+                    "! atom_types" in line
+                    and "mass" in line
+                    and "atomClass_ResidueName" in line
+                ):
+                    masses_read = True
+                    atom_types_1 = [
+                        ["*", "CH3", "15.035"],
+                        ["*", "CH", "13.019"],
+                        ["*", "O", "15.9994"],
+                        ["*", "H", "1.008"],
+                    ]
+                    atom_types_2 = [
+                        ["POL_CH3_sp3"],
+                        ["POL_CH_O"],
+                        ["POL_O"],
+                        ["POL_H"],
+                    ]
+
+                    for j in range(0, len(atom_types_1)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 3
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:3]
+                            == atom_types_1[j]
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split()[4:5] == atom_types_2[j]
+                        )
+
+                elif (
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "Kb" in line
+                    and "b0" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                ):
+                    bonds_read = True
+                    bond_types = [
+                        ["CH3", "CH", "1200.803059", "1.54"],
+                        ["CH", "O", "1200.803059", "1.43"],
+                        ["O", "H", "1200.803059", "0.945"],
+                    ]
+                    total_bonds_evaluated = []
+                    total_bonds_evaluated_reorg = []
+                    for j in range(0, len(bond_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 4
+                        )
+
+                        if (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:4]
+                            == bond_types[0]
+                            or bond_types[1]
+                            or bond_types[2]
+                        ):
+                            total_bonds_evaluated.append(
+                                out_gomc[i + 1 + j].split("!")[0].split()[0:4]
+                            )
+                    for k in range(0, len(bond_types)):
+                        if bond_types[k] in total_bonds_evaluated:
+                            total_bonds_evaluated_reorg.append(bond_types[k])
+                    assert total_bonds_evaluated_reorg == bond_types
+
+                elif (
+                    "! type_1 " in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "Ktheta" in line
+                    and "Theta0" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                ):
+                    angles_read = True
+                    angle_types = [
+                        ["CH3", "CH", "O", "100.155088", "109.469889"],
+                        ["CH3", "CH", "CH3", "124.200261", "112.000071"],
+                        ["CH", "O", "H", "110.091109", "108.499872"],
+                    ]
+                    total_angles_evaluated = []
+                    total_angles_evaluated_reorg = []
+                    for j in range(0, len(angle_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 5
+                        )
+                        if (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:5]
+                            == angle_types[0]
+                            or angle_types[1]
+                            or angle_types[2]
+                        ):
+                            total_angles_evaluated.append(
+                                out_gomc[i + 1 + j].split("!")[0].split()[0:5]
+                            )
+                    for k in range(0, len(angle_types)):
+                        if angle_types[k] in total_angles_evaluated:
+                            total_angles_evaluated_reorg.append(angle_types[k])
+
+                    assert total_angles_evaluated_reorg == angle_types
+
+                elif (
+                    "! type_1" in line
+                    and "type_2" in line
+                    and "type_3" in line
+                    and "type_4" in line
+                    and "Kchi" in line
+                    and "n" in line
+                    and "delta" in line
+                    and "extended_type_1" in line
+                    and "extended_type_2" in line
+                    and "extended_type_3" in line
+                    and "extended_type_4" in line
+                ):
+                    dihedrals_read = True
+                    dihedral_types = [
+                        ["CH3", "CH", "O", "H", "-0.392135", "1", "180.0"],
+                        ["CH3", "CH", "O", "H", "-0.062518", "2", "0.0"],
+                        ["CH3", "CH", "O", "H", "0.345615", "3", "180.0"],
+                    ]
+                    for j in range(0, len(dihedral_types)):
+                        assert (
+                            len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
+                        )
+                        assert (
+                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
+                            == dihedral_types[j]
+                        )
+
+        assert masses_read
+        assert bonds_read
+        assert angles_read
         assert dihedrals_read
 
     # test the gmso periodic wildcard dihderal input
@@ -7503,10 +8013,10 @@ class TestCharmmWriterData(BaseTest):
                 ff_filename="test_atom_typ_style_general_passes_tests",
                 forcefield_selection={
                     two_propanol_ua.name: get_mosdef_gomc_fn(
-                        "gmso_two_propanol_periodic_dihedrals_ua.xml"
+                        "gmso_two_propanol_periodic_dihedrals_ua_all_bond_angles_dihedrals_k_times_half.xml"
                     ),
                     alt_two_propanol_ua.name: get_mosdef_gomc_fn(
-                        "gmso_two_propanol_periodic_dihedrals_ua.xml"
+                        "gmso_two_propanol_periodic_dihedrals_ua_all_bond_angles_dihedrals_k_times_half.xml"
                     ),
                 },
                 residues=[two_propanol_ua.name, alt_two_propanol_ua.name],
