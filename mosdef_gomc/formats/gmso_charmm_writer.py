@@ -3495,10 +3495,10 @@ class Charmm:
                         # Check if OPLSTorsionPotential with 0.5
                         # NOTE: It does not compare if 0.5 and 1/2 (rounding error)
                         OPLSTorsionPotential_form_with_scalar = (
-                            "1/2 * k0 + " 
-                            "1/2 * k1 * (1 + cos(phi)) + " 
-                            "1/2 * k2 * (1 - cos(2*phi)) + " 
-                            "1/2 * k3 * (1 + cos(3*phi)) + " 
+                            "1/2 * k0 + "
+                            "1/2 * k1 * (1 + cos(phi)) + "
+                            "1/2 * k2 * (1 - cos(2*phi)) + "
+                            "1/2 * k3 * (1 + cos(3*phi)) + "
                             "1/2 * k4 * (1 - cos(4*phi))"
                         )
                         [
@@ -3518,10 +3518,10 @@ class Charmm:
                         # Check if OPLSTorsionPotential with 0.5
                         # note it does not compare if 0.5 and 1/2 (rounding error)
                         OPLSTorsionPotential_form_with_scalar = (
-                            "0.5 * k0 + " 
-                            "0.5 * k1 * (1 + cos(phi)) + " 
-                            "0.5 * k2 * (1 - cos(2*phi)) + " 
-                            "0.5 * k3 * (1 + cos(3*phi)) + " 
+                            "0.5 * k0 + "
+                            "0.5 * k1 * (1 + cos(phi)) + "
+                            "0.5 * k2 * (1 - cos(2*phi)) + "
+                            "0.5 * k3 * (1 + cos(3*phi)) + "
                             "0.5 * k4 * (1 - cos(4*phi))"
                         )
                         [
