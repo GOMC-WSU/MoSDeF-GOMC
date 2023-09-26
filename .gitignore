@@ -1,6 +1,7 @@
 test-output.xml
 *.py[cod]
 *.ipynb_checkpoints
+.pymon
 
 # C extensions
 *.so
