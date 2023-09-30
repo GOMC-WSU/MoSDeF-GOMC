@@ -18,10 +18,10 @@ dependencies:
   - symengine
   - python-symengine
   - python>=3.9,<=3.10
-  - forcefield-utilities>=0.2.1
+  - forcefield-utilities>=0.2.2
   - foyer>=0.12.0
   - gmso>=0.11.2
-  - mbuild>=0.16.3
+  - mbuild>=0.16.4
   - pre-commit
   - sphinx=6.1.1
   - pip
