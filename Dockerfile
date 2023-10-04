@@ -17,6 +17,9 @@ WORKDIR /mosdef_gomc
 # Create a group and user
 RUN addgroup -S anaconda && adduser -S anaconda -G anaconda
 
+# install the libarchive package needed by mamba
+RUN apk update && apk add libarchive
+
 RUN conda update conda -yq && \
   conda config --set always_yes yes --set changeps1 no && \
   . /opt/conda/etc/profile.d/conda.sh && \
