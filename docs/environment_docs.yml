@@ -1,0 +1,32 @@
+name: mosdef_gomc_docs
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - garnett
+  - gsd
+  - ipython
+  - numpydoc
+  - mock
+  - sphinx_rtd_theme
+  - nbsphinx
+  - sphinxcontrib
+  - pycifrw
+  - pytest
+  - pytest-cov
+  - sympy
+  - symengine
+  - python-symengine
+  - python>=3.9,<=3.10
+  - forcefield-utilities>=0.2.2
+  - foyer>=0.12.0
+  - gmso>=0.11.2
+  - mbuild>=0.16.4
+  - pre-commit
+  - sphinx=6.1.1
+  - pip
+  - pip:
+      - bump2version
+      - sphinxcontrib-svg2pdfconverter
+      - sphinxcontrib-video
+      - sphinxcontrib-serializinghtml
