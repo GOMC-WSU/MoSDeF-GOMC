@@ -5,7 +5,7 @@ from xml.dom import minidom
 
 import gmso
 import mbuild as mb
-from forcefield_utilities.xml_loader import FoyerFFs, GMSOFFs
+from gmso import ForceField
 from gmso.core.views import PotentialFilters
 from gmso.external.convert_mbuild import from_mbuild as mb_convert
 from gmso.parameterization import apply as gmso_apply
@@ -463,14 +463,7 @@ def specific_ff_to_residue(
     for ff_key_iter, ff_value_iter in forcefield_selection_with_paths.items():
         # try to load the Foyer and GMSO FFs, if Foyer convert to GMSO; otherwise, it is an error.
         try:
-            try:
-                ff_new_gmso_value_iter = FoyerFFs.get_ff(
-                    ff_value_iter
-                ).to_gmso_ff()
-            except:
-                ff_new_gmso_value_iter = GMSOFFs.get_ff(
-                    ff_value_iter
-                ).to_gmso_ff()
+            ff_new_gmso_value_iter = ForceField(ff_value_iter)
 
         except:
             print_error = (
