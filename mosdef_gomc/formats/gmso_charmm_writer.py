@@ -563,12 +563,6 @@ def unique_atom_naming(
                         str(base10_to_base62_alph_num(j))[-no_digits_atom_name:]
                     )
                 )
-                print(
-                    f"individual_atom_names_list = {individual_atom_names_list}"
-                )
-                print(
-                    f" = {str(base10_to_base62_alph_num(j))[-no_digits_atom_name:]}"
-                )
 
     if sum(missing_bead_to_atom_name) > 0:
         warn(
