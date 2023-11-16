@@ -473,8 +473,8 @@ def unique_atom_naming(
     for i, site in enumerate(topology.sites):
         site_name_unique_naming = site.__dict__["name_"]
 
-        #extract element or atom name from mol2 without numbers (integers)
-        element_name_unique_naming = ''
+        # extract element or atom name from mol2 without numbers (integers)
+        element_name_unique_naming = ""
         for site_name_unique_naming_char_i in site_name_unique_naming:
             try:
                 int(site_name_unique_naming_char_i)
@@ -482,7 +482,7 @@ def unique_atom_naming(
             except:
                 element_name_unique_naming += site_name_unique_naming_char_i
 
-        if element_name_unique_naming == '':
+        if element_name_unique_naming == "":
             raise ValueError(
                 "ERROR: The input file, likely mol2 file does not contain element names or char, only int."
             )
@@ -494,9 +494,15 @@ def unique_atom_naming(
             if str(site_name_unique_naming)[:1] == "_":
                 if (
                     bead_to_atom_name_dict is not None
-                    and (str(site_name_unique_naming) in bead_to_atom_name_dict) is True
+                    and (str(site_name_unique_naming) in bead_to_atom_name_dict)
+                    is True
                 ):
-                    if len(bead_to_atom_name_dict[str(site_name_unique_naming)]) > 2:
+                    if (
+                        len(
+                            bead_to_atom_name_dict[str(site_name_unique_naming)]
+                        )
+                        > 2
+                    ):
                         text_to_write = (
                             "ERROR: only enter atom names that have 2 or less digits"
                             + " in the Bead to atom naming dictionary (bead_to_atom_name_dict)."
@@ -504,13 +510,18 @@ def unique_atom_naming(
                         warn(text_to_write)
                         return None, None, None
                     else:
-                        atom_name_value = bead_to_atom_name_dict[str(site_name_unique_naming)]
+                        atom_name_value = bead_to_atom_name_dict[
+                            str(site_name_unique_naming)
+                        ]
                         no_digits_atom_name = 2
                 else:
                     missing_bead_to_atom_name.append(1)
                     atom_name_value = "BD"
                     no_digits_atom_name = 2
-            elif len(str(element_name_unique_naming)) > 2 and not str(site_name_unique_naming)[:1] == "_":
+            elif (
+                len(str(element_name_unique_naming)) > 2
+                and not str(site_name_unique_naming)[:1] == "_"
+            ):
                 if len(str(element_name_unique_naming)) == 3:
                     no_digits_atom_name = 1
                     atom_name_value = element_name_unique_naming
@@ -552,8 +563,12 @@ def unique_atom_naming(
                         str(base10_to_base62_alph_num(j))[-no_digits_atom_name:]
                     )
                 )
-                print(f"individual_atom_names_list = {individual_atom_names_list}")
-                print(f" = {str(base10_to_base62_alph_num(j))[-no_digits_atom_name:]}")
+                print(
+                    f"individual_atom_names_list = {individual_atom_names_list}"
+                )
+                print(
+                    f" = {str(base10_to_base62_alph_num(j))[-no_digits_atom_name:]}"
+                )
 
     if sum(missing_bead_to_atom_name) > 0:
         warn(
@@ -5393,16 +5408,16 @@ class Charmm:
                 site_name = str(site.__dict__["name_"])
 
                 # extract element or atom name from mol2 without numbers (integers)
-                if  site_name[0] == "_":
+                if site_name[0] == "_":
                     element_name = site_name
                 else:
-                    element_name = ''
+                    element_name = ""
                     for site_name_char_i in site_name:
                         try:
                             int(site_name_char_i)
 
                         except:
-                            element_name+= site_name_char_i
+                            element_name += site_name_char_i
 
                 try:
                     # check if element is bead (i.e., first part of name "_")
