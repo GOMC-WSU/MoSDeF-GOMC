@@ -471,17 +471,32 @@ def unique_atom_naming(
     individual_atom_names_list = []
     missing_bead_to_atom_name = []
     for i, site in enumerate(topology.sites):
-        site_name = site.__dict__["name_"]
+        site_name_unique_naming = site.__dict__["name_"]
+
+        #extract element or atom name from mol2 without numbers (integers)
+        element_name_unique_naming = ''
+        for site_name_unique_naming_char_i in site_name_unique_naming:
+            try:
+                int(site_name_unique_naming_char_i)
+
+            except:
+                element_name_unique_naming += site_name_unique_naming_char_i
+
+        if element_name_unique_naming == '':
+            raise ValueError(
+                "ERROR: The input file, likely mol2 file does not contain element names or char, only int."
+            )
+
         interate_thru_names = True
         j = 0
         while interate_thru_names is True:
             j = j + 1
-            if str(site_name)[:1] == "_":
+            if str(site_name_unique_naming)[:1] == "_":
                 if (
                     bead_to_atom_name_dict is not None
-                    and (str(site_name) in bead_to_atom_name_dict) is True
+                    and (str(site_name_unique_naming) in bead_to_atom_name_dict) is True
                 ):
-                    if len(bead_to_atom_name_dict[str(site_name)]) > 2:
+                    if len(bead_to_atom_name_dict[str(site_name_unique_naming)]) > 2:
                         text_to_write = (
                             "ERROR: only enter atom names that have 2 or less digits"
                             + " in the Bead to atom naming dictionary (bead_to_atom_name_dict)."
@@ -489,16 +504,16 @@ def unique_atom_naming(
                         warn(text_to_write)
                         return None, None, None
                     else:
-                        atom_name_value = bead_to_atom_name_dict[str(site_name)]
+                        atom_name_value = bead_to_atom_name_dict[str(site_name_unique_naming)]
                         no_digits_atom_name = 2
                 else:
                     missing_bead_to_atom_name.append(1)
                     atom_name_value = "BD"
                     no_digits_atom_name = 2
-            elif len(str(site_name)) > 2:
-                if len(str(site_name)) == 3:
+            elif len(str(element_name_unique_naming)) > 2 and not str(site_name_unique_naming)[:1] == "_":
+                if len(str(element_name_unique_naming)) == 3:
                     no_digits_atom_name = 1
-                    atom_name_value = site_name
+                    atom_name_value = element_name_unique_naming
                 else:
                     text_to_write = (
                         "ERROR: atom numbering will not work propery at"
@@ -508,7 +523,8 @@ def unique_atom_naming(
                     return None, None, None
             else:
                 no_digits_atom_name = 2
-                atom_name_value = site_name
+                atom_name_value = element_name_unique_naming
+
             atom_name_iteration = str(atom_name_value) + str(
                 base10_to_base62_alph_num(j)
             )
@@ -536,6 +552,8 @@ def unique_atom_naming(
                         str(base10_to_base62_alph_num(j))[-no_digits_atom_name:]
                     )
                 )
+                print(f"individual_atom_names_list = {individual_atom_names_list}")
+                print(f" = {str(base10_to_base62_alph_num(j))[-no_digits_atom_name:]}")
 
     if sum(missing_bead_to_atom_name) > 0:
         warn(
@@ -5371,9 +5389,22 @@ class Charmm:
                 # get other values
                 atom_no_list.append(stuct_only_iteration.get_index(site))
 
+                # only 2 character element names are allowed
+                site_name = str(site.__dict__["name_"])
+
+                # extract element or atom name from mol2 without numbers (integers)
+                if  site_name[0] == "_":
+                    element_name = site_name
+                else:
+                    element_name = ''
+                    for site_name_char_i in site_name:
+                        try:
+                            int(site_name_char_i)
+
+                        except:
+                            element_name+= site_name_char_i
+
                 try:
-                    # only 2 character element names are allowed
-                    element_name = str(site.__dict__["name_"])
                     # check if element is bead (i.e., first part of name "_")
                     if element_name[0] == "_":
                         element_name = "BD"
