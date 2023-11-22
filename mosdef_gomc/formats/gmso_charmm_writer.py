@@ -4625,7 +4625,9 @@ class Charmm:
                             print_error = "ERROR: The {'HarmonicImproperPotential'} is not supported " \
                                           "for the {'Mie'} or {'Exp6'} potentials."
                             raise ValueError(print_error)
-
+                        
+                        # write all orders of impropers to capture other possible orders in GMSO (6 possible)
+                        # improper order 1 (0-1-2-3)
                         data.write(
                             improper_format.format(
                                 improper_atom_0,
@@ -4639,6 +4641,91 @@ class Charmm:
                                 f"{res_x}_{improper_members_iter[1]}",
                                 f"{res_x}_{improper_members_iter[2]}",
                                 f"{res_x}_{improper_members_iter[3]}",
+                            )
+                        )
+                        
+                        # improper order 2 (0-2-1-3)
+                        data.write(
+                            improper_format.format(
+                                improper_atom_0,
+                                improper_atom_2,
+                                improper_atom_1,
+                                improper_atom_3,
+                                str(K0_improper_output_energy_iter),
+                                str(int(n0_improper)),
+                                str(np.round(phi_eq0_improper, decimals=improper_phase_degree_round_decimals)),
+                                f"{res_x}_{improper_members_iter[0]}",
+                                f"{res_x}_{improper_members_iter[2]}",
+                                f"{res_x}_{improper_members_iter[1]}",
+                                f"{res_x}_{improper_members_iter[3]}",
+                            )
+                        )
+                        
+                        # improper order 3 (0-1-3-2)
+                        data.write(
+                            improper_format.format(
+                                improper_atom_0,
+                                improper_atom_1,
+                                improper_atom_3,
+                                improper_atom_2,
+                                str(K0_improper_output_energy_iter),
+                                str(int(n0_improper)),
+                                str(np.round(phi_eq0_improper, decimals=improper_phase_degree_round_decimals)),
+                                f"{res_x}_{improper_members_iter[0]}",
+                                f"{res_x}_{improper_members_iter[1]}",
+                                f"{res_x}_{improper_members_iter[3]}",
+                                f"{res_x}_{improper_members_iter[2]}",
+                            )
+                        )
+                        
+                        # improper order 4 (0-3-1-2)
+                        data.write(
+                            improper_format.format(
+                                improper_atom_0,
+                                improper_atom_3,
+                                improper_atom_1,
+                                improper_atom_2,
+                                str(K0_improper_output_energy_iter),
+                                str(int(n0_improper)),
+                                str(np.round(phi_eq0_improper, decimals=improper_phase_degree_round_decimals)),
+                                f"{res_x}_{improper_members_iter[0]}",
+                                f"{res_x}_{improper_members_iter[3]}",
+                                f"{res_x}_{improper_members_iter[1]}",
+                                f"{res_x}_{improper_members_iter[2]}",
+                            )
+                        )
+                        
+                        # improper order 5 (0-2-3-1)
+                        data.write(
+                            improper_format.format(
+                                improper_atom_0,
+                                improper_atom_2,
+                                improper_atom_3,
+                                improper_atom_1,
+                                str(K0_improper_output_energy_iter),
+                                str(int(n0_improper)),
+                                str(np.round(phi_eq0_improper, decimals=improper_phase_degree_round_decimals)),
+                                f"{res_x}_{improper_members_iter[0]}",
+                                f"{res_x}_{improper_members_iter[2]}",
+                                f"{res_x}_{improper_members_iter[3]}",
+                                f"{res_x}_{improper_members_iter[1]}",
+                            )
+                        )
+                        
+                        # improper order 5 (0-3-2-1)
+                        data.write(
+                            improper_format.format(
+                                improper_atom_0,
+                                improper_atom_3,
+                                improper_atom_2,
+                                improper_atom_1,
+                                str(K0_improper_output_energy_iter),
+                                str(int(n0_improper)),
+                                str(np.round(phi_eq0_improper, decimals=improper_phase_degree_round_decimals)),
+                                f"{res_x}_{improper_members_iter[0]}",
+                                f"{res_x}_{improper_members_iter[3]}",
+                                f"{res_x}_{improper_members_iter[2]}",
+                                f"{res_x}_{improper_members_iter[1]}",
                             )
                         )
                         """
@@ -4670,6 +4757,8 @@ class Charmm:
                                 periodic_impropers_no_j
                             ]
 
+                            # write all orders of impropers to capture other possible orders in GMSO (6 possible)
+                            # improper order 1 (0-1-2-3)
                             data.write(
                                 improper_format.format(
                                     improper_atom_0,
@@ -4688,6 +4777,116 @@ class Charmm:
                                     f"{res_x}_{improper_members_iter[1]}",
                                     f"{res_x}_{improper_members_iter[2]}",
                                     f"{res_x}_{improper_members_iter[3]}",
+                                )
+                            )
+
+                            # improper order 2 (0-2-1-3)
+                            data.write(
+                                improper_format.format(
+                                    improper_atom_0,
+                                    improper_atom_2,
+                                    improper_atom_1,
+                                    improper_atom_3,
+                                    str(Kx_improper_output_energy_iter),
+                                    str(int(nx_improper_output_iter)),
+                                    str(
+                                        np.round(
+                                            phi_eqx_improper_output_iter,
+                                            decimals=improper_phase_degree_round_decimals,
+                                        )
+                                    ),
+                                    f"{res_x}_{improper_members_iter[0]}",
+                                    f"{res_x}_{improper_members_iter[2]}",
+                                    f"{res_x}_{improper_members_iter[1]}",
+                                    f"{res_x}_{improper_members_iter[3]}",
+                                )
+                            )
+
+                            # improper order 3 (0-1-3-2)
+                            data.write(
+                                improper_format.format(
+                                    improper_atom_0,
+                                    improper_atom_1,
+                                    improper_atom_3,
+                                    improper_atom_2,
+                                    str(Kx_improper_output_energy_iter),
+                                    str(int(nx_improper_output_iter)),
+                                    str(
+                                        np.round(
+                                            phi_eqx_improper_output_iter,
+                                            decimals=improper_phase_degree_round_decimals,
+                                        )
+                                    ),
+                                    f"{res_x}_{improper_members_iter[0]}",
+                                    f"{res_x}_{improper_members_iter[1]}",
+                                    f"{res_x}_{improper_members_iter[3]}",
+                                    f"{res_x}_{improper_members_iter[2]}",
+                                )
+                            )
+
+                            # improper order 4 (0-3-1-2)
+                            data.write(
+                                improper_format.format(
+                                    improper_atom_0,
+                                    improper_atom_3,
+                                    improper_atom_1,
+                                    improper_atom_2,
+                                    str(Kx_improper_output_energy_iter),
+                                    str(int(nx_improper_output_iter)),
+                                    str(
+                                        np.round(
+                                            phi_eqx_improper_output_iter,
+                                            decimals=improper_phase_degree_round_decimals,
+                                        )
+                                    ),
+                                    f"{res_x}_{improper_members_iter[0]}",
+                                    f"{res_x}_{improper_members_iter[3]}",
+                                    f"{res_x}_{improper_members_iter[1]}",
+                                    f"{res_x}_{improper_members_iter[2]}",
+                                )
+                            )
+
+                            # improper order 5 (0-2-3-1)
+                            data.write(
+                                improper_format.format(
+                                    improper_atom_0,
+                                    improper_atom_2,
+                                    improper_atom_3,
+                                    improper_atom_1,
+                                    str(Kx_improper_output_energy_iter),
+                                    str(int(nx_improper_output_iter)),
+                                    str(
+                                        np.round(
+                                            phi_eqx_improper_output_iter,
+                                            decimals=improper_phase_degree_round_decimals,
+                                        )
+                                    ),
+                                    f"{res_x}_{improper_members_iter[0]}",
+                                    f"{res_x}_{improper_members_iter[2]}",
+                                    f"{res_x}_{improper_members_iter[3]}",
+                                    f"{res_x}_{improper_members_iter[1]}",
+                                )
+                            )
+
+                            # improper order 6 (0-2-3-1)
+                            data.write(
+                                improper_format.format(
+                                    improper_atom_0,
+                                    improper_atom_3,
+                                    improper_atom_2,
+                                    improper_atom_1,
+                                    str(Kx_improper_output_energy_iter),
+                                    str(int(nx_improper_output_iter)),
+                                    str(
+                                        np.round(
+                                            phi_eqx_improper_output_iter,
+                                            decimals=improper_phase_degree_round_decimals,
+                                        )
+                                    ),
+                                    f"{res_x}_{improper_members_iter[0]}",
+                                    f"{res_x}_{improper_members_iter[3]}",
+                                    f"{res_x}_{improper_members_iter[2]}",
+                                    f"{res_x}_{improper_members_iter[1]}",
                                 )
                             )
 
