@@ -4625,7 +4625,7 @@ class Charmm:
                             print_error = "ERROR: The {'HarmonicImproperPotential'} is not supported " \
                                           "for the {'Mie'} or {'Exp6'} potentials."
                             raise ValueError(print_error)
-                        
+
                         # write all orders of impropers to capture other possible orders in GMSO (6 possible)
                         # improper order 1 (0-1-2-3)
                         data.write(
@@ -4643,7 +4643,7 @@ class Charmm:
                                 f"{res_x}_{improper_members_iter[3]}",
                             )
                         )
-                        
+
                         # improper order 2 (0-2-1-3)
                         data.write(
                             improper_format.format(
@@ -4660,7 +4660,7 @@ class Charmm:
                                 f"{res_x}_{improper_members_iter[3]}",
                             )
                         )
-                        
+
                         # improper order 3 (0-1-3-2)
                         data.write(
                             improper_format.format(
@@ -4677,7 +4677,7 @@ class Charmm:
                                 f"{res_x}_{improper_members_iter[2]}",
                             )
                         )
-                        
+
                         # improper order 4 (0-3-1-2)
                         data.write(
                             improper_format.format(
@@ -4694,7 +4694,7 @@ class Charmm:
                                 f"{res_x}_{improper_members_iter[2]}",
                             )
                         )
-                        
+
                         # improper order 5 (0-2-3-1)
                         data.write(
                             improper_format.format(
@@ -4711,7 +4711,7 @@ class Charmm:
                                 f"{res_x}_{improper_members_iter[1]}",
                             )
                         )
-                        
+
                         # improper order 5 (0-3-2-1)
                         data.write(
                             improper_format.format(
