@@ -706,6 +706,16 @@ def _get_all_possible_input_variables(description=False):
         "are not available in for every ensemble. Note: all of the move fractions"
         "must sum to 1, or the control file writer will fail.  "
         "".format(_get_default_variables_dict()["MultiParticleFreq"]),
+        "MultiParticleLiquid": "bool, default=True (GEMC-only)                  : "
+        "Use the multi-particle move in the liquid phase. "
+        "Note: GOMC determines the boxes are liquid or gas/vapor before "
+        "running each move, based on the calculated density of the GEMC boxes."
+        "".format(_get_default_variables_dict()["MultiParticleLiquid"]),
+        "MultiParticleGas": "bool, default=False (GEMC-only)                    : "
+        "Use the multi-particle move in the gas/vapor phase. "
+        "Note: GOMC determines the boxes are liquid or gas/vapor before "
+        "running each move, based on the calculated density of the GEMC boxes."
+        "".format(_get_default_variables_dict()["MultiParticleGas"]),
         # MEMC moves
         "IntraMEMC-1Freq": "MEMC MC moves (all ensembles)                     : "
         "int or float (0 <= value <= 1), default are specific for each ensemble {}. "
@@ -1033,6 +1043,9 @@ def _get_default_variables_dict():
         "ConsoleFreq": [True, 10000],
         "BlockAverageFreq": [True, 10000],
         "HistogramFreq": [True, 10000],
+        # Use Multi-particle in Liquid or Gas/Vapor phase
+        "MultiParticleLiquid": True,
+        "MultiParticleGas": False,
         # Histogram data
         "DistName": "dis",
         "HistName": "his",
@@ -1433,7 +1446,13 @@ def _get_possible_ensemble_input_variables(ensemble_type):
         ]
 
     elif ensemble_type in ["GEMC_NPT", "GEMC_NVT"]:
-        extra_sim_info_variables_list = ["RcutCoulomb_box_1", "FixVolBox0"]
+        extra_sim_info_variables_list = \
+            [
+                "RcutCoulomb_box_1",
+                "FixVolBox0",
+                "MultiParticleLiquid",
+                "MultiParticleGas"
+            ]
 
         free_energy_variables_list = []  # always empty for GEMC
 
@@ -1997,6 +2016,14 @@ class GOMCControl:
         In this move, all molecules in the selected simulation box will be rigidly
         rotated or displaced simultaneously, along the calculated torque or force
         respectively (i.e., fraction of multi-particle moves).
+    MultiParticleLiquid: bool, default=True (GEMC-only)
+        Use the multi-particle move in the liquid phase.
+        Note: GOMC determines the boxes are liquid or gas/vapor before
+        running each move, based on the calculated density of the GEMC boxes.
+    MultiParticleGas: bool, default=False (GEMC-only)
+        Use the multi-particle move in the gas/vapor phase.
+        Note: GOMC determines the boxes are liquid or gas/vapor before
+        running each move, based on the calculated density of the GEMC boxes.
     IntraMEMC-1Freq: int or float (0 <= value <= 1), default are specific for each ensemble
         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
         Fractional percentage at which specified number of small molecule kind will be
@@ -3115,6 +3142,14 @@ class GOMCControl:
             "IntraTargetedSwapFreq"
         ][self.ensemble_type]
 
+        # Multiparticle move in GEMC in liquid and vapor/gas
+        self.MultiParticleLiquid = default_input_variables_dict[
+            "MultiParticleLiquid"
+        ]
+        self.MultiParticleGas = default_input_variables_dict[
+            "MultiParticleGas"
+        ]
+
         # MEMC data input
         self.ExchangeVolumeDim = default_input_variables_dict[
             "ExchangeVolumeDim"
@@ -3454,6 +3489,35 @@ class GOMCControl:
 
         # check for bad input variables and list the bad ones
         for var_iter in range(0, len(input_var_keys_list)):
+            # Set the Multi-particle move in GEMC in liquid and vapor/gas
+            key = "MultiParticleLiquid"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_true_or_false(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                        input_var_keys_list[var_iter] == key
+                        and key in possible_ensemble_variables_list
+                ):
+                    self.MultiParticleLiquid = self.input_variables_dict[key]
+
+            key = "MultiParticleGas"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_true_or_false(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                        input_var_keys_list[var_iter] == key
+                        and key in possible_ensemble_variables_list
+                ):
+                    self.MultiParticleGas = self.input_variables_dict[key]
+
             key = "PRNG"
             if input_var_keys_list[var_iter] == key:
                 if (
@@ -6612,6 +6676,20 @@ class GOMCControl:
             )
         data_control_file.write(" \n")
 
+        # Mulit-particle move in Liquid and vapor/phases
+        if self.MultiParticleFreq > 0 and self.ensemble_type in [
+            "GEMC_NPT",
+            "GEMC_NVT",
+        ]:
+            data_control_file.write(
+                "{:25s} {}\n".format("MultiParticleLiquid", self.MultiParticleLiquid)
+            )
+            data_control_file.write(
+                "{:25s} {}\n".format("MultiParticleGas", self.MultiParticleGas)
+            )
+
+        data_control_file.write(" \n")
+
         data_control_file.write("####################################\n")
         data_control_file.write("# PRESSURE CALCULATION\n")
         data_control_file.write("####################################\n")
@@ -9106,6 +9184,13 @@ def write_gomc_control_file(
         In this move, all molecules in the selected simulation box will be rigidly
         rotated or displaced simultaneously, along the calculated torque or force
         respectively (i.e., fraction of multi-particle moves).
+    MultiParticleLiquid: bool, default=True (GEMC-only)
+        Use the multi-particle move in the liquid phase.
+        Note: GOMC determines the boxes are liquid or gas/vapor before
+        running each move, based on the calculated density of the GEMC boxes.
+    MultiParticleGas: bool, default=False (GEMC-only)
+        Use the multi-particle move in the gas/vapor phase.
+        Note: GOMC determines the boxes are liquid or gas/vapor before
     IntraMEMC-1Freq: int or float (0 <= value <= 1), default are specific for each ensemble
         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
         Fractional percentage at which specified number of small molecule kind will be
