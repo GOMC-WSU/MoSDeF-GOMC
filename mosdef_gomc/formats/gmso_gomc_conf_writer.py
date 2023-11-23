@@ -1446,13 +1446,12 @@ def _get_possible_ensemble_input_variables(ensemble_type):
         ]
 
     elif ensemble_type in ["GEMC_NPT", "GEMC_NVT"]:
-        extra_sim_info_variables_list = \
-            [
-                "RcutCoulomb_box_1",
-                "FixVolBox0",
-                "MultiParticleLiquid",
-                "MultiParticleGas"
-            ]
+        extra_sim_info_variables_list = [
+            "RcutCoulomb_box_1",
+            "FixVolBox0",
+            "MultiParticleLiquid",
+            "MultiParticleGas",
+        ]
 
         free_energy_variables_list = []  # always empty for GEMC
 
@@ -3146,9 +3145,7 @@ class GOMCControl:
         self.MultiParticleLiquid = default_input_variables_dict[
             "MultiParticleLiquid"
         ]
-        self.MultiParticleGas = default_input_variables_dict[
-            "MultiParticleGas"
-        ]
+        self.MultiParticleGas = default_input_variables_dict["MultiParticleGas"]
 
         # MEMC data input
         self.ExchangeVolumeDim = default_input_variables_dict[
@@ -3499,8 +3496,8 @@ class GOMCControl:
                 )
 
                 if (
-                        input_var_keys_list[var_iter] == key
-                        and key in possible_ensemble_variables_list
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
                 ):
                     self.MultiParticleLiquid = self.input_variables_dict[key]
 
@@ -3513,8 +3510,8 @@ class GOMCControl:
                 )
 
                 if (
-                        input_var_keys_list[var_iter] == key
-                        and key in possible_ensemble_variables_list
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
                 ):
                     self.MultiParticleGas = self.input_variables_dict[key]
 
@@ -6682,7 +6679,9 @@ class GOMCControl:
             "GEMC_NVT",
         ]:
             data_control_file.write(
-                "{:25s} {}\n".format("MultiParticleLiquid", self.MultiParticleLiquid)
+                "{:25s} {}\n".format(
+                    "MultiParticleLiquid", self.MultiParticleLiquid
+                )
             )
             data_control_file.write(
                 "{:25s} {}\n".format("MultiParticleGas", self.MultiParticleGas)

@@ -1728,7 +1728,9 @@ class TestGOMCControlFileWriter(BaseTest):
             "RcutCoulomb_box_1": True,
         }
 
-    def test_save_change_most_variable_NVT_mulitparticle(self, ethane_gomc, ethanol_gomc):
+    def test_save_change_most_variable_NVT_mulitparticle(
+        self, ethane_gomc, ethanol_gomc
+    ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
@@ -1810,7 +1812,9 @@ class TestGOMCControlFileWriter(BaseTest):
             },
         )
 
-        with open("test_save_change_most_variable_NVT_mulitparticle.conf", "r") as fp:
+        with open(
+            "test_save_change_most_variable_NVT_mulitparticle.conf", "r"
+        ) as fp:
             variables_read_dict = {
                 "Restart": False,
                 "ExpertMode": False,
@@ -2350,7 +2354,9 @@ class TestGOMCControlFileWriter(BaseTest):
             "OutSurfaceTension": True,
         }
 
-    def test_save_change_most_variable_GEMC_NVT_mulitparticle_settings_default(self, ethane_gomc, ethanol_gomc):
+    def test_save_change_most_variable_GEMC_NVT_mulitparticle_settings_default(
+        self, ethane_gomc, ethanol_gomc
+    ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
@@ -2384,7 +2390,10 @@ class TestGOMCControlFileWriter(BaseTest):
             },
         )
 
-        with open("test_save_change_most_variable_GEMC_NVT_mulitparticle_settings_default.conf", "r") as fp:
+        with open(
+            "test_save_change_most_variable_GEMC_NVT_mulitparticle_settings_default.conf",
+            "r",
+        ) as fp:
             variables_read_dict = {
                 "MultiParticleLiquid": False,
                 "MultiParticleGas": False,
@@ -2409,8 +2418,9 @@ class TestGOMCControlFileWriter(BaseTest):
             "MultiParticleGas": True,
         }
 
-
-    def test_save_change_most_variable_GEMC_NVT_mulitparticle_settings_both_false(self, ethane_gomc, ethanol_gomc):
+    def test_save_change_most_variable_GEMC_NVT_mulitparticle_settings_both_false(
+        self, ethane_gomc, ethanol_gomc
+    ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
@@ -2446,7 +2456,10 @@ class TestGOMCControlFileWriter(BaseTest):
             },
         )
 
-        with open("test_save_change_most_variable_GEMC_NVT_mulitparticle_settings_both_false.conf", "r") as fp:
+        with open(
+            "test_save_change_most_variable_GEMC_NVT_mulitparticle_settings_both_false.conf",
+            "r",
+        ) as fp:
             variables_read_dict = {
                 "MultiParticleLiquid": False,
                 "MultiParticleGas": False,
@@ -2471,7 +2484,9 @@ class TestGOMCControlFileWriter(BaseTest):
             "MultiParticleGas": True,
         }
 
-    def test_save_change_most_variable_GEMC_NPT_mulitparticle_settings_both_true(self, ethane_gomc, ethanol_gomc):
+    def test_save_change_most_variable_GEMC_NPT_mulitparticle_settings_both_true(
+        self, ethane_gomc, ethanol_gomc
+    ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
@@ -2507,7 +2522,10 @@ class TestGOMCControlFileWriter(BaseTest):
             },
         )
 
-        with open("test_save_change_most_variable_GEMC_NPT_mulitparticle_settings_both_true.conf", "r") as fp:
+        with open(
+            "test_save_change_most_variable_GEMC_NPT_mulitparticle_settings_both_true.conf",
+            "r",
+        ) as fp:
             variables_read_dict = {
                 "MultiParticleLiquid": False,
                 "MultiParticleGas": False,
@@ -2532,7 +2550,9 @@ class TestGOMCControlFileWriter(BaseTest):
             "MultiParticleGas": True,
         }
 
-    def test_save_change_most_variable_GEMC_NPT_mulitparticle_not_printed_for_NVT(self, ethane_gomc, ethanol_gomc):
+    def test_save_change_most_variable_GEMC_NPT_mulitparticle_not_printed_for_NVT(
+        self, ethane_gomc, ethanol_gomc
+    ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
@@ -2546,13 +2566,13 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
         with pytest.raises(
-                ValueError,
-                match=r"ERROR: All the correct input variables where not provided for "
-                      r"the NVT ensemble. Please be sure to check that the keys in the "
-                      r"input variables dictionary \(input_variables_dict\) is correct, and "
-                      r"be aware that added spaces before or after the variable in any keys "
-                      r"will also give this warning. The bad variable inputs ensemble "
-                      r"inputs = \['MultiParticleLiquid', 'MultiParticleGas'\]",
+            ValueError,
+            match=r"ERROR: All the correct input variables where not provided for "
+            r"the NVT ensemble. Please be sure to check that the keys in the "
+            r"input variables dictionary \(input_variables_dict\) is correct, and "
+            r"be aware that added spaces before or after the variable in any keys "
+            r"will also give this warning. The bad variable inputs ensemble "
+            r"inputs = \['MultiParticleLiquid', 'MultiParticleGas'\]",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -2574,7 +2594,9 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-    def test_save_change_most_variable_GEMC_NPT_bad_mulitparticle_liquid_setting(self, ethane_gomc, ethanol_gomc):
+    def test_save_change_most_variable_GEMC_NPT_bad_mulitparticle_liquid_setting(
+        self, ethane_gomc, ethanol_gomc
+    ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
@@ -2591,11 +2613,11 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
         with pytest.raises(
-                ValueError,
-                match=r"ERROR: The following input variables have "
-                      r"bad values \(check spelling and for empty spaces in the keys or that "
-                      r"the values are in the correct form with the acceptable values\)"
-                      r": \['MultiParticleLiquid'\]",
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['MultiParticleLiquid'\]",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -2617,7 +2639,9 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-    def test_save_change_most_variable_GEMC_NPT_bad_mulitparticle_gas_setting(self, ethane_gomc, ethanol_gomc):
+    def test_save_change_most_variable_GEMC_NPT_bad_mulitparticle_gas_setting(
+        self, ethane_gomc, ethanol_gomc
+    ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
             n_compounds=[1, 1],
