@@ -2,9 +2,9 @@ import datetime
 import os
 from warnings import warn
 
+import numpy as np
 import unyt as u
 from unyt.dimensions import energy, length, pressure, temperature
-import numpy as np
 
 from mosdef_gomc.formats.gmso_charmm_writer import Charmm
 
@@ -727,7 +727,7 @@ def _get_all_possible_input_variables(description=False):
         "running each move, based on the calculated density of the GEMC boxes."
         "".format(_get_default_variables_dict()["MultiParticleLiquid"]),
         "MultiParticleGas": "bool, default=False (GEMC-only)                    : "
-        "Use the multi-particle moves (MultiParticleFreq and MultiParticleBrownianFreq) " 
+        "Use the multi-particle moves (MultiParticleFreq and MultiParticleBrownianFreq) "
         "in the gas/vapor phase. "
         "Note: GOMC determines the boxes are liquid or gas/vapor before "
         "running each move, based on the calculated density of the GEMC boxes."
@@ -4599,10 +4599,12 @@ class GOMCControl:
                 )
 
                 if (
-                        input_var_keys_list[var_iter] == key
-                        and key in possible_ensemble_variables_list
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
                 ):
-                    self.MultiParticleBrownianFreq = self.input_variables_dict[key]
+                    self.MultiParticleBrownianFreq = self.input_variables_dict[
+                        key
+                    ]
 
             # MEMC moves freqencies
             key = "IntraMEMC-1Freq"
@@ -5982,7 +5984,10 @@ class GOMCControl:
             print("\t CrankShaftFreq = " + str(self.CrankShaftFreq))
             print("\t VolFreq = " + str(self.VolFreq))
             print("\t MultiParticleFreq = " + str(self.MultiParticleFreq))
-            print("\t MultiParticleBrownianFreq = " + str(self.MultiParticleBrownianFreq))
+            print(
+                "\t MultiParticleBrownianFreq = "
+                + str(self.MultiParticleBrownianFreq)
+            )
             print("\t IntraMEMC-1Freq = " + str(self.IntraMEMC_1Freq))
             print("\t MEMC-1Freq = " + str(self.MEMC_1Freq))
             print("\t IntraMEMC-2Freq = " + str(self.IntraMEMC_2Freq))
@@ -6007,7 +6012,9 @@ class GOMCControl:
             raise ValueError(print_error_message)
 
         # MultiParticleFreq and MultiParticleBrownianFreq cannot be used at the same time.
-        if not np.isclose(self.MultiParticleFreq, 0) and not np.isclose(self.MultiParticleBrownianFreq, 0):
+        if not np.isclose(self.MultiParticleFreq, 0) and not np.isclose(
+            self.MultiParticleBrownianFreq, 0
+        ):
             raise ValueError(
                 "ERROR: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian "
                 "(MultiParticleBrownianFreq) cannot be used at the same time."
@@ -6738,8 +6745,10 @@ class GOMCControl:
         data_control_file.write(" \n")
 
         # Mulit-particle move in Liquid and vapor/phases
-        if (not np.isclose(self.MultiParticleFreq, 0) or not np.isclose(self.MultiParticleBrownianFreq, 0))  \
-                and self.ensemble_type in [
+        if (
+            not np.isclose(self.MultiParticleFreq, 0)
+            or not np.isclose(self.MultiParticleBrownianFreq, 0)
+        ) and self.ensemble_type in [
             "GEMC_NPT",
             "GEMC_NVT",
         ]:

@@ -2685,7 +2685,7 @@ class TestGOMCControlFileWriter(BaseTest):
             )
 
     def test_save_change_most_variable_GEMC_NVT_mulitparticlebrownian_settings_default(
-            self, ethane_gomc, ethanol_gomc
+        self, ethane_gomc, ethanol_gomc
     ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -2721,8 +2721,8 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
         with open(
-                "test_save_change_most_variable_GEMC_NVT_mulitparticlebrownian_settings_default.conf",
-                "r",
+            "test_save_change_most_variable_GEMC_NVT_mulitparticlebrownian_settings_default.conf",
+            "r",
         ) as fp:
             variables_read_dict = {
                 "MultiParticleLiquid": False,
@@ -2748,9 +2748,8 @@ class TestGOMCControlFileWriter(BaseTest):
             "MultiParticleGas": True,
         }
 
-
     def test_save_change_most_variable_GEMC_NVT_mulitparticlebrownian_settings_both_false(
-            self, ethane_gomc, ethanol_gomc
+        self, ethane_gomc, ethanol_gomc
     ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -2788,8 +2787,8 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
         with open(
-                "test_save_change_most_variable_GEMC_NVT_mulitparticlebrownian_settings_both_false.conf",
-                "r",
+            "test_save_change_most_variable_GEMC_NVT_mulitparticlebrownian_settings_both_false.conf",
+            "r",
         ) as fp:
             variables_read_dict = {
                 "MultiParticleLiquid": False,
@@ -2815,9 +2814,8 @@ class TestGOMCControlFileWriter(BaseTest):
             "MultiParticleGas": True,
         }
 
-
     def test_save_change_most_variable_GEMC_NPT_mulitparticlebrownian_settings_both_true(
-            self, ethane_gomc, ethanol_gomc
+        self, ethane_gomc, ethanol_gomc
     ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -2855,8 +2853,8 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
         with open(
-                "test_save_change_most_variable_GEMC_NPT_mulitparticlebrownian_settings_both_true.conf",
-                "r",
+            "test_save_change_most_variable_GEMC_NPT_mulitparticlebrownian_settings_both_true.conf",
+            "r",
         ) as fp:
             variables_read_dict = {
                 "MultiParticleLiquid": False,
@@ -2882,9 +2880,8 @@ class TestGOMCControlFileWriter(BaseTest):
             "MultiParticleGas": True,
         }
 
-
     def test_save_change_most_variable_GEMC_NPT_mulitparticlebrownian_not_printed_for_NVT(
-            self, ethane_gomc, ethanol_gomc
+        self, ethane_gomc, ethanol_gomc
     ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -2899,13 +2896,13 @@ class TestGOMCControlFileWriter(BaseTest):
             forcefield_selection="oplsaa",
         )
         with pytest.raises(
-                ValueError,
-                match=r"ERROR: All the correct input variables where not provided for "
-                      r"the NVT ensemble. Please be sure to check that the keys in the "
-                      r"input variables dictionary \(input_variables_dict\) is correct, and "
-                      r"be aware that added spaces before or after the variable in any keys "
-                      r"will also give this warning. The bad variable inputs ensemble "
-                      r"inputs = \['MultiParticleLiquid', 'MultiParticleGas'\]",
+            ValueError,
+            match=r"ERROR: All the correct input variables where not provided for "
+            r"the NVT ensemble. Please be sure to check that the keys in the "
+            r"input variables dictionary \(input_variables_dict\) is correct, and "
+            r"be aware that added spaces before or after the variable in any keys "
+            r"will also give this warning. The bad variable inputs ensemble "
+            r"inputs = \['MultiParticleLiquid', 'MultiParticleGas'\]",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -2927,9 +2924,8 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-
     def test_save_change_most_variable_GEMC_NPT_bad_mulitparticlebrownian_liquid_setting(
-            self, ethane_gomc, ethanol_gomc
+        self, ethane_gomc, ethanol_gomc
     ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -2947,11 +2943,11 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
         with pytest.raises(
-                ValueError,
-                match=r"ERROR: The following input variables have "
-                      r"bad values \(check spelling and for empty spaces in the keys or that "
-                      r"the values are in the correct form with the acceptable values\)"
-                      r": \['MultiParticleLiquid'\]",
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['MultiParticleLiquid'\]",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -2973,9 +2969,8 @@ class TestGOMCControlFileWriter(BaseTest):
                 },
             )
 
-
     def test_save_change_most_variable_GEMC_NPT_bad_mulitparticlebrownian_gas_setting(
-            self, ethane_gomc, ethanol_gomc
+        self, ethane_gomc, ethanol_gomc
     ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -2993,11 +2988,11 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
         with pytest.raises(
-                ValueError,
-                match=r"ERROR: The following input variables have "
-                      r"bad values \(check spelling and for empty spaces in the keys or that "
-                      r"the values are in the correct form with the acceptable values\)"
-                      r": \['MultiParticleGas'\]",
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['MultiParticleGas'\]",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -3020,7 +3015,7 @@ class TestGOMCControlFileWriter(BaseTest):
             )
 
     def test_save_change_most_variable_GEMC_NPT_bad_mulitparticle_and_mulitparticlebrownian(
-            self, ethane_gomc, ethanol_gomc
+        self, ethane_gomc, ethanol_gomc
     ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -3038,9 +3033,9 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
         with pytest.raises(
-                ValueError,
-                match=r"ERROR: Both MultiParticle \(MultiParticleFreq\) and MultiParticleBrownian "
-                      r"\(MultiParticleBrownianFreq\) cannot be used at the same time.",
+            ValueError,
+            match=r"ERROR: Both MultiParticle \(MultiParticleFreq\) and MultiParticleBrownian "
+            r"\(MultiParticleBrownianFreq\) cannot be used at the same time.",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
@@ -3064,7 +3059,7 @@ class TestGOMCControlFileWriter(BaseTest):
             )
 
     def test_save_GEMC_NPT_bad_mulitparticlebrownian_freq_greater_than_1(
-            self, ethane_gomc, ethanol_gomc
+        self, ethane_gomc, ethanol_gomc
     ):
         test_box_ethane_ethanol = mb.fill_box(
             compound=[ethane_gomc, ethanol_gomc],
@@ -3082,15 +3077,15 @@ class TestGOMCControlFileWriter(BaseTest):
         )
 
         with pytest.raises(
-                ValueError,
-                match= r"ERROR: The sum of the Monte Carlo move ratios does not equal 1. "
-                       r"Note: The sum that was manually entered may equal 1, but some "
-                       r"moves may not be valid for the provided ensemble. The moves "
-                       r"that are invalid for a given ensemble are set to zero. If "
-                       r"the default moves are not being used, all the move frequencies "
-                       r"which do not have default values of zero will need to be set manually "
-                       r"so the sum equals \(DisFreq, RotFreq, IntraSwapFreq, SwapFreq, "
-                       r"RegrowthFreq, CrankShaftFreq, and VolFreq\).",
+            ValueError,
+            match=r"ERROR: The sum of the Monte Carlo move ratios does not equal 1. "
+            r"Note: The sum that was manually entered may equal 1, but some "
+            r"moves may not be valid for the provided ensemble. The moves "
+            r"that are invalid for a given ensemble are set to zero. If "
+            r"the default moves are not being used, all the move frequencies "
+            r"which do not have default values of zero will need to be set manually "
+            r"so the sum equals \(DisFreq, RotFreq, IntraSwapFreq, SwapFreq, "
+            r"RegrowthFreq, CrankShaftFreq, and VolFreq\).",
         ):
             gomc_control.write_gomc_control_file(
                 charmm,
