@@ -4,6 +4,7 @@ from warnings import warn
 
 import unyt as u
 from unyt.dimensions import energy, length, pressure, temperature
+import numpy as np
 
 from mosdef_gomc.formats.gmso_charmm_writer import Charmm
 
@@ -703,16 +704,31 @@ def _get_all_possible_input_variables(description=False):
         "occur. In this move, all molecules in the selected simulation box will be rigidly "
         "rotated or displaced simultaneously, along the calculated torque or force "
         "respectively (i.e., fraction of multi-particle moves). Note: all of the move types"
-        "are not available in for every ensemble. Note: all of the move fractions"
-        "must sum to 1, or the control file writer will fail.  "
+        "are not available in for every ensemble. "
+        "Note: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian "
+        "(MultiParticleBrownianFreq) cannot be used at the same time. "
+        "Note: all of the move fractions must sum to 1, or the control file writer will fail. "
+        "".format(_get_default_variables_dict()["MultiParticleFreq"]),
+        "MultiParticleBrownianFreq": "Std. MC moves (all ensembles)                     : "
+        "int or float (0 <= value <= 1), default are specific for each ensemble {}. "
+        "Fractional percentage at which multi-particle brownian move will occur. In this "
+        "move, all molecules in the selected simulation box will be rigidly rotated or displaced "
+        "simultaneously, along the calculated torque or force, respectively "
+        "(i.e., fraction of Multi-Particle Brownian moves). "
+        "Note: all of the move types are not available in for every ensemble. "
+        "Note: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian "
+        "(MultiParticleBrownianFreq) cannot be used at the same time. "
+        "Note: all of the move fractions must sum to 1, or the control file writer will fail. "
         "".format(_get_default_variables_dict()["MultiParticleFreq"]),
         "MultiParticleLiquid": "bool, default=True (GEMC-only)                  : "
-        "Use the multi-particle move in the liquid phase. "
+        "Use the multi-particle moves (MultiParticleFreq and MultiParticleBrownianFreq) "
+        "in the liquid phase. "
         "Note: GOMC determines the boxes are liquid or gas/vapor before "
         "running each move, based on the calculated density of the GEMC boxes."
         "".format(_get_default_variables_dict()["MultiParticleLiquid"]),
         "MultiParticleGas": "bool, default=False (GEMC-only)                    : "
-        "Use the multi-particle move in the gas/vapor phase. "
+        "Use the multi-particle moves (MultiParticleFreq and MultiParticleBrownianFreq) " 
+        "in the gas/vapor phase. "
         "Note: GOMC determines the boxes are liquid or gas/vapor before "
         "running each move, based on the calculated density of the GEMC boxes."
         "".format(_get_default_variables_dict()["MultiParticleGas"]),
@@ -1133,6 +1149,13 @@ def _get_default_variables_dict():
             "GEMC_NPT": 0.00,
             "GCMC": 0.00,
         },
+        "MultiParticleBrownianFreq": {
+            "NVT": 0.00,
+            "NPT": 0.00,
+            "GEMC_NVT": 0.00,
+            "GEMC_NPT": 0.00,
+            "GCMC": 0.00,
+        },
         # MEMC moves
         "IntraMEMC-1Freq": {
             "NVT": 0.00,
@@ -1388,6 +1411,7 @@ def _get_possible_ensemble_input_variables(ensemble_type):
         "CrankShaftFreq",
         "VolFreq",
         "MultiParticleFreq",
+        "MultiParticleBrownianFreq",
         "TargetedSwapFreq",
         "IntraTargetedSwapFreq",
     ]
@@ -2015,6 +2039,18 @@ class GOMCControl:
         In this move, all molecules in the selected simulation box will be rigidly
         rotated or displaced simultaneously, along the calculated torque or force
         respectively (i.e., fraction of multi-particle moves).
+        Note: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian
+        (MultiParticleBrownianFreq) cannot be used at the same time.
+    MultiParticleBrownianFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+        Fractional percentage at which multi-particle brownian move will occur. In this
+        move, all molecules in the selected simulation box will be rigidly rotated or displaced
+        simultaneously, along the calculated torque or force, respectively
+        (i.e., fraction of Multi-Particle Brownian moves).
+        Note: all of the move types are not available in for every ensemble.
+        Note: all of the move fractions must sum to 1, or the control file writer will fail.
+        Note: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian
+        (MultiParticleBrownianFreq) cannot be used at the same time.
     MultiParticleLiquid: bool, default=True (GEMC-only)
         Use the multi-particle move in the liquid phase.
         Note: GOMC determines the boxes are liquid or gas/vapor before
@@ -3115,6 +3151,9 @@ class GOMCControl:
         self.MultiParticleFreq = default_input_variables_dict[
             "MultiParticleFreq"
         ][self.ensemble_type]
+        self.MultiParticleBrownianFreq = default_input_variables_dict[
+            "MultiParticleBrownianFreq"
+        ][self.ensemble_type]
 
         self.IntraMEMC_1Freq = default_input_variables_dict["IntraMEMC-1Freq"][
             self.ensemble_type
@@ -3442,6 +3481,7 @@ class GOMCControl:
                 "CrankShaftFreq",
                 "VolFreq",
                 "MultiParticleFreq",
+                "MultiParticleBrownianFreq",
                 "IntraMEMC-1Freq",
                 "MEMC-1Freq",
                 "IntraMEMC-2Freq",
@@ -3461,6 +3501,7 @@ class GOMCControl:
                 self.CrankShaftFreq = 0.00
                 self.VolFreq = 0.00
                 self.MultiParticleFreq = 0.00
+                self.MultiParticleBrownianFreq = 0.00
                 self.IntraMEMC_1Freq = 0.00
                 self.MEMC_1Freq = 0.00
                 self.IntraMEMC_2Freq = 0.00
@@ -4548,6 +4589,20 @@ class GOMCControl:
                     and key in possible_ensemble_variables_list
                 ):
                     self.MultiParticleFreq = self.input_variables_dict[key]
+
+            key = "MultiParticleBrownianFreq"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_or_float_zero_to_1(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                        input_var_keys_list[var_iter] == key
+                        and key in possible_ensemble_variables_list
+                ):
+                    self.MultiParticleBrownianFreq = self.input_variables_dict[key]
 
             # MEMC moves freqencies
             key = "IntraMEMC-1Freq"
@@ -5895,6 +5950,7 @@ class GOMCControl:
             self.CrankShaftFreq,
             self.VolFreq,
             self.MultiParticleFreq,
+            self.MultiParticleBrownianFreq,
             self.IntraMEMC_1Freq,
             self.MEMC_1Freq,
             self.IntraMEMC_2Freq,
@@ -5926,6 +5982,7 @@ class GOMCControl:
             print("\t CrankShaftFreq = " + str(self.CrankShaftFreq))
             print("\t VolFreq = " + str(self.VolFreq))
             print("\t MultiParticleFreq = " + str(self.MultiParticleFreq))
+            print("\t MultiParticleBrownianFreq = " + str(self.MultiParticleBrownianFreq))
             print("\t IntraMEMC-1Freq = " + str(self.IntraMEMC_1Freq))
             print("\t MEMC-1Freq = " + str(self.MEMC_1Freq))
             print("\t IntraMEMC-2Freq = " + str(self.IntraMEMC_2Freq))
@@ -5948,6 +6005,13 @@ class GOMCControl:
                 "RegrowthFreq, CrankShaftFreq, and VolFreq)."
             )
             raise ValueError(print_error_message)
+
+        # MultiParticleFreq and MultiParticleBrownianFreq cannot be used at the same time.
+        if not np.isclose(self.MultiParticleFreq, 0) and not np.isclose(self.MultiParticleBrownianFreq, 0):
+            raise ValueError(
+                "ERROR: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian "
+                "(MultiParticleBrownianFreq) cannot be used at the same time."
+            )
 
         # Check that RunSteps > EqSteps >= AdjSteps
         if (
@@ -6674,7 +6738,8 @@ class GOMCControl:
         data_control_file.write(" \n")
 
         # Mulit-particle move in Liquid and vapor/phases
-        if self.MultiParticleFreq > 0 and self.ensemble_type in [
+        if (not np.isclose(self.MultiParticleFreq, 0) or not np.isclose(self.MultiParticleBrownianFreq, 0))  \
+                and self.ensemble_type in [
             "GEMC_NPT",
             "GEMC_NVT",
         ]:
@@ -6745,6 +6810,12 @@ class GOMCControl:
             data_control_file.write(
                 "{:25s} {}\n".format(
                     "MultiParticleFreq", self.MultiParticleFreq
+                )
+            )
+        if self.MultiParticleBrownianFreq > mc_move_zero_error_tolerance:
+            data_control_file.write(
+                "{:25s} {}\n".format(
+                    "MultiParticleBrownianFreq", self.MultiParticleBrownianFreq
                 )
             )
         if self.IntraMEMC_1Freq > mc_move_zero_error_tolerance:
@@ -9183,6 +9254,18 @@ def write_gomc_control_file(
         In this move, all molecules in the selected simulation box will be rigidly
         rotated or displaced simultaneously, along the calculated torque or force
         respectively (i.e., fraction of multi-particle moves).
+        Note: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian
+        (MultiParticleBrownianFreq) cannot be used at the same time.
+    MultiParticleBrownianFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+        Fractional percentage at which multi-particle brownian move will occur. In this
+        move, all molecules in the selected simulation box will be rigidly rotated or displaced
+        simultaneously, along the calculated torque or force, respectively
+        (i.e., fraction of Multi-Particle Brownian moves).
+        Note: all of the move types are not available in for every ensemble.
+        Note: all of the move fractions must sum to 1, or the control file writer will fail.
+        Note: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian
+        (MultiParticleBrownianFreq) cannot be used at the same time.
     MultiParticleLiquid: bool, default=True (GEMC-only)
         Use the multi-particle move in the liquid phase.
         Note: GOMC determines the boxes are liquid or gas/vapor before
