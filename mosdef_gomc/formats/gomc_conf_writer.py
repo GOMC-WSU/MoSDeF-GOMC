@@ -1,5 +1,4 @@
 class GOMCControl:
-
     def __init__(
         self,
         charmm_object,
@@ -58,7 +57,6 @@ def write_gomc_control_file(
     binVelocities_box_1=None,
     input_variables_dict=None,
 ):
-
     GOMCControl(
         charmm_object,
         ensemble_type,
@@ -82,4 +80,3 @@ def write_gomc_control_file(
         binVelocities_box_1=binVelocities_box_1,
         input_variables_dict=input_variables_dict,
     )
-

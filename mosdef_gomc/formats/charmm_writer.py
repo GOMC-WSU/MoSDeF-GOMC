@@ -1,5 +1,4 @@
 class Charmm:
-
     def __init__(
         self,
         structure_box_0,
