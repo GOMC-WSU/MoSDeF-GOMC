@@ -3627,10 +3627,10 @@ class GOMCControl:
 
             key = "RcutCoulomb_box_0"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[
-                    key
-                ] = _check_if_unyt_length_convert_to_angstrom(
-                    key, self.input_variables_dict[key]
+                self.input_variables_dict[key] = (
+                    _check_if_unyt_length_convert_to_angstrom(
+                        key, self.input_variables_dict[key]
+                    )
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
                     self.input_variables_dict,
@@ -3646,10 +3646,10 @@ class GOMCControl:
 
             key = "RcutCoulomb_box_1"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[
-                    key
-                ] = _check_if_unyt_length_convert_to_angstrom(
-                    key, self.input_variables_dict[key]
+                self.input_variables_dict[key] = (
+                    _check_if_unyt_length_convert_to_angstrom(
+                        key, self.input_variables_dict[key]
+                    )
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
                     self.input_variables_dict,
@@ -3665,10 +3665,10 @@ class GOMCControl:
 
             key = "Pressure"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[
-                    key
-                ] = _check_if_unyt_pressure_convert_to_bar(
-                    key, self.input_variables_dict[key]
+                self.input_variables_dict[key] = (
+                    _check_if_unyt_pressure_convert_to_bar(
+                        key, self.input_variables_dict[key]
+                    )
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
                     self.input_variables_dict,
@@ -3688,10 +3688,10 @@ class GOMCControl:
                     "before rcut self.input_variables_dict[key] = "
                     + str(self.input_variables_dict[key])
                 )
-                self.input_variables_dict[
-                    key
-                ] = _check_if_unyt_length_convert_to_angstrom(
-                    key, self.input_variables_dict[key]
+                self.input_variables_dict[key] = (
+                    _check_if_unyt_length_convert_to_angstrom(
+                        key, self.input_variables_dict[key]
+                    )
                 )
                 print(
                     "after rcut self.input_variables_dict[key] = "
@@ -3711,10 +3711,10 @@ class GOMCControl:
 
             key = "RcutLow"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[
-                    key
-                ] = _check_if_unyt_length_convert_to_angstrom(
-                    key, self.input_variables_dict[key]
+                self.input_variables_dict[key] = (
+                    _check_if_unyt_length_convert_to_angstrom(
+                        key, self.input_variables_dict[key]
+                    )
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
                     self.input_variables_dict,
@@ -3794,10 +3794,10 @@ class GOMCControl:
 
             key = "Rswitch"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[
-                    key
-                ] = _check_if_unyt_length_convert_to_angstrom(
-                    key, self.input_variables_dict[key]
+                self.input_variables_dict[key] = (
+                    _check_if_unyt_length_convert_to_angstrom(
+                        key, self.input_variables_dict[key]
+                    )
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
                     self.input_variables_dict,
@@ -4456,10 +4456,10 @@ class GOMCControl:
 
             key = "MinSigma"
             if input_var_keys_list[var_iter] == key:
-                self.input_variables_dict[
-                    key
-                ] = _check_if_unyt_length_convert_to_angstrom(
-                    key, self.input_variables_dict[key]
+                self.input_variables_dict[key] = (
+                    _check_if_unyt_length_convert_to_angstrom(
+                        key, self.input_variables_dict[key]
+                    )
                 )
                 self.ck_input_variable_int_or_float_zero_or_greater(
                     self.input_variables_dict,
