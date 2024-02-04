@@ -25,7 +25,7 @@ RUN conda update conda -yq && \
   . /opt/conda/etc/profile.d/conda.sh && \
   sed -i -E "s/python.*$/python="$(PY_VERSION)"/" environment.yml && \
   conda install -c conda-forge mamba && \
-  mamba env create nomkl --file environment.yml && \
+  mamba env create --file environment.yml && \
   conda activate mosdef_gomc && \
   mamba install -c conda-forge nomkl jupyter python="$PY_VERSION" && \
   python setup.py install && \
