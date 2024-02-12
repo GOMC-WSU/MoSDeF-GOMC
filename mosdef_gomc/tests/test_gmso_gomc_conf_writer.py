@@ -11194,9 +11194,9 @@ class TestGOMCControlFileWriter(BaseTest):
                         assert split_line[2] == "1-2"
                         assert split_line[3] == "3"
                         assert split_line[4] == "4"
-                        variables_read_dict[
-                            "SubVolumeCenterList_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeCenterList_number_0"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumeCenter "):
                     split_line = line.split()
@@ -11223,27 +11223,27 @@ class TestGOMCControlFileWriter(BaseTest):
                     split_line = line.split()
                     if split_line[1] == "0":
                         assert split_line[2] == "ALL"
-                        variables_read_dict[
-                            "SubVolumeResidueKind_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeResidueKind_number_0"] = (
+                            True
+                        )
                     if split_line[1] == "1":
                         assert split_line[2] == "ALL"
-                        variables_read_dict[
-                            "SubVolumeResidueKind_number_1"
-                        ] = True
+                        variables_read_dict["SubVolumeResidueKind_number_1"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumeRigidSwap "):
                     split_line = line.split()
                     if split_line[1] == "0":
                         assert split_line[2] == "True"
-                        variables_read_dict[
-                            "SubVolumeRigidSwap_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeRigidSwap_number_0"] = (
+                            True
+                        )
                     if split_line[1] == "1":
                         assert split_line[2] == "False"
-                        variables_read_dict[
-                            "SubVolumeRigidSwap_number_1"
-                        ] = True
+                        variables_read_dict["SubVolumeRigidSwap_number_1"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumePBC "):
                     split_line = line.split()
@@ -11417,9 +11417,9 @@ class TestGOMCControlFileWriter(BaseTest):
                         assert split_line[2] == "1-6"
                         assert split_line[3] == "7"
                         assert split_line[4] == "8"
-                        variables_read_dict[
-                            "SubVolumeCenterList_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeCenterList_number_0"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumeCenter "):
                     split_line = line.split()
@@ -11447,27 +11447,27 @@ class TestGOMCControlFileWriter(BaseTest):
                     if split_line[1] == "0":
                         assert split_line[2] == "ETH"
                         assert split_line[3] == "ETO"
-                        variables_read_dict[
-                            "SubVolumeResidueKind_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeResidueKind_number_0"] = (
+                            True
+                        )
                     if split_line[1] == "1":
                         assert split_line[2] == "ETH"
-                        variables_read_dict[
-                            "SubVolumeResidueKind_number_1"
-                        ] = True
+                        variables_read_dict["SubVolumeResidueKind_number_1"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumeRigidSwap "):
                     split_line = line.split()
                     if split_line[1] == "0":
                         assert split_line[2] == "False"
-                        variables_read_dict[
-                            "SubVolumeRigidSwap_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeRigidSwap_number_0"] = (
+                            True
+                        )
                     if split_line[1] == "1":
                         assert split_line[2] == "True"
-                        variables_read_dict[
-                            "SubVolumeRigidSwap_number_1"
-                        ] = True
+                        variables_read_dict["SubVolumeRigidSwap_number_1"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumePBC "):
                     split_line = line.split()
@@ -11636,9 +11636,9 @@ class TestGOMCControlFileWriter(BaseTest):
                         assert split_line[2] == "1-6"
                         assert split_line[3] == "7"
                         assert split_line[4] == "8"
-                        variables_read_dict[
-                            "SubVolumeCenterList_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeCenterList_number_0"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumeCenter "):
                     split_line = line.split()
@@ -11666,27 +11666,27 @@ class TestGOMCControlFileWriter(BaseTest):
                     if split_line[1] == "0":
                         assert split_line[2] == "ETH"
                         assert split_line[3] == "ETO"
-                        variables_read_dict[
-                            "SubVolumeResidueKind_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeResidueKind_number_0"] = (
+                            True
+                        )
                     if split_line[1] == "1":
                         assert split_line[2] == "ETH"
-                        variables_read_dict[
-                            "SubVolumeResidueKind_number_1"
-                        ] = True
+                        variables_read_dict["SubVolumeResidueKind_number_1"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumeRigidSwap "):
                     split_line = line.split()
                     if split_line[1] == "0":
                         assert split_line[2] == "True"
-                        variables_read_dict[
-                            "SubVolumeRigidSwap_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeRigidSwap_number_0"] = (
+                            True
+                        )
                     if split_line[1] == "1":
                         assert split_line[2] == "False"
-                        variables_read_dict[
-                            "SubVolumeRigidSwap_number_1"
-                        ] = True
+                        variables_read_dict["SubVolumeRigidSwap_number_1"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumePBC "):
                     split_line = line.split()
@@ -11814,9 +11814,9 @@ class TestGOMCControlFileWriter(BaseTest):
                         assert split_line[2] == "1-6"
                         assert split_line[3] == "7"
                         assert split_line[4] == "8"
-                        variables_read_dict[
-                            "SubVolumeCenterList_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeCenterList_number_0"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumeCenter "):
                     split_line = line.split()
@@ -11844,27 +11844,27 @@ class TestGOMCControlFileWriter(BaseTest):
                     if split_line[1] == "0":
                         assert split_line[2] == "ETH"
                         assert split_line[3] == "ETO"
-                        variables_read_dict[
-                            "SubVolumeResidueKind_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeResidueKind_number_0"] = (
+                            True
+                        )
                     if split_line[1] == "1":
                         assert split_line[2] == "ETH"
-                        variables_read_dict[
-                            "SubVolumeResidueKind_number_1"
-                        ] = True
+                        variables_read_dict["SubVolumeResidueKind_number_1"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumeRigidSwap "):
                     split_line = line.split()
                     if split_line[1] == "0":
                         assert split_line[2] == "True"
-                        variables_read_dict[
-                            "SubVolumeRigidSwap_number_0"
-                        ] = True
+                        variables_read_dict["SubVolumeRigidSwap_number_0"] = (
+                            True
+                        )
                     if split_line[1] == "1":
                         assert split_line[2] == "False"
-                        variables_read_dict[
-                            "SubVolumeRigidSwap_number_1"
-                        ] = True
+                        variables_read_dict["SubVolumeRigidSwap_number_1"] = (
+                            True
+                        )
 
                 elif line.startswith("SubVolumePBC "):
                     split_line = line.split()
