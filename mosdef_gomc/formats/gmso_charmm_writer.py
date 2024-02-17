@@ -101,9 +101,7 @@ def _check_convert_bond_k_constant_units(
                 )
                 return bond_energy_output_unyt
 
-        elif (
-            temperature / length**2 == bond_energy_input_unyt.units.dimensions
-        ):
+        elif temperature / length**2 == bond_energy_input_unyt.units.dimensions:
             if bond_energy_output_units_str == "kcal/mol/angstrom**2":
                 bond_energy_output_unyt = bond_energy_input_unyt.to(
                     "K/angstrom**2"
@@ -192,9 +190,7 @@ def _check_convert_angle_k_constant_units(
                 angle_energy_output_unyt = angle_energy_output_unyt / u.rad**2
                 return angle_energy_output_unyt
 
-        elif (
-            temperature / angle**2 == angle_energy_input_unyt.units.dimensions
-        ):
+        elif temperature / angle**2 == angle_energy_input_unyt.units.dimensions:
             if angle_energy_output_units_str == "kcal/mol/rad**2":
                 angle_energy_output_unyt = angle_energy_input_unyt.to(
                     "K/rad**2"
