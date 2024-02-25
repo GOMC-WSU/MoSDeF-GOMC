@@ -517,10 +517,28 @@ def specific_ff_to_residue(
                 unique_topology_groups_list.append(unique_top_group)
 
     for unique_group in unique_topology_groups_list:
-        unique_subtop_group = new_gmso_topology.create_subtop(
-            label_type=gmso_match_ff_by, label=unique_group
-        )
-        unique_topologies_groups_dict[unique_group] = unique_subtop_group
+        # Check that all residues in box are in the residue names and for other possible GMSO errors
+        try:
+            unique_subtop_group = new_gmso_topology.create_subtop(
+                label_type=gmso_match_ff_by, label=unique_group
+            )
+            unique_topologies_groups_dict[unique_group] = unique_subtop_group
+        except:
+            print_error_message_all_res_not_specified = (
+                f"ERROR: There is something wrong with the MoSDeF-GOMC inputs when run through GMSO. "
+                f"It could be something else, but please check the following also. "
+                f"All the residues are not specified in the residue list, or "
+                f"the entered residues does not match the residues that "
+                f"were found in the foyer and GMSO force field application. "
+                f"The residues were not used from the forcefield_selection string or dictionary. "
+                "All the residues were not used from the forcefield_selection "
+                "string or dictionary. There may be residues below other "
+                "specified residues in the mbuild.Compound hierarchy. "
+                "If so, all the highest listed residues pass down the force "
+                "fields through the hierarchy. Alternatively, residues that "
+                "are not in the structure may have been specified. ",
+            )
+            raise ValueError(print_error_message_all_res_not_specified)
 
         nb_scalers_list = new_gmso_topology.get_lj_scale(
             molecule_id=unique_group
@@ -538,17 +556,6 @@ def specific_ff_to_residue(
             electrostatics14Scale_dict[unique_group] = electro_scalers_list[2]
         elif nb_scalers_list is None:
             electrostatics14Scale_dict[unique_group] = None
-
-    # Check that all residues in box are in the residue names
-    if isinstance(structure, mb.Compound):
-        for applied_res_i in unique_topology_groups_list:
-            if applied_res_i not in residues:
-                print_error_message_all_res_not_specified = (
-                    f"ERROR: All the residues are not specified in the residue list, or "
-                    f"the {applied_res_i} residue does not match the residues that "
-                    f"were found in the foyer and GMSO force field application. "
-                )
-                raise ValueError(print_error_message_all_res_not_specified)
 
     # check if all the molecules/residues were found in in the mb.Compound/allowable input
     text_to_print_2 = (
