@@ -7958,17 +7958,17 @@ class TestCharmmWriterData(BaseTest):
         with pytest.raises(
             ValueError,
             match=f"ERROR: There is something wrong with the MoSDeF-GOMC inputs when run through GMSO. "
-                  f"It could be something else, but please check the following also. "
-                  f"All the residues are not specified in the residue list, or "
-                  f"the entered residues does not match the residues that "
-                  f"were found in the foyer and GMSO force field application. "
-                  f"The residues were not used from the forcefield_selection string or dictionary. "
-                  "All the residues were not used from the forcefield_selection "
-                  "string or dictionary. There may be residues below other "
-                  "specified residues in the mbuild.Compound hierarchy. "
-                  "If so, all the highest listed residues pass down the force "
-                  "fields through the hierarchy. Alternatively, residues that "
-                  "are not in the structure may have been specified. ",
+            f"It could be something else, but please check the following also. "
+            f"All the residues are not specified in the residue list, or "
+            f"the entered residues does not match the residues that "
+            f"were found in the foyer and GMSO force field application. "
+            f"The residues were not used from the forcefield_selection string or dictionary. "
+            "All the residues were not used from the forcefield_selection "
+            "string or dictionary. There may be residues below other "
+            "specified residues in the mbuild.Compound hierarchy. "
+            "If so, all the highest listed residues pass down the force "
+            "fields through the hierarchy. Alternatively, residues that "
+            "are not in the structure may have been specified. ",
         ):
             molecule = two_propanol_ua
             molecule.box = mb.Box(lengths=[4, 4, 4])

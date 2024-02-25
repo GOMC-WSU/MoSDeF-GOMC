@@ -386,17 +386,17 @@ class TestSpecificFFToResidue(BaseTest):
         with pytest.raises(
             ValueError,
             match=f"ERROR: There is something wrong with the MoSDeF-GOMC inputs when run through GMSO. "
-                  f"It could be something else, but please check the following also. "
-                  f"All the residues are not specified in the residue list, or "
-                  f"the entered residues does not match the residues that "
-                  f"were found in the foyer and GMSO force field application. "
-                  f"The residues were not used from the forcefield_selection string or dictionary. "
-                  "All the residues were not used from the forcefield_selection "
-                  "string or dictionary. There may be residues below other "
-                  "specified residues in the mbuild.Compound hierarchy. "
-                  "If so, all the highest listed residues pass down the force "
-                  "fields through the hierarchy. Alternatively, residues that "
-                  "are not in the structure may have been specified. ",
+            f"It could be something else, but please check the following also. "
+            f"All the residues are not specified in the residue list, or "
+            f"the entered residues does not match the residues that "
+            f"were found in the foyer and GMSO force field application. "
+            f"The residues were not used from the forcefield_selection string or dictionary. "
+            "All the residues were not used from the forcefield_selection "
+            "string or dictionary. There may be residues below other "
+            "specified residues in the mbuild.Compound hierarchy. "
+            "If so, all the highest listed residues pass down the force "
+            "fields through the hierarchy. Alternatively, residues that "
+            "are not in the structure may have been specified. ",
         ):
             box_reservior_0 = mb.fill_box(
                 compound=[ethane_gomc], box=[1, 1, 1], n_compounds=[1]
@@ -414,17 +414,17 @@ class TestSpecificFFToResidue(BaseTest):
         with pytest.raises(
             ValueError,
             match=f"ERROR: There is something wrong with the MoSDeF-GOMC inputs when run through GMSO. "
-                  f"It could be something else, but please check the following also. "
-                  f"All the residues are not specified in the residue list, or "
-                  f"the entered residues does not match the residues that "
-                  f"were found in the foyer and GMSO force field application. "
-                  f"The residues were not used from the forcefield_selection string or dictionary. "
-                  "All the residues were not used from the forcefield_selection "
-                  "string or dictionary. There may be residues below other "
-                  "specified residues in the mbuild.Compound hierarchy. "
-                  "If so, all the highest listed residues pass down the force "
-                  "fields through the hierarchy. Alternatively, residues that "
-                  "are not in the structure may have been specified. ",
+            f"It could be something else, but please check the following also. "
+            f"All the residues are not specified in the residue list, or "
+            f"the entered residues does not match the residues that "
+            f"were found in the foyer and GMSO force field application. "
+            f"The residues were not used from the forcefield_selection string or dictionary. "
+            "All the residues were not used from the forcefield_selection "
+            "string or dictionary. There may be residues below other "
+            "specified residues in the mbuild.Compound hierarchy. "
+            "If so, all the highest listed residues pass down the force "
+            "fields through the hierarchy. Alternatively, residues that "
+            "are not in the structure may have been specified. ",
         ):
             box_reservior_0 = mb.fill_box(
                 compound=[ethane_gomc], box=[1, 1, 1], n_compounds=[1]
