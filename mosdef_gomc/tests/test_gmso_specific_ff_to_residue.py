@@ -385,7 +385,12 @@ class TestSpecificFFToResidue(BaseTest):
     ):
         with pytest.raises(
             ValueError,
-            match=f"The {'ETO'} residues were not used from the forcefield_selection string or dictionary. "
+            match=f"ERROR: There is something wrong with the MoSDeF-GOMC inputs when run through GMSO. "
+            f"It could be something else, but please check the following also. "
+            f"All the residues are not specified in the residue list, or "
+            f"the entered residues does not match the residues that "
+            f"were found in the foyer and GMSO force field application. "
+            f"The residues were not used from the forcefield_selection string or dictionary. "
             "All the residues were not used from the forcefield_selection "
             "string or dictionary. There may be residues below other "
             "specified residues in the mbuild.Compound hierarchy. "
@@ -406,17 +411,20 @@ class TestSpecificFFToResidue(BaseTest):
     def test_charmm_all_residues_not_in_dict_boxes_for_simulation_2(
         self, ethane_gomc, ethanol_gomc
     ):
-        with pytest.warns(
-            UserWarning,
-            match=f"The {'ETO'} residues were not used from the forcefield_selection string or dictionary. "
+        with pytest.raises(
+            ValueError,
+            match=f"ERROR: There is something wrong with the MoSDeF-GOMC inputs when run through GMSO. "
+            f"It could be something else, but please check the following also. "
+            f"All the residues are not specified in the residue list, or "
+            f"the entered residues does not match the residues that "
+            f"were found in the foyer and GMSO force field application. "
+            f"The residues were not used from the forcefield_selection string or dictionary. "
             "All the residues were not used from the forcefield_selection "
             "string or dictionary. There may be residues below other "
             "specified residues in the mbuild.Compound hierarchy. "
             "If so, all the highest listed residues pass down the force "
             "fields through the hierarchy. Alternatively, residues that "
-            "are not in the structure may have been specified. "
-            f"NOTE: This warning will appear if you are using the CHARMM pdb and psf writers "
-            f"2 boxes, and the boxes do not contain all the residues in each box.",
+            "are not in the structure may have been specified. ",
         ):
             box_reservior_0 = mb.fill_box(
                 compound=[ethane_gomc], box=[1, 1, 1], n_compounds=[1]
