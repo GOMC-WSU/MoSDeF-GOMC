@@ -773,6 +773,18 @@ def _get_all_possible_input_variables(description=False):
         "Note: all of the move types are not available in for every ensemble."
         "Note: all of the move fractions must sum to 1, or the control file writer will fail. "
         "".format(_get_default_variables_dict()["MEMC-2Freq"]),
+        "MEMC-2-LiqFreq": "MEMC MC moves (only GEMC_NPT, GEMC_NVT, and GCMC) : "
+        "int or float (0 <= value <= 1), default are specific for each ensemble {}. "
+        "Fractional percentage at which specified number of small molecule kind will be "
+        "exchanged with a specified large molecule kind in defined sub-volume, between"
+        "simulation boxes. Backbone of small and large molecule kind will be used to insert "
+        "the large molecule more efficiently. "
+        "This move needs additional information such as ExchangeVolumeDim, ExchangeRatio, "
+        "ExchangeSmallKind, ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone. "
+        "this move is designed for Liquid-Liquid Equilibria"
+        "Note: all of the move types are not available in for every ensemble."
+        "Note: all of the move fractions must sum to 1, or the control file writer will fail. "
+        "".format(_get_default_variables_dict()["MEMC-2-LiqFreq"]),
         "IntraMEMC-3Freq": "MEMC MC moves (all ensembles)                     : "
         "int or float (0 <= value <= 1), default are specific for each ensemble {}. "
         "Fractional percentage at which specified number of small molecule kind will be "
@@ -795,6 +807,18 @@ def _get_all_possible_input_variables(description=False):
         "Note: all of the move types are not available in for every ensemble."
         "Note: all of the move fractions must sum to 1, or the control file writer will fail. "
         "".format(_get_default_variables_dict()["MEMC-3Freq"]),
+        "MEMC-3-LiqFreq": "MEMC MC moves (only GEMC_NPT, GEMC_NVT, and GCMC) : "
+        "int or float (0 <= value <= 1), default are specific for each ensemble {}. "
+        "Fractional percentage at which specified number of small molecule kind will be exchanged "
+        "with a specified large molecule kind in defined sub-volume, between simulation boxes. "
+        "Specified atom of the large molecule kind will be used to insert the large molecule "
+        "using coupled-decoupled configurational-bias. This move need additional information "
+        "such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind, ExchangeLargeKind, "
+        "and LargeKindBackBone. "
+        "Design for LLE"
+        "Note: all of the move types are not available in for every ensemble."
+        "Note: all of the move fractions must sum to 1, or the control file writer will fail. "
+        "".format(_get_default_variables_dict()["MEMC-3-LiqFreq"]),
         # MEMC move parameters
         "ExchangeVolumeDim": "MEMC parameters (all ensembles)                   : "
         "list of 3 floats or integers "
@@ -1185,6 +1209,13 @@ def _get_default_variables_dict():
             "GEMC_NPT": 0.00,
             "GCMC": 0.00,
         },
+         "MEMC-2-LiqFreq": {
+            "NVT": 0.00,
+            "NPT": 0.00,
+            "GEMC_NVT": 0.00,
+            "GEMC_NPT": 0.00,
+            "GCMC": 0.00,
+        },
         "IntraMEMC-3Freq": {
             "NVT": 0.00,
             "NPT": 0.00,
@@ -1193,6 +1224,13 @@ def _get_default_variables_dict():
             "GCMC": 0.00,
         },
         "MEMC-3Freq": {
+            "NVT": 0.00,
+            "NPT": 0.00,
+            "GEMC_NVT": 0.00,
+            "GEMC_NPT": 0.00,
+            "GCMC": 0.00,
+        },
+        "MEMC-3-LiqFreq": {
             "NVT": 0.00,
             "NPT": 0.00,
             "GEMC_NVT": 0.00,
@@ -1421,8 +1459,10 @@ def _get_possible_ensemble_input_variables(ensemble_type):
         "MEMC-1Freq",
         "IntraMEMC-2Freq",
         "MEMC-2Freq",
+        "MEMC-2-LiqFreq",
         "IntraMEMC-3Freq",
         "MEMC-3Freq",
+        "MEMC-3-LiqFreq",
         "ExchangeVolumeDim",
         "MEMC_DataInput",
         "TargetedSwap_DataInput",
@@ -2087,6 +2127,14 @@ class GOMCControl:
         used to insert the large molecule more efficiently. This move need additional
         information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
         ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone.
+    MEMC-2-LiqFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+        Fractional percentage at which specified number of small molecule kind will be
+        exchanged with a specified large molecule kind in defined sub-volume,
+        between simulation boxes. Backbone of small and large molecule kind will be
+        used to insert the large molecule more efficiently. This move need additional
+        information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
+        ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone. Designed for LLE.
     IntraMEMC-3Freq: int or float (0 <= value <= 1), default are specific for each ensemble
         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
         Fractional percentage at which specified number of small molecule kind will be
@@ -2103,6 +2151,14 @@ class GOMCControl:
         used to insert the large molecule using coupled-decoupled configurational-bias.
         This move need additional information such as ExchangeVolumeDim,
         ExchangeRatio, ExchangeSmallKind, ExchangeLargeKind, and LargeKindBackBone.
+   MEMC-3-LiqFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+        Fractional percentage at which specified number of small molecule kind will be
+        exchanged with a specified large molecule kind in defined sub-volume,
+        between simulation boxes. Backbone of small and large molecule kind will be
+        used to insert the large molecule more efficiently. This move need additional
+        information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
+        ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone. Designed for LLE.
     TargetedSwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0}
         Fractional percentage at which targeted swap move will occur.
@@ -3167,10 +3223,16 @@ class GOMCControl:
         self.MEMC_2Freq = default_input_variables_dict["MEMC-2Freq"][
             self.ensemble_type
         ]
+        self.MEMC_2LiqFreq = default_input_variables_dict["MEMC-2-LiqFreq"][
+            self.ensemble_type
+        ]
         self.IntraMEMC_3Freq = default_input_variables_dict["IntraMEMC-3Freq"][
             self.ensemble_type
         ]
         self.MEMC_3Freq = default_input_variables_dict["MEMC-3Freq"][
+            self.ensemble_type
+        ]
+        self.MEMC_3_LiqFreq = default_input_variables_dict["MEMC-3-LiqFreq"][
             self.ensemble_type
         ]
         self.TargetedSwapFreq = default_input_variables_dict[
@@ -3486,8 +3548,10 @@ class GOMCControl:
                 "MEMC-1Freq",
                 "IntraMEMC-2Freq",
                 "MEMC-2Freq",
+                "MEMC-2-LiqFreq",
                 "IntraMEMC-3Freq",
                 "MEMC-3Freq",
+                "MEMC-3-LiqFreq",
                 "TargetedSwapFreq",
                 "IntraTargetedSwapFreq",
             ]
@@ -3506,8 +3570,10 @@ class GOMCControl:
                 self.MEMC_1Freq = 0.00
                 self.IntraMEMC_2Freq = 0.00
                 self.MEMC_2Freq = 0.00
+                self.MEMC_2LiqFreq = 0.00
                 self.IntraMEMC_3Freq = 0.00
                 self.MEMC_3Freq = 0.00
+                self.MEMC_3LiqFreq = 0.00
                 self.TargetedSwapFreq = 0.00
                 self.IntraTargetedSwapFreq = 0.00
 
@@ -4670,7 +4736,21 @@ class GOMCControl:
                     self.MEMC_2Freq = self.input_variables_dict[key]
                 else:
                     self.MEMC_2Freq = 0.00
+            key = "MEMC-2-LiqFreq"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_or_float_zero_to_1(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
 
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.MEMC_2LiqFreq = self.input_variables_dict[key]
+                else:
+                    self.MEMC_2LiqFreq = 0.00
             key = "IntraMEMC-3Freq"
             if input_var_keys_list[var_iter] == key:
                 self.ck_input_variable_int_or_float_zero_to_1(
@@ -4702,6 +4782,21 @@ class GOMCControl:
                     self.MEMC_3Freq = self.input_variables_dict[key]
                 else:
                     self.MEMC_3Freq = 0.00
+            key = "MEMC_3-LiqFreq"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_or_float_zero_to_1(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.MEMC_3LiqFreq = self.input_variables_dict[key]
+                else:
+                    self.MEMC_3LiqFreq = 0.00
 
             key = "ExchangeVolumeDim"
             if input_var_keys_list[var_iter] == key:
@@ -5932,7 +6027,9 @@ class GOMCControl:
                 self.SwapFreq != 0
                 or self.MEMC_1Freq != 0
                 or self.MEMC_2Freq != 0
+                or self.MEMC_2LiqFreq != 0
                 or self.MEMC_3Freq != 0
+                or self.MEMC_3LiqFreq != 0
             ):
                 self.input_error = True
                 print_error_message = (
@@ -5957,8 +6054,10 @@ class GOMCControl:
             self.MEMC_1Freq,
             self.IntraMEMC_2Freq,
             self.MEMC_2Freq,
+            self.MEMC_2LiqFreq,
             self.IntraMEMC_3Freq,
             self.MEMC_3Freq,
+            self.MEMC_3LiqFreq,
             self.TargetedSwapFreq,
             self.IntraTargetedSwapFreq,
         ]
@@ -5992,8 +6091,10 @@ class GOMCControl:
             print("\t MEMC-1Freq = " + str(self.MEMC_1Freq))
             print("\t IntraMEMC-2Freq = " + str(self.IntraMEMC_2Freq))
             print("\t MEMC-2Freq = " + str(self.MEMC_2Freq))
+            print("\t MEMC-2-LiqFreq = " + str(self.MEMC_2LiqFreq))
             print("\t IntraMEMC-3Freq = " + str(self.IntraMEMC_3Freq))
             print("\t MEMC-3Freq = " + str(self.MEMC_3Freq))
+            print("\t MEMC-3-LiqFreq = " + str(self.MEMC_3LiqFreq))
             print("\t TargetedSwapFreq = " + str(self.TargetedSwapFreq))
             print(
                 "\t IntraTargetedSwapFreq = " + str(self.IntraTargetedSwapFreq)
@@ -6231,11 +6332,13 @@ class GOMCControl:
                 else:
                     raise ValueError(print_error_message)
 
-        # check that MEMC moves rations are > 0 if MEMC_DataInput is used
+        # check that MEMC moves ratios are > 0 if MEMC_DataInput is used
         if self.MEMC_DataInput is not None and (
             self.MEMC_1Freq == 0
             and self.MEMC_2Freq == 0
+            and self.MEMC_2LiqFreq == 0
             and self.MEMC_3Freq == 0
+            and self.MEMC_3LiqFreq == 0
             and self.IntraMEMC_1Freq == 0
             and self.IntraMEMC_2Freq == 0
             and self.IntraMEMC_3Freq == 0
@@ -6252,7 +6355,9 @@ class GOMCControl:
         if self.MEMC_DataInput is None and (
             self.MEMC_1Freq != 0
             or self.MEMC_2Freq != 0
+            or self.MEMC_2LiqFreq != 0
             or self.MEMC_3Freq != 0
+            or self.MEMC_3LiqFreq != 0
             or self.IntraMEMC_1Freq != 0
             or self.IntraMEMC_2Freq != 0
             or self.IntraMEMC_3Freq != 0
@@ -6268,7 +6373,7 @@ class GOMCControl:
 
         # ensure the LargeKindBackBone and SmallKindBackBones are provided as appropriate for MEMC-1, MEMC-2, MEMC-3
         if self.MEMC_DataInput is not None and (
-            self.MEMC_2Freq > 0 or self.IntraMEMC_2Freq > 0
+            self.MEMC_2Freq > 0 or self.MEMC_2LiqFreq > 0 or  self.IntraMEMC_2Freq > 0
         ):
             for MEMC_2_i in range(0, len(self.MEMC_DataInput)):
                 if (
@@ -6287,7 +6392,7 @@ class GOMCControl:
                     raise ValueError(print_error_message)
 
         if self.MEMC_DataInput is not None and (
-            self.MEMC_3Freq > 0 or self.IntraMEMC_3Freq > 0
+            self.MEMC_3Freq > 0 or self.MEMC_3LiqFreq > 0 or self.IntraMEMC_3Freq > 0
         ):
             for MEMC_3_i in range(0, len(self.MEMC_DataInput)):
                 if (
@@ -6843,6 +6948,10 @@ class GOMCControl:
             data_control_file.write(
                 "{:25s} {}\n".format("MEMC-2Freq", self.MEMC_2Freq)
             )
+        if self.MEMC_2LiqFreq > mc_move_zero_error_tolerance:
+            data_control_file.write(
+                "{:25s} {}\n".format("MEMC-2-LiqFreq", self.MEMC_2LiqFreq)
+            )
         if self.IntraMEMC_3Freq > mc_move_zero_error_tolerance:
             data_control_file.write(
                 "{:25s} {}\n".format("IntraMEMC-3Freq", self.IntraMEMC_3Freq)
@@ -6850,6 +6959,10 @@ class GOMCControl:
         if self.MEMC_3Freq > mc_move_zero_error_tolerance:
             data_control_file.write(
                 "{:25s} {}\n".format("MEMC-3Freq", self.MEMC_3Freq)
+            )
+        if self.MEMC_3LiqFreq > mc_move_zero_error_tolerance:
+            data_control_file.write(
+                "{:25s} {}\n".format("MEMC-3-LiqFreq", self.MEMC_3LiqFreq)
             )
         if self.TargetedSwapFreq > mc_move_zero_error_tolerance:
             data_control_file.write(
@@ -6867,7 +6980,9 @@ class GOMCControl:
         if self.MEMC_DataInput is not None and (
             self.MEMC_1Freq > 0
             or self.MEMC_2Freq > 0
+            or self.MEMC_2LiqFreq > 0
             or self.MEMC_3Freq > 0
+            or self.MEMC_3LiqFreq > 0
             or self.IntraMEMC_1Freq > 0
             or self.IntraMEMC_2Freq > 0
             or self.IntraMEMC_3Freq > 0
@@ -6929,8 +7044,10 @@ class GOMCControl:
             )
             if self.MEMC_DataInput is not None and (
                 self.MEMC_2Freq > 0
+                or self.MEMC_2LiqFreq > 0
                 or self.IntraMEMC_2Freq > 0
                 or self.MEMC_3Freq > 0
+                or self.MEMC_3LiqFreq > 0
                 or self.IntraMEMC_3Freq > 0
             ):
                 data_control_file.write(
@@ -6939,7 +7056,7 @@ class GOMCControl:
                     )
                 )
             if self.MEMC_DataInput is not None and (
-                self.MEMC_2Freq > 0 or self.IntraMEMC_2Freq > 0
+                self.MEMC_2Freq > 0 or self.MEMC_2LiqFreq > 0 or self.IntraMEMC_2Freq > 0
             ):
                 data_control_file.write(
                     "{:25s} {}\n".format(
@@ -9310,6 +9427,14 @@ def write_gomc_control_file(
         used to insert the large molecule more efficiently. This move need additional
         information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
         ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone.
+    MEMC-2-LiqFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+        Fractional percentage at which specified number of small molecule kind will be
+        exchanged with a specified large molecule kind in defined sub-volume,
+        between simulation boxes. Backbone of small and large molecule kind will be
+        used to insert the large molecule more efficiently. This move need additional
+        information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
+        ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone. Designed for LLE.
     IntraMEMC-3Freq: int or float (0 <= value <= 1), default are specific for each ensemble
         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
         Fractional percentage at which specified number of small molecule kind will be
@@ -9326,6 +9451,14 @@ def write_gomc_control_file(
         used to insert the large molecule using coupled-decoupled configurational-bias.
         This move need additional information such as ExchangeVolumeDim,
         ExchangeRatio, ExchangeSmallKind, ExchangeLargeKind, and LargeKindBackBone.
+    MEMC-3-LiqFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+        Fractional percentage at which specified number of small molecule kind will be
+        exchanged with a specified large molecule kind in defined sub-volume,
+        between simulation boxes.  Specified atom of the large molecule kind will be
+        used to insert the large molecule using coupled-decoupled configurational-bias.
+        This move need additional information such as ExchangeVolumeDim,
+        ExchangeRatio, ExchangeSmallKind, ExchangeLargeKind, and LargeKindBackBone. Designed for LLE
     TargetedSwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0}
         Fractional percentage at which targeted swap move will occur.
