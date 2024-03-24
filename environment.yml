@@ -17,10 +17,10 @@ dependencies:
   - sympy
   - symengine
   - python-symengine
-  - python>=3.9,<=3.10
+  - python>=3.10,<=3.11
   - forcefield-utilities>=0.3.0
   - foyer>=0.12.1
-  - gmso>=0.12.0
+  - gmso>=0.12.1
   - mbuild>=0.17.0
   - pre-commit
   - sphinx=6.1.1
