@@ -73,9 +73,9 @@ Building the documentation
 --------------------------
 
 ``MoSDeF-GOMC`` documentation is all built using `sphinx <https://www.sphinx-doc.org/en/master/index.html>`_.
-The ``sphinx`` software may need to be installed separately to avoid dependency conflicts. 
-If ``sphinx`` is not automatically provided, the correct ``sphinx`` package can be build after creating 
-a new conda environment using the ``environment_docs.yml`` file in the ``MoSDeF-GOMC/docs`` 
+The ``sphinx`` software may need to be installed separately to avoid dependency conflicts.
+If ``sphinx`` is not automatically provided, the correct ``sphinx`` package can be build after creating
+a new conda environment using the ``environment_docs.yml`` file in the ``MoSDeF-GOMC/docs``
 directory, located on ``MoSDeF-GOMC`` GitHub's main repository or GitHub's releases for a specific version.
 
 The ``docs`` can be built locally with the following commands when in the ``docs`` directory::
