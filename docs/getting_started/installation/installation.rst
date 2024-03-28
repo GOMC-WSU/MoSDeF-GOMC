@@ -63,7 +63,7 @@ Testing your installation
 -------------------------
 
 MoSDeF-GOMC uses `pytest <https://docs.pytest.org/en/stable/>`_ to test the code for accuracy, possible errors, code changes, or if the existing implementation is correct.
-The pytest package is auto-installed in the mosdef_gomc environment.
+The pytest package is auto-installed in the ``mosdef_gomc`` environment.
 
 To run these unit tests, run the following from the base directory::
 
@@ -72,8 +72,11 @@ To run these unit tests, run the following from the base directory::
 Building the documentation
 --------------------------
 
-MoSDeF-GOMC documentation is all built using `sphinx <https://www.sphinx-doc.org/en/master/index.html>`_.
-The sphinx package is auto-installed in the mosdef_gomc environment.
+``MoSDeF-GOMC`` documentation is all built using `sphinx <https://www.sphinx-doc.org/en/master/index.html>`_.
+The ``sphinx`` software may need to be installed separately to avoid dependency conflicts.
+If ``sphinx`` is not automatically provided, the correct ``sphinx`` package can be build after creating
+a new conda environment using the ``environment_docs.yml`` file in the ``MoSDeF-GOMC/docs``
+directory, located on ``MoSDeF-GOMC`` GitHub's main repository or GitHub's releases for a specific version.
 
 The ``docs`` can be built locally with the following commands when in the ``docs`` directory::
 
