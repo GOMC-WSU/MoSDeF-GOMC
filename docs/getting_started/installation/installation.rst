@@ -8,13 +8,13 @@ Install with `mamba <https://github.com/mamba-org/mamba>`_ (Recommended)
 ------------------------------------------------------------------------
 ::
 
-    $ conda create --name mosdef_gomc python=3.10
+    $ conda create --name mosdef_gomc python=3.11
 
     $ conda activate mosdef_gomc
 
     $ conda install -c conda-forge mamba
 
-    $ mamba install -c conda-forge mosdef-gomc python=3.10
+    $ mamba install -c conda-forge mosdef-gomc python=3.11
 
 
 Install with `conda <https://repo.anaconda.com/miniconda/>`_
@@ -56,14 +56,14 @@ To check all the file, you can run::
 Supported Python Versions
 -------------------------
 
-Python 3.9 and 3.10 are officially supported and tested during development and with the final product.
-Python versions older than 3.9 may work, but there is no guarantee.
+Python 3.10 and 3.11 are officially supported and tested during development and with the final product.
+Python versions older than 3.10 may work, but there is no guarantee.
 
 Testing your installation
 -------------------------
 
 MoSDeF-GOMC uses `pytest <https://docs.pytest.org/en/stable/>`_ to test the code for accuracy, possible errors, code changes, or if the existing implementation is correct.
-The pytest package is auto-installed in the mosdef_gomc environment.
+The pytest package is auto-installed in the ``mosdef_gomc`` environment.
 
 To run these unit tests, run the following from the base directory::
 
@@ -72,8 +72,11 @@ To run these unit tests, run the following from the base directory::
 Building the documentation
 --------------------------
 
-MoSDeF-GOMC documentation is all built using `sphinx <https://www.sphinx-doc.org/en/master/index.html>`_.
-The sphinx package is auto-installed in the mosdef_gomc environment.
+``MoSDeF-GOMC`` documentation is all built using `sphinx <https://www.sphinx-doc.org/en/master/index.html>`_.
+The ``sphinx`` software may need to be installed separately to avoid dependency conflicts.
+If ``sphinx`` is not automatically provided, the correct ``sphinx`` package can be build after creating
+a new conda environment using the ``environment_docs.yml`` file in the ``MoSDeF-GOMC/docs``
+directory, located on ``MoSDeF-GOMC`` GitHub's main repository or GitHub's releases for a specific version.
 
 The ``docs`` can be built locally with the following commands when in the ``docs`` directory::
 
