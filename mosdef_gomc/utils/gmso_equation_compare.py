@@ -10,6 +10,7 @@ import unyt as u
 # Although,'symengine.sympify' from 'import symengine ' is faster, it was changed to 'sympy.nsimplify' as it changes
 # improves the solving of the code by also solving 0.5 or other non-integers with integers.
 
+
 # compare Lennard-Jones (LJ) non-bonded equations
 def evaluate_nonbonded_lj_format_with_scaler(new_lj_form, base_lj_form):
     """Compare a new Lennard-Jones (LJ) form to a base LJ form (new LJ form / base LJ form).
@@ -45,8 +46,7 @@ def evaluate_nonbonded_lj_format_with_scaler(new_lj_form, base_lj_form):
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - sympy.nsimplify(new_lj_form)
-                / sympy.nsimplify(base_lj_form),
+                - sympy.nsimplify(new_lj_form) / sympy.nsimplify(base_lj_form),
                 Rmin - sigma * two ** (1 / 6),
                 two - 2,
             ],
