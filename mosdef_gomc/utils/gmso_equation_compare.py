@@ -4,10 +4,11 @@ import os
 # import signac
 import xml.etree.ElementTree as ET
 
-import symengine
 import sympy
 import unyt as u
 
+# Although,'symengine.sympify' from 'import symengine ' is faster, it was changed to 'sympy.nsimplify' as it changes
+# improves the solving of the code by also solving 0.5 or other non-integers with integers.
 
 # compare Lennard-Jones (LJ) non-bonded equations
 def evaluate_nonbonded_lj_format_with_scaler(new_lj_form, base_lj_form):
@@ -44,8 +45,8 @@ def evaluate_nonbonded_lj_format_with_scaler(new_lj_form, base_lj_form):
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_lj_form)
-                / symengine.sympify(base_lj_form),
+                - sympy.nsimplify(new_lj_form)
+                / sympy.nsimplify(base_lj_form),
                 Rmin - sigma * two ** (1 / 6),
                 two - 2,
             ],
@@ -96,8 +97,8 @@ def evaluate_nonbonded_mie_format_with_scaler(new_mie_form, base_mie_form):
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_mie_form)
-                / symengine.sympify(base_mie_form),
+                - sympy.nsimplify(new_mie_form)
+                / sympy.nsimplify(base_mie_form),
             ],
             [eqn_ratio],
         )
@@ -147,8 +148,8 @@ def evaluate_nonbonded_exp6_format_with_scaler(new_exp6_form, base_exp6_form):
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_exp6_form)
-                / symengine.sympify(base_exp6_form),
+                - sympy.nsimplify(new_exp6_form)
+                / sympy.nsimplify(base_exp6_form),
             ],
             [eqn_ratio],
         )
@@ -413,8 +414,8 @@ def evaluate_harmonic_angle_format_with_scaler(new_angle_form, base_angle_form):
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_angle_form)
-                / symengine.sympify(base_angle_form),
+                - sympy.nsimplify(new_angle_form)
+                / sympy.nsimplify(base_angle_form),
             ],
             [eqn_ratio],
         )
@@ -460,8 +461,8 @@ def evaluate_harmonic_torsion_format_with_scaler(
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_torsion_form)
-                / symengine.sympify(base_torsion_form),
+                - sympy.nsimplify(new_torsion_form)
+                / sympy.nsimplify(base_torsion_form),
             ],
             [eqn_ratio],
         )
@@ -509,8 +510,8 @@ def evaluate_OPLS_torsion_format_with_scaler(
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_torsion_form)
-                / symengine.sympify(base_torsion_form),
+                - sympy.nsimplify(new_torsion_form)
+                / sympy.nsimplify(base_torsion_form),
             ],
             [eqn_ratio],
         )
