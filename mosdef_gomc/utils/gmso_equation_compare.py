@@ -46,7 +46,8 @@ def evaluate_nonbonded_lj_format_with_scaler(new_lj_form, base_lj_form):
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - sympy.nsimplify(new_lj_form) / sympy.nsimplify(base_lj_form),
+                - sympy.nsimplify(new_lj_form) 
+                / sympy.nsimplify(base_lj_form),
                 Rmin - sigma * two ** (1 / 6),
                 two - 2,
             ],
@@ -367,8 +368,8 @@ def evaluate_harmonic_bond_format_with_scaler(new_bond_form, base_bond_form):
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_bond_form)
-                / symengine.sympify(base_bond_form),
+                - sympy.nsimplify(new_bond_form)
+                / sympy.nsimplify(base_bond_form),
             ],
             [eqn_ratio],
         )
@@ -557,8 +558,8 @@ def evaluate_periodic_torsion_format_with_scaler(
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_torsion_form)
-                / symengine.sympify(base_torsion_form),
+                - sympy.nsimplify(new_torsion_form)
+                / sympy.nsimplify(base_torsion_form),
             ],
             [eqn_ratio],
         )
@@ -604,8 +605,8 @@ def evaluate_RB_torsion_format_with_scaler(new_torsion_form, base_torsion_form):
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_torsion_form)
-                / symengine.sympify(base_torsion_form),
+                - sympy.nsimplify(new_torsion_form)
+                / sympy.nsimplify(base_torsion_form),
             ],
             [eqn_ratio],
         )
@@ -651,8 +652,8 @@ def evaluate_harmonic_improper_format_with_scaler(
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_improper_form)
-                / symengine.sympify(base_improper_form),
+                - sympy.nsimplify(new_improper_form)
+                / sympy.nsimplify(base_improper_form),
             ],
             [eqn_ratio],
         )
@@ -698,8 +699,8 @@ def evaluate_periodic_improper_format_with_scaler(
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_improper_form)
-                / symengine.sympify(base_improper_form),
+                - sympy.nsimplify(new_improper_form)
+                / sympy.nsimplify(base_improper_form),
             ],
             [eqn_ratio],
         )
