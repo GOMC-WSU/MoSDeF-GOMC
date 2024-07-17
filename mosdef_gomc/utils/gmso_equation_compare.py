@@ -48,7 +48,7 @@ def evaluate_nonbonded_lj_format_with_scaler(new_lj_form, base_lj_form):
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_lj_form) 
+                - symengine.sympify(new_lj_form)
                 / symengine.sympify(base_lj_form),
                 Rmin - sigma * two ** (1 / 6),
                 two - 2,
