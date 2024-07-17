@@ -9,8 +9,8 @@ import sympy
 import unyt as u
 
 # Although,'symengine.sympify' from 'import symengine ' is faster, it was changed to 'sympy.nsimplify' for some
-# with the 0.5 decimals in it like as it changes
-# improves the solving of the code by also solving 0.5 or other non-integers with integers.
+# less simple equations with the 0.5 decimals in it (example OPLS dihedral).  This was the only was to improve
+# or actually solve for the scalers in the equations when using non-integers in the forms like the OPLS dihedral.
 
 
 # compare Lennard-Jones (LJ) non-bonded equations
