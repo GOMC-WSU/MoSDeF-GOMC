@@ -3139,19 +3139,41 @@ class Charmm:
                     )
                 )
                 atom_mass_decimals_round = 4
+                atom_mass_list = []
                 for atom_type, mass in self.mass_atom_type_dict.items():
-                    mass_format = "* {:15s} {:15s} ! {:25s}\n"
-                    data.write(
-                        mass_format.format(
+                    atom_mass_list.append(
+                        [ 
                             self.mosdef_atom_name_to_atom_type_dict[atom_type],
-                            str(
-                                np.round(
-                                    mass, decimals=atom_mass_decimals_round
-                                )
-                            ),
-                            atom_type,
-                        )
+                                str(
+                                    np.round(
+                                        mass, decimals=atom_mass_decimals_round
+                                    ),
+                                ),
+                                atom_type,
+                        ]
                     )
+
+                    # check for duplicates, for duplicate class or atom type
+                    mass_same_count = 0 # Start at 0 (1 always found) count numbr of values that are the same  
+                    for mass_check_i in range(0, len(atom_mass_list)):
+
+                        # check if atomclass or atomtype is the same
+                        if atom_mass_list[-1][0] == atom_mass_list[mass_check_i][0]:
+                            mass_same_count += 1
+
+                            # check if values are the same since atomclass or atomtype is the same
+                            if atom_mass_list[-1][1] != atom_mass_list[mass_check_i][1]:
+                                raise ValueError(
+                                    f"ERROR: The same atomclass or atomtype in the "
+                                    f"force field are have different {'mass'} values.\n"
+                                    f"{atom_mass_list[-1]} != {atom_mass_list[mass_check_i]} "
+                                    )
+                            
+                    # Only print for 1 time so mass_same_count=1 (starts at 0)
+                    if mass_same_count == 1:
+                        mass_format = "* {:15s} {:15s} ! {:25s}\n"
+                        data.write(mass_format.format(atom_mass_list[-1][0], atom_mass_list[-1][1], atom_mass_list[-1][2]) )
+                   
 
                 # Bond coefficients
                 if len(self.topology_selection.bond_types) > 0:
@@ -3183,6 +3205,7 @@ class Charmm:
                     bond_k_Kelvin_round_decimals = 4
                     bond_distance_round_decimals = 6
 
+                    bond_values_list = []
                     for bond_type_x in self.combinded_residue_bond_types:
                         res_x = bond_type_x.__dict__["tags_"]["resname"]
                         bond_members_iter = bond_type_x.member_types
@@ -3232,10 +3255,6 @@ class Charmm:
                                 decimals=bond_k_Kelvin_round_decimals,
                             )
 
-                        bond_format = (
-                            "{:10s} {:10s} {:15s} {:15s} ! {:20s} {:20s}\n"
-                        )
-
                         if (
                             (self.gomc_fix_bonds_angles is not None)
                             and (str(res_x) in self.gomc_fix_bonds_angles)
@@ -3244,11 +3263,10 @@ class Charmm:
                                 (self.gomc_fix_bonds is not None)
                                 and (str(res_x) in self.gomc_fix_bonds)
                             )
-                        ):
+                        ):  
                             fix_bond_k_value = "999999999999"
-                            data.write(
-                                bond_format.format(
-                                    self.mosdef_atom_name_to_atom_type_dict[
+                            bond_values_list.append(
+                                [   self.mosdef_atom_name_to_atom_type_dict[
                                         f"{res_x}_{bond_members_iter[0]}"
                                     ],
                                     self.mosdef_atom_name_to_atom_type_dict[
@@ -3265,12 +3283,12 @@ class Charmm:
                                     ),
                                     f"{res_x}_{bond_members_iter[0]}",
                                     f"{res_x}_{bond_members_iter[1]}",
-                                )
+                                ]
                             )
 
                         else:
-                            data.write(
-                                bond_format.format(
+                            bond_values_list.append(
+                                [
                                     self.mosdef_atom_name_to_atom_type_dict[
                                         f"{res_x}_{bond_members_iter[0]}"
                                     ],
@@ -3288,8 +3306,56 @@ class Charmm:
                                     ),
                                     f"{res_x}_{bond_members_iter[0]}",
                                     f"{res_x}_{bond_members_iter[1]}",
-                                )
+                                ]
                             )
+                             
+
+                        # check for duplicates, for duplicate class or atom type
+                        bond_same_count = 0 # Start at 0 (1 always found) count numbr of values that are the same  
+                        for bond_check_i in range(0, len(bond_values_list)):
+
+                            # check if atomclass or atomtype is the same (check regular and reverse bond order)
+                            if (
+                                    (
+                                        bond_values_list[-1][0] == bond_values_list[bond_check_i][0] 
+                                        and 
+                                        bond_values_list[-1][1] == bond_values_list[bond_check_i][1]
+                                    ) 
+                                    or 
+                                    (
+                                        bond_values_list[-1][0] == bond_values_list[bond_check_i][1] 
+                                        and 
+                                        bond_values_list[-1][1] == bond_values_list[bond_check_i][0]
+                                    )
+
+                                ):
+                                bond_same_count += 1
+
+                                # check if values are the same since atomclass or atomtype is the same
+                                if (
+                                    bond_values_list[-1][2] != bond_values_list[bond_check_i][2] 
+                                    or 
+                                    bond_values_list[-1][3] != bond_values_list[bond_check_i][3] 
+                                ):
+                                    raise ValueError(
+                                        f"ERROR: The same atomclass or atomtype in the "
+                                        f"force field are have different {'bond'} values.\n"
+                                        f"{bond_values_list[-1]} != {bond_values_list[bond_check_i]} "
+                                        )
+                                
+                        # Only print for 1 time so bond_same_count=1 (starts at 0)
+                        if bond_same_count == 1:
+                            bond_format = ("{:10s} {:10s} {:15s} {:15s} ! {:20s} {:20s}\n")
+                            data.write(bond_format.format(
+                                bond_values_list[-1][0],
+                                bond_values_list[-1][1],
+                                bond_values_list[-1][2],
+                                bond_values_list[-1][3],
+                                bond_values_list[-1][4],
+                                bond_values_list[-1][5],
+                            )
+                        )
+
 
                 # Angle coefficients
                 if len(self.topology_selection.angle_types):
@@ -3324,7 +3390,7 @@ class Charmm:
                     angle_k_kcal_per_mol_round_decimals = 6
                     angle_k_Kelvin_round_decimals = 4
                     angle_degree_round_decimals = 6
-
+                    angle_values_list = []
                     for angle_type_x in self.combinded_residue_angle_types:
                         res_x = angle_type_x.__dict__["tags_"]["resname"]
                         angle_members_iter = angle_type_x.member_types
@@ -3378,8 +3444,6 @@ class Charmm:
                                 decimals=angle_k_Kelvin_round_decimals,
                             )
 
-                        angle_format = "{:10s} {:10s} {:10s} {:15s} {:15s} ! {:20s} {:20s} {:20s}\n"
-
                         if (
                             (self.gomc_fix_bonds_angles is not None)
                             and (str(res_x) in self.gomc_fix_bonds_angles)
@@ -3390,8 +3454,8 @@ class Charmm:
                             )
                         ):
                             fix_angle_k_value = "999999999999"
-                            data.write(
-                                angle_format.format(
+                            angle_values_list.append(
+                                [
                                     self.mosdef_atom_name_to_atom_type_dict[
                                         f"{res_x}_{angle_members_iter[0]}"
                                     ],
@@ -3413,12 +3477,12 @@ class Charmm:
                                     f"{angle_members_iter[0]}_{res_x}",
                                     f"{angle_members_iter[1]}_{res_x}",
                                     f"{angle_members_iter[2]}_{res_x}",
-                                )
+                                ]
                             )
 
                         else:
-                            data.write(
-                                angle_format.format(
+                            angle_values_list.append(
+                                [
                                     self.mosdef_atom_name_to_atom_type_dict[
                                         f"{res_x}_{angle_members_iter[0]}"
                                     ],
@@ -3437,11 +3501,64 @@ class Charmm:
                                             decimals=angle_degree_round_decimals,
                                         )
                                     ),
-                                    f"{res_x}_{angle_members_iter[0]}",
-                                    f"{res_x}_{angle_members_iter[1]}",
-                                    f"{res_x}_{angle_members_iter[2]}",
-                                )
+                                    f"{angle_members_iter[0]}_{res_x}",
+                                    f"{angle_members_iter[1]}_{res_x}",
+                                    f"{angle_members_iter[2]}_{res_x}",
+                                ]
                             )
+                                                   
+
+                        # check for duplicates, for duplicate class or atom type
+                        angle_same_count = 0 # Start at 0 (1 always found) count numbr of values that are the same  
+                        for angle_check_i in range(0, len(angle_values_list)):
+
+                            # check if atomclass or atomtype is the same (check regular and reverse angle order)
+                            if ( 
+                                angle_values_list[-1][1] == angle_values_list[angle_check_i][1] 
+                                and 
+                                (
+                                (
+                                    angle_values_list[-1][0] == angle_values_list[angle_check_i][0] 
+                                    and 
+                                    angle_values_list[-1][2] == angle_values_list[angle_check_i][2]
+                                ) 
+                                or 
+                                (
+                                    angle_values_list[-1][0] == angle_values_list[angle_check_i][2] 
+                                    and 
+                                    angle_values_list[-1][2] == angle_values_list[angle_check_i][0]
+                                )
+
+                                )
+                            ):
+                                angle_same_count += 1
+
+                                # check if values are the same since atomclass or atomtype is the same
+                                if (
+                                    angle_values_list[-1][3] != angle_values_list[angle_check_i][3] 
+                                    or 
+                                    angle_values_list[-1][4] != angle_values_list[angle_check_i][4] 
+                                ):
+                                    raise ValueError(
+                                        f"ERROR: The same atomclass or atomtype in the "
+                                        f"force field are have different {'angle'} values.\n"
+                                        f"{angle_values_list[-1]} != {angle_values_list[angle_check_i]} "
+                                        )
+                                
+                        # Only print for 1 time so angle_same_count=1 (starts at 0)
+                        if angle_same_count == 1:
+                            angle_format = ("{:10s} {:10s} {:10s} {:15s} {:15s} ! {:20s} {:20s} {:20s}\n")
+                            data.write(angle_format.format(
+                                angle_values_list[-1][0],
+                                angle_values_list[-1][1],
+                                angle_values_list[-1][2],
+                                angle_values_list[-1][3],
+                                angle_values_list[-1][4],
+                                angle_values_list[-1][5],
+                                angle_values_list[-1][6],
+                                angle_values_list[-1][7],
+                            )
+                        )
 
                 # Dihedral coefficients
                 if len(self.topology_selection.dihedral_types):
@@ -3502,6 +3619,7 @@ class Charmm:
                 dihedral_range = 2 * no_pi
                 dihedral_no_steps = int(dihedral_range / dihedral_steps) + 1
 
+                dihedral_values_list = []
                 for dihedral_type_x in self.combinded_residue_dihedral_types:
                     res_x = dihedral_type_x.__dict__["tags_"]["resname"]
                     dihedral_members_iter = dihedral_type_x.member_types
@@ -4009,6 +4127,11 @@ class Charmm:
                         # K0_output_energy_iter in LJ CHARMM format is only a harmonic dihedral,
                         # which is not included yet because GOMC currently only treats K0 as a constant,
                         # not a harmonic dihedral.
+                        K0_output_energy_iter = np.round(
+                            0,
+                            decimals=dihedral_k_Kelvin_round_decimals,
+                        )
+
                         K1_output_energy_iter = np.round(
                             K1, decimals=dihedral_k_kcal_per_mol_round_decimals
                         )
@@ -4066,10 +4189,6 @@ class Charmm:
                     # **************************************
                     # check the error between the convertions of RB_tortions to Periodic DIHEDRALS (end)
                     # **************************************
-                    dihedral_format = (
-                        "{:10s} {:10s} {:10s} {:10s} {:15s} {:10s} {:15s} "
-                        "! {:20s} {:20s} {:20s} {:20s}\n"
-                    )
 
                     # get the dihedral atoms
                     dihedral_atom_0 = self.mosdef_atom_name_to_atom_type_dict[
@@ -4085,23 +4204,37 @@ class Charmm:
                         f"{res_x}_{dihedral_members_iter[3]}"
                     ]
 
-                    # write charmm dihedral K0 (zero order dihedral --- a constant) if Mie or Exp6,
-                    # but not written for periodic as the K0 constant is defined as a
-                    # harmonic potential function in periodic.
-                    if self.utilized_NB_expression in ["Mie", "Exp6"]:
-                        # write charmm dihedral K0 (harmonic dihedral)
-                        if K0_output_energy_iter != 0:
-                            data.write(
-                                dihedral_format.format(
+                    # get the energies in the list
+                    dihedral_values_list.append(
+                        [
+                            [
+                                dihedral_atom_0,
+                                dihedral_atom_1,
+                                dihedral_atom_2,
+                                dihedral_atom_3,
+                                str(K0_output_energy_iter),
+                                str(int(n0)),
+                                str(
+                                    np.round(
+                                        d0,
+                                        decimals=dihedral_phase_degree_round_decimals,
+                                    )
+                                ),
+                                f"{res_x}_{dihedral_members_iter[0]}",
+                                f"{res_x}_{dihedral_members_iter[1]}",
+                                f"{res_x}_{dihedral_members_iter[2]}",
+                                f"{res_x}_{dihedral_members_iter[3]}",
+                            ],
+                            [
                                     dihedral_atom_0,
                                     dihedral_atom_1,
                                     dihedral_atom_2,
                                     dihedral_atom_3,
-                                    str(K0_output_energy_iter),
-                                    str(int(n0)),
+                                    str(K1_output_energy_iter),
+                                    str(int(n1)),
                                     str(
                                         np.round(
-                                            d0,
+                                            d1,
                                             decimals=dihedral_phase_degree_round_decimals,
                                         )
                                     ),
@@ -4109,129 +4242,252 @@ class Charmm:
                                     f"{res_x}_{dihedral_members_iter[1]}",
                                     f"{res_x}_{dihedral_members_iter[2]}",
                                     f"{res_x}_{dihedral_members_iter[3]}",
+                            ],
+                            [
+                                    dihedral_atom_0,
+                                    dihedral_atom_1,
+                                    dihedral_atom_2,
+                                    dihedral_atom_3,
+                                    str(K2_output_energy_iter),
+                                    str(int(n2)),
+                                    str(
+                                        np.round(
+                                            d2,
+                                            decimals=dihedral_phase_degree_round_decimals,
+                                        )
+                                    ),
+                                    f"{res_x}_{dihedral_members_iter[0]}",
+                                    f"{res_x}_{dihedral_members_iter[1]}",
+                                    f"{res_x}_{dihedral_members_iter[2]}",
+                                    f"{res_x}_{dihedral_members_iter[3]}",
+                            ],
+                            [
+                                    dihedral_atom_0,
+                                    dihedral_atom_1,
+                                    dihedral_atom_2,
+                                    dihedral_atom_3,
+                                    str(K3_output_energy_iter),
+                                    str(int(n3)),
+                                    str(
+                                        np.round(
+                                            d3,
+                                            decimals=dihedral_phase_degree_round_decimals,
+                                        )
+                                    ),
+                                    f"{res_x}_{dihedral_members_iter[0]}",
+                                    f"{res_x}_{dihedral_members_iter[1]}",
+                                    f"{res_x}_{dihedral_members_iter[2]}",
+                                    f"{res_x}_{dihedral_members_iter[3]}",
+                            ],
+                            [
+                                    dihedral_atom_0,
+                                    dihedral_atom_1,
+                                    dihedral_atom_2,
+                                    dihedral_atom_3,
+                                    str(K4_output_energy_iter),
+                                    str(int(n4)),
+                                    str(
+                                        np.round(
+                                            d4,
+                                            decimals=dihedral_phase_degree_round_decimals,
+                                        )
+                                    ),
+                                    f"{res_x}_{dihedral_members_iter[0]}",
+                                    f"{res_x}_{dihedral_members_iter[1]}",
+                                    f"{res_x}_{dihedral_members_iter[2]}",
+                                    f"{res_x}_{dihedral_members_iter[3]}",
+                            ],
+                            [
+                                    dihedral_atom_0,
+                                    dihedral_atom_1,
+                                    dihedral_atom_2,
+                                    dihedral_atom_3,
+                                    str(K5_output_energy_iter),
+                                    str(int(n5)),
+                                    str(
+                                        np.round(
+                                            d5,
+                                            decimals=dihedral_phase_degree_round_decimals,
+                                        )
+                                    ),
+                                    f"{res_x}_{dihedral_members_iter[0]}",
+                                    f"{res_x}_{dihedral_members_iter[1]}",
+                                    f"{res_x}_{dihedral_members_iter[2]}",
+                                    f"{res_x}_{dihedral_members_iter[3]}",
+                            ]
+                        ]
+                    )
+
+
+                    # check for duplicates, for duplicate class or atom type
+                    dihedral_same_count = 0 # Start at 0 (1 always found) count numbr of values that are the same  
+                    for dihedral_check_i in range(0, len(dihedral_values_list)):
+                        # check if atomclass or atomtype is the same (check regular and reverse angle order)
+                        if (
+                            (
+                                dihedral_values_list[-1][0][0] == dihedral_values_list[dihedral_check_i][0][0] 
+                                and 
+                                dihedral_values_list[-1][0][1] == dihedral_values_list[dihedral_check_i][0][1]
+                                and 
+                                dihedral_values_list[-1][0][2] == dihedral_values_list[dihedral_check_i][0][2]
+                                and 
+                                dihedral_values_list[-1][0][3] == dihedral_values_list[dihedral_check_i][0][3]
+                            ) 
+                            or 
+                            (
+                                dihedral_values_list[-1][0][0] == dihedral_values_list[dihedral_check_i][0][3] 
+                                and 
+                                dihedral_values_list[-1][0][1] == dihedral_values_list[dihedral_check_i][0][2]
+                                and 
+                                dihedral_values_list[-1][0][2] == dihedral_values_list[dihedral_check_i][0][1]
+                                and 
+                                dihedral_values_list[-1][0][3] == dihedral_values_list[dihedral_check_i][0][0]
+                            )
+                        ):
+                            dihedral_same_count += 1
+
+                            # check if values are the same since atomclass or atomtype is the same
+                            max_k_value_used_int = len(dihedral_values_list[-1])
+                            for k_v_i in range(0, max_k_value_used_int):
+                                if (
+                                    (
+                                        dihedral_values_list[-1][k_v_i][4] != dihedral_values_list[dihedral_check_i][k_v_i][4] 
+                                        or 
+                                        dihedral_values_list[-1][k_v_i][5] != dihedral_values_list[dihedral_check_i][k_v_i][5] 
+                                        or 
+                                        dihedral_values_list[-1][k_v_i][6] != dihedral_values_list[dihedral_check_i][k_v_i][6] 
+                                    ) 
+                                ):
+                                    raise ValueError(
+                                        f"ERROR: The same atomclass or atomtype in the "
+                                        f"force field are have different {'dihedral'} values.\n"
+                                        f"{dihedral_values_list[-1][k_v_i]} != {dihedral_values_list[dihedral_check_i][k_v_i]}."
+                                        )
+                    
+                    dihedral_format = (
+                        "{:10s} {:10s} {:10s} {:10s} {:15s} {:10s} {:15s} "
+                        "! {:20s} {:20s} {:20s} {:20s}\n"
+                    )
+                    # Only print for 1 time so dihedral_count=1 (starts at 0)
+                    if dihedral_same_count == 1:
+
+                        # write charmm dihedral K0 (zero order dihedral --- a constant) if Mie or Exp6,
+                        # but not written for periodic as the K0 constant is defined as a
+                        # harmonic potential function in periodic.
+                        if self.utilized_NB_expression in ["Mie", "Exp6"]:
+                            # write charmm dihedral K0 (harmonic dihedral)
+                            if K0_output_energy_iter != 0:
+                                data.write(
+                                    dihedral_format.format(
+                                        dihedral_values_list[-1][0][0],
+                                        dihedral_values_list[-1][0][1],
+                                        dihedral_values_list[-1][0][2],
+                                        dihedral_values_list[-1][0][3],
+                                        dihedral_values_list[-1][0][4],
+                                        dihedral_values_list[-1][0][5],
+                                        dihedral_values_list[-1][0][6],
+                                        dihedral_values_list[-1][0][7],
+                                        dihedral_values_list[-1][0][8],
+                                        dihedral_values_list[-1][0][9],
+                                        dihedral_values_list[-1][0][10]
+                                    )
+                                )
+
+                        # write charmm dihedral K1 (first order periodic dihedral)
+                        if (
+                            K1_output_energy_iter == 0
+                            and K2_output_energy_iter == 0
+                            and K3_output_energy_iter == 0
+                            and K4_output_energy_iter == 0
+                            and K5_output_energy_iter == 0
+                        ) or (K1_output_energy_iter != 0):
+                            data.write(
+                                dihedral_format.format(
+                                    dihedral_values_list[-1][1][0],
+                                    dihedral_values_list[-1][1][1],
+                                    dihedral_values_list[-1][1][2],
+                                    dihedral_values_list[-1][1][3],
+                                    dihedral_values_list[-1][1][4],
+                                    dihedral_values_list[-1][1][5],
+                                    dihedral_values_list[-1][1][6],
+                                    dihedral_values_list[-1][1][7],
+                                    dihedral_values_list[-1][1][8],
+                                    dihedral_values_list[-1][1][9],
+                                    dihedral_values_list[-1][1][10]
                                 )
                             )
 
-                    # write charmm dihedral K1 (first order periodic dihedral)
-                    if (
-                        K1_output_energy_iter == 0
-                        and K2_output_energy_iter == 0
-                        and K3_output_energy_iter == 0
-                        and K4_output_energy_iter == 0
-                        and K5_output_energy_iter == 0
-                    ) or (K1_output_energy_iter != 0):
-                        data.write(
-                            dihedral_format.format(
-                                dihedral_atom_0,
-                                dihedral_atom_1,
-                                dihedral_atom_2,
-                                dihedral_atom_3,
-                                str(K1_output_energy_iter),
-                                str(int(n1)),
-                                str(
-                                    np.round(
-                                        d1,
-                                        decimals=dihedral_phase_degree_round_decimals,
-                                    )
-                                ),
-                                f"{res_x}_{dihedral_members_iter[0]}",
-                                f"{res_x}_{dihedral_members_iter[1]}",
-                                f"{res_x}_{dihedral_members_iter[2]}",
-                                f"{res_x}_{dihedral_members_iter[3]}",
+                        # write charmm dihedral K2 (second order periodic dihedral)
+                        if K2_output_energy_iter != 0:
+                            data.write(
+                                dihedral_format.format(
+                                    dihedral_values_list[-1][2][0],
+                                    dihedral_values_list[-1][2][1],
+                                    dihedral_values_list[-1][2][2],
+                                    dihedral_values_list[-1][2][3],
+                                    dihedral_values_list[-1][2][4],
+                                    dihedral_values_list[-1][2][5],
+                                    dihedral_values_list[-1][2][6],
+                                    dihedral_values_list[-1][2][7],
+                                    dihedral_values_list[-1][2][8],
+                                    dihedral_values_list[-1][2][9],
+                                    dihedral_values_list[-1][2][10]
+                                )
                             )
-                        )
 
-                    # write charmm dihedral K2 (second order periodic dihedral)
-                    if K2_output_energy_iter != 0:
-                        data.write(
-                            dihedral_format.format(
-                                dihedral_atom_0,
-                                dihedral_atom_1,
-                                dihedral_atom_2,
-                                dihedral_atom_3,
-                                str(K2_output_energy_iter),
-                                str(int(n2)),
-                                str(
-                                    np.round(
-                                        d2,
-                                        decimals=dihedral_phase_degree_round_decimals,
-                                    )
-                                ),
-                                f"{res_x}_{dihedral_members_iter[0]}",
-                                f"{res_x}_{dihedral_members_iter[1]}",
-                                f"{res_x}_{dihedral_members_iter[2]}",
-                                f"{res_x}_{dihedral_members_iter[3]}",
+                        # write charmm dihedral K3 (third order periodic dihedral)
+                        if K3_output_energy_iter != 0:
+                            data.write(
+                                dihedral_format.format(
+                                    dihedral_values_list[-1][3][0],
+                                    dihedral_values_list[-1][3][1],
+                                    dihedral_values_list[-1][3][2],
+                                    dihedral_values_list[-1][3][3],
+                                    dihedral_values_list[-1][3][4],
+                                    dihedral_values_list[-1][3][5],
+                                    dihedral_values_list[-1][3][6],
+                                    dihedral_values_list[-1][3][7],
+                                    dihedral_values_list[-1][3][8],
+                                    dihedral_values_list[-1][3][9],
+                                    dihedral_values_list[-1][3][10]
+                                )
                             )
-                        )
 
-                    # write charmm dihedral K3 (third order periodic dihedral)
-                    if K3_output_energy_iter != 0:
-                        data.write(
-                            dihedral_format.format(
-                                dihedral_atom_0,
-                                dihedral_atom_1,
-                                dihedral_atom_2,
-                                dihedral_atom_3,
-                                str(K3_output_energy_iter),
-                                str(int(n3)),
-                                str(
-                                    np.round(
-                                        d3,
-                                        decimals=dihedral_phase_degree_round_decimals,
-                                    )
-                                ),
-                                f"{res_x}_{dihedral_members_iter[0]}",
-                                f"{res_x}_{dihedral_members_iter[1]}",
-                                f"{res_x}_{dihedral_members_iter[2]}",
-                                f"{res_x}_{dihedral_members_iter[3]}",
+                        # write charmm dihedral K4 (fourth order periodic dihedral)
+                        if K4_output_energy_iter != 0:
+                            data.write(
+                                dihedral_format.format(
+                                    dihedral_values_list[-1][4][0],
+                                    dihedral_values_list[-1][4][1],
+                                    dihedral_values_list[-1][4][2],
+                                    dihedral_values_list[-1][4][3],
+                                    dihedral_values_list[-1][4][4],
+                                    dihedral_values_list[-1][4][5],
+                                    dihedral_values_list[-1][4][6],
+                                    dihedral_values_list[-1][4][7],
+                                    dihedral_values_list[-1][4][8],
+                                    dihedral_values_list[-1][4][9],
+                                    dihedral_values_list[-1][4][10]
+                                )
                             )
-                        )
 
-                    # write charmm dihedral K4 (fourth order periodic dihedral)
-                    if K4_output_energy_iter != 0:
-                        data.write(
-                            dihedral_format.format(
-                                dihedral_atom_0,
-                                dihedral_atom_1,
-                                dihedral_atom_2,
-                                dihedral_atom_3,
-                                str(K4_output_energy_iter),
-                                str(int(n4)),
-                                str(
-                                    np.round(
-                                        d4,
-                                        decimals=dihedral_phase_degree_round_decimals,
-                                    )
-                                ),
-                                f"{res_x}_{dihedral_members_iter[0]}",
-                                f"{res_x}_{dihedral_members_iter[1]}",
-                                f"{res_x}_{dihedral_members_iter[2]}",
-                                f"{res_x}_{dihedral_members_iter[3]}",
+                        # write charmm dihedral K5 (fifth order periodic dihedral)
+                        if K5_output_energy_iter != 0:
+                            data.write(
+                                dihedral_format.format(
+                                    dihedral_values_list[-1][5][0],
+                                    dihedral_values_list[-1][5][1],
+                                    dihedral_values_list[-1][5][2],
+                                    dihedral_values_list[-1][5][3],
+                                    dihedral_values_list[-1][5][4],
+                                    dihedral_values_list[-1][5][5],
+                                    dihedral_values_list[-1][5][6],
+                                    dihedral_values_list[-1][5][7],
+                                    dihedral_values_list[-1][5][8],
+                                    dihedral_values_list[-1][5][9],
+                                    dihedral_values_list[-1][5][10]
+                                )
                             )
-                        )
-
-                    # write charmm dihedral K5 (fifth order periodic dihedral)
-                    if K5_output_energy_iter != 0:
-                        data.write(
-                            dihedral_format.format(
-                                dihedral_atom_0,
-                                dihedral_atom_1,
-                                dihedral_atom_2,
-                                dihedral_atom_3,
-                                str(K5_output_energy_iter),
-                                str(int(n5)),
-                                str(
-                                    np.round(
-                                        d5,
-                                        decimals=dihedral_phase_degree_round_decimals,
-                                    )
-                                ),
-                                f"{res_x}_{dihedral_members_iter[0]}",
-                                f"{res_x}_{dihedral_members_iter[1]}",
-                                f"{res_x}_{dihedral_members_iter[2]}",
-                                f"{res_x}_{dihedral_members_iter[3]}",
-                            )
-                        )
 
                 if len(self.topology_selection.dihedral_types):
                     if sum(list_if_large_error_dihedral_overall) > 0:
@@ -4261,6 +4517,7 @@ class Charmm:
                         )
                         data.write(info_if_dihedral_error_ok)
                         print(info_if_dihedral_error_ok)
+
 
                 # Improper coefficients
                 if len(self.topology_selection.improper_types):
@@ -4308,6 +4565,7 @@ class Charmm:
                 improper_k_Kelvin_round_decimals = 4
                 improper_phase_degree_round_decimals = 6
 
+                impr_periodic_val_list = []
                 for improper_type_x in self.combinded_residue_improper_types:
                     res_x = improper_type_x.__dict__["tags_"]["resname"]
                     improper_members_iter = improper_type_x.member_types
@@ -4585,11 +4843,6 @@ class Charmm:
                                 )
                                 raise ValueError(print_value_error)
 
-                    improper_format = (
-                        "{:10s} {:10s} {:10s} {:10s} {:15s} {:10s} {:15s} "
-                        "! {:20s} {:20s} {:20s} {:20s}\n"
-                    )
-
                     # get the improper atom values
                     improper_atom_0 = self.mosdef_atom_name_to_atom_type_dict[
                         f"{res_x}_{improper_members_iter[0]}"
@@ -4666,8 +4919,8 @@ class Charmm:
                                 periodic_impropers_no_j
                             ]
 
-                            data.write(
-                                improper_format.format(
+                            impr_periodic_val_list.append(
+                                [
                                     improper_atom_0,
                                     improper_atom_1,
                                     improper_atom_2,
@@ -4684,6 +4937,70 @@ class Charmm:
                                     f"{res_x}_{improper_members_iter[1]}",
                                     f"{res_x}_{improper_members_iter[2]}",
                                     f"{res_x}_{improper_members_iter[3]}",
+                                ]
+                            )
+
+                            # check for duplicates, for duplicate class or atom type
+                            improper_same_count = 0 # Start at 0 (1 always found) count numbr of values that are the same  
+                            for improper_check_i in range(0, len(impr_periodic_val_list)):
+
+                                # check if atomclass or atomtype is the same (check regular and reverse improper order)
+                                if ( 
+                                    (
+                                        impr_periodic_val_list[-1][0] == impr_periodic_val_list[improper_check_i][0] 
+                                    and
+                                        impr_periodic_val_list[-1][3] == impr_periodic_val_list[improper_check_i][3] 
+                                    and 
+                                        impr_periodic_val_list[-1][5] == impr_periodic_val_list[improper_check_i][5] 
+                                    )
+                                    and 
+                                    (
+                                        (
+                                            impr_periodic_val_list[-1][1] == impr_periodic_val_list[improper_check_i][1] 
+                                        and 
+                                            impr_periodic_val_list[-1][2] == impr_periodic_val_list[improper_check_i][2]
+                                        ) 
+                                        or 
+                                        (
+                                            impr_periodic_val_list[-1][1] == impr_periodic_val_list[improper_check_i][2] 
+                                        and 
+                                            impr_periodic_val_list[-1][2] == impr_periodic_val_list[improper_check_i][1]
+                                        )
+                                    )
+                                ):
+                                    improper_same_count += 1
+
+                                    # check if values are the same since atomclass or atomtype is the same
+                                    if (
+                                        impr_periodic_val_list[-1][4] != impr_periodic_val_list[improper_check_i][4] 
+                                        or 
+                                        impr_periodic_val_list[-1][6] != impr_periodic_val_list[improper_check_i][6] 
+                                    ):
+                                        raise ValueError(
+                                            f"ERROR: The same atomclass or atomtype in the "
+                                            f"force field are have different {'improper'} values.\n"
+                                            f"{impr_periodic_val_list[-1]} != {impr_periodic_val_list[improper_check_i]} "
+                                            )
+
+                            
+                            # Only print for 1 time so improper_same_count=1 (starts at 0)
+                            if improper_same_count == 1:
+                                improper_format = (
+                                    "{:10s} {:10s} {:10s} {:10s} {:15s} {:10s} {:15s} "
+                                    "! {:20s} {:20s} {:20s} {:20s}\n"
+                                )
+                                data.write(improper_format.format(
+                                    impr_periodic_val_list[-1][0],
+                                    impr_periodic_val_list[-1][1],
+                                    impr_periodic_val_list[-1][2],
+                                    impr_periodic_val_list[-1][3],
+                                    impr_periodic_val_list[-1][4],
+                                    impr_periodic_val_list[-1][5],
+                                    impr_periodic_val_list[-1][6],
+                                    impr_periodic_val_list[-1][7],
+                                    impr_periodic_val_list[-1][8],
+                                    impr_periodic_val_list[-1][9],
+                                    impr_periodic_val_list[-1][10],
                                 )
                             )
 
@@ -4725,72 +5042,7 @@ class Charmm:
                         )
                     )
 
-                    for (
-                        class_x,
-                        epsilon_kcal_per_mol,
-                    ) in self.epsilon_kcal_per_mol_atom_type_dict.items():
-                        nb_format = "{:10s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
-
-                        # if the 1-4 non-bonded scalar is used.
-                        # If 1-4 non-bonded scalar = 0, all 1-4 non-bonded values are set to zero (0).
-                        # If 1-4 non-bonded scalar = 1, the epsilon 1-4 non-bonded interaction is scaled
-                        # via another scalar.
-                        if float(self.nonbonded_1_4_dict[class_x]) == 0:
-                            scalar_used_binary = 0
-                        else:
-                            scalar_used_binary = 1
-
-                        data.write(
-                            nb_format.format(
-                                str(
-                                    self.mosdef_atom_name_to_atom_type_dict[
-                                        class_x
-                                    ]
-                                ),
-                                str(0.0),
-                                str(
-                                    np.round(
-                                        -epsilon_kcal_per_mol,
-                                        decimals=epsilon_kcal_per_mol_round_decimals,
-                                    )
-                                ),
-                                str(
-                                    np.round(
-                                        _LJ_sigma_to_r_min_div_2(
-                                            self.sigma_angstrom_atom_type_dict[
-                                                class_x
-                                            ]
-                                        ),
-                                        decimals=sigma_round_decimals,
-                                    )
-                                ),
-                                str(0.0),
-                                str(
-                                    -np.round(
-                                        scalar_used_binary
-                                        * float(
-                                            self.nonbonded_1_4_dict[class_x]
-                                        )
-                                        * epsilon_kcal_per_mol,
-                                        decimals=epsilon_kcal_per_mol_round_decimals,
-                                    )
-                                ),
-                                str(
-                                    np.round(
-                                        _LJ_sigma_to_r_min_div_2(
-                                            self.sigma_angstrom_atom_type_dict[
-                                                class_x
-                                            ]
-                                        ),
-                                        decimals=sigma_round_decimals,
-                                    )
-                                ),
-                                str(class_x),
-                                str(class_x),
-                            )
-                        )
-
-                elif self.utilized_NB_expression in ["Mie", "Exp6"]:
+                elif self.utilized_NB_expression in ["Mie", "Exp6"]:                          
                     if self.utilized_NB_expression == "Mie":
                         data.write("\n")
                         data.write("NONBONDED_MIE * Mie\n")
@@ -4839,21 +5091,87 @@ class Charmm:
                                 "extended_type_2",
                             )
                         )
+                
+                else:
+                    printed_output = (
+                        f"ERROR: Currently this potential ({self.utilized_NB_expression}) "
+                        f"is not supported in this MoSDeF GOMC parameter writer\n"
+                    )
+                    data.write(printed_output)
+                    print_error_message = printed_output
+                    raise ValueError(print_error_message)
 
-                    for (
-                        class_x,
-                        epsilon_kcal_per_mol,
-                    ) in self.epsilon_kcal_per_mol_atom_type_dict.items():
-                        nb_format = "{:10s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
+                # write out the non-bonded portion
+                nb_val_list = []
+                for (
+                    class_x,
+                    epsilon_kcal_per_mol,
+                ) in self.epsilon_kcal_per_mol_atom_type_dict.items():
+                    # if the 1-4 non-bonded scalar is used.
+                    # If 1-4 non-bonded scalar = 0, all 1-4 non-bonded values are set to zero (0).
+                    # If 1-4 non-bonded scalar = 1, the epsilon 1-4 non-bonded interaction is scaled
+                    # via another scalar.
+                    if float(self.nonbonded_1_4_dict[class_x]) == 0:
+                        scalar_used_binary = 0
+                    else:
+                        scalar_used_binary = 1
+                    
+                    # if in "LJ" form put in kcal/mol
+                    if self.utilized_NB_expression == "LJ":
+                        nb_val_list.append(
+                            [
+                                str(
+                                    self.mosdef_atom_name_to_atom_type_dict[
+                                        class_x
+                                    ]
+                                ),
+                                str(0.0),
+                                str(
+                                    np.round(
+                                        -epsilon_kcal_per_mol,
+                                        decimals=epsilon_kcal_per_mol_round_decimals,
+                                    )
+                                ),
+                                str(
+                                    np.round(
+                                        _LJ_sigma_to_r_min_div_2(
+                                            self.sigma_angstrom_atom_type_dict[
+                                                class_x
+                                            ]
+                                        ),
+                                        decimals=sigma_round_decimals,
+                                    )
+                                ),
+                                str(0.0),
+                                str(
+                                    -np.round(
+                                        scalar_used_binary
+                                        * float(
+                                            self.nonbonded_1_4_dict[class_x]
+                                        )
+                                        * epsilon_kcal_per_mol,
+                                        decimals=epsilon_kcal_per_mol_round_decimals,
+                                    )
+                                ),
+                                str(
+                                    np.round(
+                                        _LJ_sigma_to_r_min_div_2(
+                                            self.sigma_angstrom_atom_type_dict[
+                                                class_x
+                                            ]
+                                        ),
+                                        decimals=sigma_round_decimals,
+                                    )
+                                ),
+                                str(class_x),
+                                str(class_x)
+                            ]
+                        )
 
-                        # if the 1-4 non-bonded scalar is used.
-                        # If 1-4 non-bonded scalar = 0, all 1-4 non-bonded values are set to zero (0).
-                        # If 1-4 non-bonded scalar = 1, only the epsilon 1-4 non-bonded interaction is scaled
-                        # via another scalar.
-                        for (
-                            res_nb_14,
-                            scaler_nb_14,
-                        ) in self.nonbonded_1_4_dict.items():
+                    # if in "Mie" or "Exp6" form put in K -- energy units
+                    elif self.utilized_NB_expression in ["Mie", "Exp6"]:
+                        # check that nb-vdw = 0 or 1 only for "Mie or Exp6"
+                        for res_nb_14, scaler_nb_14 in self.nonbonded_1_4_dict.items():
                             if scaler_nb_14 is None:
                                 print_error = (
                                     f"ERROR: The {res_nb_14} residue is provided a value of "
@@ -4861,15 +5179,7 @@ class Charmm:
                                     f"Please check the force file xml file."
                                 )
                                 raise ValueError(print_error)
-                        if float(self.nonbonded_1_4_dict[class_x]) == 0:
-                            scalar_used_binary = 0
-                        else:
-                            scalar_used_binary = 1
-
-                        epsilon_Kelvin = u.unyt_quantity(
-                            epsilon_kcal_per_mol, "kcal/mol"
-                        ).to_value("K", equivalence="thermal")
-
+                        
                         # select Mie n values or Exp6 alpha values
                         if self.utilized_NB_expression == "Mie":
                             mie_n_or_exp6_alpha_atom_type_value = (
@@ -4880,8 +5190,14 @@ class Charmm:
                                 self.exp6_alpha_atom_type_dict[class_x]
                             )
 
-                        data.write(
-                            nb_format.format(
+                        epsilon_Kelvin = u.unyt_quantity(
+                            epsilon_kcal_per_mol, "kcal/mol"
+                            ).to_value(
+                                "K", equivalence="thermal"
+                                )
+
+                        nb_val_list.append(
+                            [
                                 str(
                                     self.mosdef_atom_name_to_atom_type_dict[
                                         class_x
@@ -4933,17 +5249,54 @@ class Charmm:
                                 ),
                                 str(class_x),
                                 str(class_x),
-                            )
+                            ]
                         )
+            
+                    # check for duplicates, for duplicate class or atom type
+                    nb_same_count = 0 # Start at 0 (1 always found) count numbr of values that are the same  
+                    for nb_check_i in range(0, len(nb_val_list)):
 
-                else:
-                    printed_output = (
-                        f"ERROR: Currently this potential ({self.utilized_NB_expression}) "
-                        f"is not supported in this MoSDeF GOMC parameter writer\n"
+                        # check if atomclass or atomtype is the same 
+                        if nb_val_list[-1][0] == nb_val_list[nb_check_i][0]:
+                            nb_same_count += 1
+
+                            # check if values are the same since atomclass or atomtype is the same
+                            if (
+                                nb_val_list[-1][1] != nb_val_list[nb_check_i][1] 
+                                or 
+                                nb_val_list[-1][2] != nb_val_list[nb_check_i][2] 
+                                or 
+                                nb_val_list[-1][3] != nb_val_list[nb_check_i][3] 
+                                or 
+                                nb_val_list[-1][4] != nb_val_list[nb_check_i][4] 
+                                or 
+                                nb_val_list[-1][5] != nb_val_list[nb_check_i][5] 
+                                or 
+                                nb_val_list[-1][6] != nb_val_list[nb_check_i][6] 
+                            ):
+                                raise ValueError(
+                                    f"ERROR: The same atomclass or atomtype in the "
+                                    f"force field are have different {'non-bonded'} values.\n"
+                                    f"{nb_val_list[-1]} != {nb_val_list[nb_check_i]} "
+                                    )
+
+                    # Only print for 1 time so nb_same_count=1 (starts at 0)
+                    if nb_same_count == 1:
+                        nb_format = (
+                            "{:10s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
+                            )
+                        data.write(nb_format.format(
+                            nb_val_list[-1][0],
+                            nb_val_list[-1][1],
+                            nb_val_list[-1][2],
+                            nb_val_list[-1][3],
+                            nb_val_list[-1][4],
+                            nb_val_list[-1][5],
+                            nb_val_list[-1][6],
+                            nb_val_list[-1][7],
+                            nb_val_list[-1][8],
+                        )
                     )
-                    data.write(printed_output)
-                    print_error_message = printed_output
-                    raise ValueError(print_error_message)
 
                 # writing end in file
                 data.write("\nEND\n")
