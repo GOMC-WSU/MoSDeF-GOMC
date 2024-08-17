@@ -440,7 +440,7 @@ class TestCharmmWriterData(BaseTest):
                     pass
 
         assert charges_read
-    
+
     def test_save_charmm_pdb(self, ethane_gomc):
         box_0 = mb.fill_box(
             compound=[ethane_gomc], n_compounds=[2], box=[4, 4, 4]
@@ -513,7 +513,7 @@ class TestCharmmWriterData(BaseTest):
                     pass
 
         assert pdb_read
-    
+
     def test_save_charmm_psf_2_ethane_from_single_mol2(self):
         two_ethane_mol2_file = Topology.load(
             get_mosdef_gomc_fn("2_ethane.mol2")
@@ -884,7 +884,7 @@ class TestCharmmWriterData(BaseTest):
                     pass
 
         assert nonbondeds_read
-    
+
     def test_save_charmm_gomc_ethyl_benzene_aa_ff(self):
         ethyl_benzene_aa = Topology.load(
             get_mosdef_gomc_fn("ethyl_benzene_aa.mol2")
@@ -1061,7 +1061,7 @@ class TestCharmmWriterData(BaseTest):
                     pass
 
         assert improper_read
-    
+
     def test_save_charmm_ethyl_benzene_aa_psf(self):
         ethyl_benzene_aa = Topology.load(
             get_mosdef_gomc_fn("ethyl_benzene_aa.mol2")
@@ -1592,7 +1592,7 @@ class TestCharmmWriterData(BaseTest):
                     pass
 
         assert read_psf
-    
+
     def test_save_charmm_ua_pdb(self, two_propanol_ua):
         box_0 = mb.fill_box(
             compound=[two_propanol_ua], n_compounds=[1], box=[4, 4, 4]
@@ -1753,7 +1753,7 @@ class TestCharmmWriterData(BaseTest):
                     pass
 
         assert read_psf
-    
+
     def test_save_charmm_ua_single_angle_data_psf(self):
         molecule = mb.load(
             get_mosdef_gomc_fn("psf_file_single_angle_test_ua.mol2")
@@ -1963,7 +1963,7 @@ class TestCharmmWriterData(BaseTest):
     # *********************
     # new psf angleed atom tests (end)
     # *********************
-    
+
     def test_save_charmm_mie_ua_gomc_ff(self, water, two_propanol_ua):
         box_0 = mb.fill_box(
             compound=[water, two_propanol_ua], n_compounds=[1, 1], box=[5, 4, 3]
@@ -2803,7 +2803,7 @@ class TestCharmmWriterData(BaseTest):
                     pass
 
         assert dihedrals_read
-    
+
     def test_save_charmm_mie_ua_K_energy_units_periodic_ff_with_nb_half(
         self, water, two_propanol_ua
     ):
@@ -3670,7 +3670,7 @@ class TestCharmmWriterData(BaseTest):
 
         assert bonds_read
         assert angles_read
-    
+
     def test_charmm_pdb_fix_angles_only_and_fix_bonds_angles(
         self, ethane_gomc, ethanol_gomc
     ):
@@ -4106,7 +4106,7 @@ class TestCharmmWriterData(BaseTest):
         assert len(verified_unique_entries_base_54_list) - len(
             add_same_values_list
         ) == len(unique_entries_base_54_list)
-    
+
     def test_save_charmm_ua_single_bond_data_with_7_char_psf(self):
         with pytest.raises(
             ValueError,
@@ -4325,7 +4325,7 @@ class TestCharmmWriterData(BaseTest):
                 forcefield_selection=["oplsaa", "oplsaa"],
                 atom_type_naming_style="general",
             )
-    
+
     def test_charmm_ffselection_string(self, ethane_gomc):
         box_0 = mb.fill_box(
             compound=[ethane_gomc], n_compounds=[1], box=[4, 4, 4]
@@ -4593,7 +4593,7 @@ class TestCharmmWriterData(BaseTest):
                 bead_to_atom_name_dict={"_CH3": "C"},
                 gomc_fix_angles="two_propanol_ua.name",
             )
-    
+
     def test_gomc_fix_angles_residue_not_in_system(self, two_propanol_ua):
         with pytest.raises(
             ValueError,
@@ -4922,7 +4922,7 @@ class TestCharmmWriterData(BaseTest):
                 residues=[ethanol_gomc.name],
                 forcefield_selection="oplsaa",
             )
-    
+
     # Test that an empty box (psf and pdb files) can be created to start a simulation
     def test_box_1_empty_test_1(self, two_propanol_ua):
         empty_compound = Box(lengths=[2, 2, 2])
@@ -5502,7 +5502,7 @@ class TestCharmmWriterData(BaseTest):
 
         assert masses_read
         assert nonbondeds_read
-    
+
     def test_write_inp_zeolite_non_othoganol_box_using_atom_name(self):
         lattice_cif_ETV_triclinic = load_cif(
             file_or_path=get_mosdef_gomc_fn("ETV_triclinic.cif")
@@ -6481,7 +6481,7 @@ class TestCharmmWriterData(BaseTest):
                     ),
                 },
             )
-    
+
     # **** testing the different dihedral types produce the same values and work properly ****
     # test the gmso RB dihderal input with 1 times the RB torsion values
     def test_save_gmso_RB_dihedral_times_1_gomc_ff(self, two_propanol_ua):
@@ -7000,7 +7000,7 @@ class TestCharmmWriterData(BaseTest):
         assert bonds_read
         assert angles_read
         assert dihedrals_read
-    
+
     # test the gmso periodic dihderal input add k (bonds, angles, dihedrals times 1)
     def test_save_gmso_periodic_dihedral_gomc_ff_all_ks_times_1(
         self, two_propanol_ua
@@ -7469,7 +7469,7 @@ class TestCharmmWriterData(BaseTest):
                 gomc_fix_bonds_angles=[water.name],
             )
             charmm.write_inp()
-    
+
     def test_save_charmm_gomc_ua_charmm_periodic_improper_ff(
         self, two_propanol_ua
     ):
@@ -7983,7 +7983,7 @@ class TestCharmmWriterData(BaseTest):
                 gmso_match_ff_by="molecule",
                 atom_type_naming_style="general",
             )
-    
+
     def test_atom_type_style_general_warning(
         self, two_propanol_ua, alt_two_propanol_ua
     ):
@@ -8243,7 +8243,7 @@ class TestCharmmWriterData(BaseTest):
                             "0.0",
                             "0.0",
                             "14.0",
-                        ]
+                        ],
                     ]
 
                     for j in range(0, len(nb_types)):
@@ -8263,7 +8263,7 @@ class TestCharmmWriterData(BaseTest):
         assert angles_read
         assert dihedrals_read
         assert nonbondeds_read
-    
+
     def test_atom_type_style_all_unique_diff_epsilon(
         self, two_propanol_ua, alt_two_propanol_ua
     ):
@@ -8849,7 +8849,7 @@ class TestCharmmWriterData(BaseTest):
         assert angles_read
         assert dihedrals_read
         assert nonbondeds_read
-    
+
     def test_atom_type_style_all_unique_diff_mass(
         self, two_propanol_ua, alt_two_propanol_ua
     ):
@@ -9435,7 +9435,7 @@ class TestCharmmWriterData(BaseTest):
         assert angles_read
         assert dihedrals_read
         assert nonbondeds_read
-    
+
     def test_write_inp_zeolite_non_othoganol_water_zeolite_level_group(
         self, water
     ):
@@ -9953,7 +9953,7 @@ class TestCharmmWriterData(BaseTest):
         assert dihedrals_read
         assert impropers_read
         assert nonbondeds_read
-        
+
     """
     # ***************************
     # ***************************
@@ -10302,8 +10302,8 @@ class TestCharmmWriterData(BaseTest):
     # There should be SEGMENT_IDS A to C in this example
     # ***************************
     # ***************************
-    """   
-    
+    """
+
     def test_Exp6_Rmin_to_sigma_solver(self):
         exp6_sigma_value = _Exp6_Rmin_to_sigma_solver(4.0941137, 16)
         assert np.isclose(exp6_sigma_value, 3.6790000166)
@@ -10874,9 +10874,7 @@ class TestCharmmWriterData(BaseTest):
         butane_aa = mb.load(get_mosdef_gomc_fn("butane_aa.mol2"))
         butane_aa.name = "BUT"
         box_0 = mb.fill_box(
-            compound=[butane_aa], 
-            n_compounds=[2], 
-            box=[20, 20, 20]
+            compound=[butane_aa], n_compounds=[2], box=[20, 20, 20]
         )
 
         charmm = Charmm(
@@ -10886,7 +10884,7 @@ class TestCharmmWriterData(BaseTest):
             residues=[butane_aa.name],
             forcefield_selection=get_mosdef_gomc_fn(
                 "amber_aa_butane_CT_CT_CT_CT_with_fake_improper_gmso.xml"
-                ),
+            ),
             atom_type_naming_style="general",
         )
         charmm.write_inp()
@@ -11100,7 +11098,7 @@ class TestCharmmWriterData(BaseTest):
                         assert (
                             out_gomc[i + 1 + j].split("!")[0].split()[0:7]
                             == nb_types[j]
-                        )                 
+                        )
 
                 else:
                     pass

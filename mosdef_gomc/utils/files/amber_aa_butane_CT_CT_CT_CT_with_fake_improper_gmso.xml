@@ -5,7 +5,7 @@
   </FFMetaData>
   <AtomTypes expression="4 * epsilon * ((sigma/r)**12 - (sigma/r)**6)">
     <ParametersUnitDef parameter="sigma" unit="nm"/>
-    <ParametersUnitDef parameter="epsilon" unit="kJ/mol"/>  
+    <ParametersUnitDef parameter="epsilon" unit="kJ/mol"/>
     <AtomType name="C_CTH3" atomclass="CT" element="C" charge="-0.33" mass="12.01100" definition="[C;X4](C)(H)(H)H" description="alkane CH3" doi="10.1021/ci300363c" overrides="">
       <Parameters>
         <Parameter name="epsilon" value="0.457730"/>
