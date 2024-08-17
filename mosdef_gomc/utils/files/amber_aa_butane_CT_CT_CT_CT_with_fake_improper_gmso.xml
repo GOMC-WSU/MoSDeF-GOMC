@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ForceField name="amber_aa_gmso_butane_only - ﻿AMBER99" version="0.0.1">
+  <FFMetaData combiningRule="lorentz" electrostatics14Scale="0.8333" nonBonded14Scale="0.5">
+    <Units energy="kJ/mol" mass="amu" charge="elementary_charge" distance="nm"/>
+  </FFMetaData>
+  <AtomTypes expression="4 * epsilon * ((sigma/r)**12 - (sigma/r)**6)">
+    <ParametersUnitDef parameter="sigma" unit="nm"/>
+    <ParametersUnitDef parameter="epsilon" unit="kJ/mol"/>
+    <AtomType name="C_CTH3" atomclass="CT" element="C" charge="-0.33" mass="12.01100" definition="[C;X4](C)(H)(H)H" description="alkane CH3" doi="10.1021/ci300363c" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="0.457730"/>
+        <Parameter name="sigma" value="0.339967"/>
+      </Parameters>
+    </AtomType>
+    <AtomType name="C_CTH2" atomclass="CT" element="C" charge="-0.28" mass="12.01100" definition="[C;X4](C)(C)(H)H" description="alkane CH2" doi="10.1021/ci300363c" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="0.457730"/>
+        <Parameter name="sigma" value="0.339967"/>
+      </Parameters>
+    </AtomType>
+    <AtomType name="H_CTH3" atomclass="HC" element="H" charge="0.11" mass="1.00800" definition="[H][C;%C_CTH3]" description="alkane H" doi="10.1021/ci300363c" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="0.0656888"/>
+        <Parameter name="sigma" value="0.264953"/>
+      </Parameters>
+    </AtomType>
+    <AtomType name="H_CTH2" atomclass="HC" element="H" charge="0.14" mass="1.00800" definition="[H][C;%C_CTH2]" description="alkane H" doi="10.1021/ci300363c" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="0.0656888"/>
+        <Parameter name="sigma" value="0.264953"/>
+      </Parameters>
+    </AtomType>
+  </AtomTypes>
+  <BondTypes expression="1/2 * k * (r-r_eq)**2">
+    <ParametersUnitDef parameter="r_eq" unit="nm"/>
+    <ParametersUnitDef parameter="k" unit="kJ/mol/nm**2"/>
+    <BondType name="BondType-Harmonic-4" class1="CT" class2="CT">
+      <Parameters>
+        <Parameter name="k" value="259408.0"/>
+        <Parameter name="r_eq" value="0.15260"/>
+      </Parameters>
+    </BondType>
+    <BondType name="BondType-Harmonic-5" class1="CT" class2="HC">
+      <Parameters>
+        <Parameter name="k" value="284512.0"/>
+        <Parameter name="r_eq" value="0.10900"/>
+      </Parameters>
+    </BondType>
+  </BondTypes>
+  <AngleTypes expression="1/2 * k * (theta - theta_eq)**2">
+    <ParametersUnitDef parameter="theta_eq" unit="degree"/>
+    <ParametersUnitDef parameter="k" unit="kJ/mol/radian**2"/>
+     <AngleType name="AngleType-Harmonic-1" class1="CT" class2="CT" class3="CT">
+      <Parameters>
+        <Parameter name="k" value="334.720"/>
+        <Parameter name="theta_eq" value="109.500"/>
+      </Parameters>
+    </AngleType>
+    <AngleType name="AngleType-Harmonic-1" class1="CT" class2="CT" class3="HC">
+      <Parameters>
+        <Parameter name="k" value="418.400"/>
+        <Parameter name="theta_eq" value="109.500"/>
+      </Parameters>
+    </AngleType>
+    <AngleType name="AngleType-Harmonic-2" class1="HC" class2="CT" class3="HC">
+      <Parameters>
+        <Parameter name="k" value="292.880"/>
+        <Parameter name="theta_eq" value="109.500"/>
+      </Parameters>
+    </AngleType>
+  </AngleTypes>
+  <DihedralTypes expression="k * (1 + cos(n * phi - phi_eq))">
+    <ParametersUnitDef parameter="k" unit="kJ/mol"/>
+    <ParametersUnitDef parameter="n" unit="dimensionless"/>
+    <ParametersUnitDef parameter="phi_eq" unit="degree"/>
+    <DihedralType name="DihedralType-Periodic-Proper-1" class1="CT" class2="CT" class3="CT" class4="CT">
+      <Parameters>
+        <Parameter name="n">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>90</Value>
+          <Value>180</Value>
+          <Value>0.0</Value>
+          <Value>180</Value>
+        </Parameter>
+      </Parameters>
+    </DihedralType>
+    <DihedralType name="DihedralType-Periodic-Proper-2" class1="CT" class2="CT" class3="CT" class4="HC">
+      <Parameters>
+        <Parameter name="n">
+          <Value>3</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>-0.66944</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>180</Value>
+        </Parameter>
+      </Parameters>
+    </DihedralType>
+    <DihedralType name="DihedralType-Periodic-Proper-3" class1="HC" class2="CT" class3="CT" class4="HC">
+      <Parameters>
+        <Parameter name="n">
+          <Value>3</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>-0.62760</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>180</Value>
+        </Parameter>
+      </Parameters>
+    </DihedralType>
+    <ImproperType name="DihedralType_periodic_improper_CT_HC_HC_HC" class1="CT" class2="HC" class3="HC" class4="HC">
+      <Parameters>
+        <Parameter name="n">
+          <Value>1</Value>
+          <Value>3</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>-8.368</Value>
+          <Value>4.184</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>180</Value>
+          <Value>0</Value>
+        </Parameter>
+      </Parameters>
+    </ImproperType>
+  </DihedralTypes>
+</ForceField>
