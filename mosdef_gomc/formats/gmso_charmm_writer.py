@@ -3485,9 +3485,9 @@ class Charmm:
                                             decimals=angle_degree_round_decimals,
                                         )
                                     ),
-                                    f"{angle_members_iter[0]}_{res_x}",
-                                    f"{angle_members_iter[1]}_{res_x}",
-                                    f"{angle_members_iter[2]}_{res_x}",
+                                    f"{res_x}_{angle_members_iter[0]}",
+                                    f"{res_x}_{angle_members_iter[1]}",
+                                    f"{res_x}_{angle_members_iter[2]}",
                                 ]
                             )
 
@@ -3512,9 +3512,9 @@ class Charmm:
                                             decimals=angle_degree_round_decimals,
                                         )
                                     ),
-                                    f"{angle_members_iter[0]}_{res_x}",
-                                    f"{angle_members_iter[1]}_{res_x}",
-                                    f"{angle_members_iter[2]}_{res_x}",
+                                    f"{res_x}_{angle_members_iter[0]}",
+                                    f"{res_x}_{angle_members_iter[1]}",
+                                    f"{res_x}_{angle_members_iter[2]}",
                                 ]
                             )
 
