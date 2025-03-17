@@ -8,6 +8,10 @@ import symengine
 import sympy
 import unyt as u
 
+# Although,'symengine.sympify' from 'import symengine ' is faster, it was changed to 'sympy.nsimplify' for some
+# less simple equations with the 0.5 decimals in it (example OPLS dihedral).  This was the only was to improve
+# or actually solve for the scalers in the equations when using non-integers in the forms like the OPLS dihedral.
+
 
 # compare Lennard-Jones (LJ) non-bonded equations
 def evaluate_nonbonded_lj_format_with_scaler(new_lj_form, base_lj_form):
@@ -509,8 +513,8 @@ def evaluate_OPLS_torsion_format_with_scaler(
         values = sympy.nonlinsolve(
             [
                 eqn_ratio
-                - symengine.sympify(new_torsion_form)
-                / symengine.sympify(base_torsion_form),
+                - sympy.nsimplify(new_torsion_form)
+                / sympy.nsimplify(base_torsion_form),
             ],
             [eqn_ratio],
         )

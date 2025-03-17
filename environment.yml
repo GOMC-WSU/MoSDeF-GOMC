@@ -4,7 +4,7 @@ channels:
   - defaults
 dependencies:
   - garnett
-  - gsd
+  - gsd=3.3.2
   - ipython
   - numpydoc
   - mock
@@ -14,14 +14,15 @@ dependencies:
   - pycifrw
   - pytest
   - pytest-cov
+  - coverage
   - sympy
   - symengine
   - python-symengine
   - python>=3.10,<3.12
   - forcefield-utilities>=0.3.0
   - foyer>=0.12.1
-  - gmso>=0.12.1
-  - mbuild>=0.17.0
+  - gmso>=0.12.4
+  - mbuild>=0.17.1
   - pre-commit
   - sphinx=6.1.1
   - pip
