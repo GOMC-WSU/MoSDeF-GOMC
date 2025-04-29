@@ -1,4 +1,4 @@
-The MIT License (MIT) 
+The MIT License (MIT)
 
 With the exceptions noted below, this code is released under the MIT License:
 
