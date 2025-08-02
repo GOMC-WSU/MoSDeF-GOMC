@@ -8,13 +8,13 @@ Install with `mamba <https://github.com/mamba-org/mamba>`_ (Recommended)
 ------------------------------------------------------------------------
 ::
 
-    $ conda create --name mosdef_gomc python=3.11
+    $ conda create --name mosdef_gomc python=3.13
 
     $ conda activate mosdef_gomc
 
     $ conda install -c conda-forge mamba
 
-    $ mamba install -c conda-forge mosdef-gomc python=3.11
+    $ mamba install -c conda-forge mosdef-gomc python=3.13
 
 
 Install with `conda <https://repo.anaconda.com/miniconda/>`_
@@ -56,8 +56,8 @@ To check all the file, you can run::
 Supported Python Versions
 -------------------------
 
-Python 3.10 and 3.11 are officially supported and tested during development and with the final product.
-Python versions older than 3.10 may work, but there is no guarantee.
+Python 3.12 and 3.13 are officially supported and tested during development and with the final product.
+Python versions older than 3.12 may work, but there is no guarantee.
 
 Testing your installation
 -------------------------
