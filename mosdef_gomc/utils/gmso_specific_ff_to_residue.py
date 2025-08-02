@@ -409,9 +409,7 @@ def specific_ff_to_residue(
                 raise ValueError(print_error_message)
         elif not user_entered_ff_with_path_dict[residue_iteration]:
             ff_for_residue_iteration = ff_data[residue_iteration]
-            ff_names_path_iteration = (
-                f"{forcefields.get_ff_path()[0]}/xml/{ff_for_residue_iteration}.xml"
-            )
+            ff_names_path_iteration = f"{forcefields.get_ff_path()[0]}/xml/{ff_for_residue_iteration}.xml"
             try:
                 read_xlm_iteration = minidom.parse(ff_names_path_iteration)
                 forcefield_selection_with_paths.update(
