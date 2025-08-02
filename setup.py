@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 
 #########################################
 NAME = "MoSDeF-GOMC"
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 ISRELEASED = True
 if ISRELEASED:
     __version__ = VERSION
