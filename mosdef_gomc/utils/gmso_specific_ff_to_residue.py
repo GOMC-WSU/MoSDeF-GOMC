@@ -474,16 +474,18 @@ def specific_ff_to_residue(
 
     # can use  match_ff_by="group" or "molecule", group was only chosen so everything is using the
     # user selected mb.Compound.name...
-    gmso_apply(
-        new_gmso_topology,
-        gmso_compatable_forcefield_selection,
-        speedup_by_molgraph=True,
-        speedup_by_moltag=True,
-        identify_connections=True,
-        match_ff_by=gmso_match_ff_by,
-        remove_untyped=True,
-    )
-    new_gmso_topology.update_topology()
+    if (
+        new_gmso_topology.n_sites > 0
+    ):  # only parameterize on topologies with sites.
+        gmso_apply(
+            new_gmso_topology,
+            gmso_compatable_forcefield_selection,
+            speedup_by_molgraph=True,
+            speedup_by_moltag=True,
+            identify_connections=True,
+            match_ff_by=gmso_match_ff_by,
+            remove_untyped=True,
+        )
 
     # find mixing rule.  If an empty.box mixing rule is set to None
     if isinstance(structure, Compound):
