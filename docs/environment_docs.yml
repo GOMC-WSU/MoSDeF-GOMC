@@ -21,7 +21,7 @@ dependencies:
   - python>=3.12,<3.14
   - forcefield-utilities>=0.4.0
   - foyer>=1.0.1
-  - gmso=0.14.0
+  - gmso>=0.12.4
   - mbuild>=1.2.1
   - pre-commit
   - sphinx=6.1.1
