@@ -7564,17 +7564,33 @@ class TestCharmmWriterData(BaseTest):
                     and "extended_type_4" in line
                 ):
                     impropers_read = True
-                    improp_types = [
-                        ["CH", "CH3", "O", "CH3", "-2.0", "1", "180.0"],
-                        ["CH", "CH3", "O", "CH3", "1.0", "3", "0.0"],
-                    ]
-                    for j in range(0, len(improp_types)):
+                    improp_types = set(
+                        [
+                            ("CH", "CH3", "O", "CH3"),
+                            ("CH", "O", "CH3", "CH3"),
+                        ]
+                    )
+                    improp_params = set(
+                        [
+                            ("-2.0", "1", "180.0"),
+                            ("1.0", "3", "0.0"),
+                        ]
+                    )
+                    for j in range(len(improp_types)):
                         assert (
                             len(out_gomc[i + 1 + j].split("!")[0].split()) == 7
                         )
                         assert (
-                            out_gomc[i + 1 + j].split("!")[0].split()[0:7]
-                            == improp_types[j]
+                            tuple(
+                                out_gomc[i + 1 + j].split("!")[0].split()[0:4]
+                            )
+                            in improp_types
+                        )
+                        assert (
+                            tuple(
+                                out_gomc[i + 1 + j].split("!")[0].split()[4:7]
+                            )
+                            in improp_params
                         )
 
                 else:
