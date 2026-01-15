@@ -773,6 +773,18 @@ def _get_all_possible_input_variables(description=False):
         "Note: all of the move types are not available in for every ensemble."
         "Note: all of the move fractions must sum to 1, or the control file writer will fail. "
         "".format(_get_default_variables_dict()["MEMC-2Freq"]),
+        "MEMC-2-LiqFreq": "MEMC MC moves (only GEMC_NPT, GEMC_NVT, and GCMC) : "
+        "int or float (0 <= value <= 1), default are specific for each ensemble {}. "
+        "Fractional percentage at which specified number of small molecule kind will be "
+        "exchanged with a specified large molecule kind in defined sub-volume, between"
+        "simulation boxes. Backbone of small and large molecule kind will be used to insert "
+        "the large molecule more efficiently. "
+        "This move needs additional information such as ExchangeVolumeDim, ExchangeRatio, "
+        "ExchangeSmallKind, ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone. "
+        "this move is designed for Liquid-Liquid Equilibria"
+        "Note: all of the move types are not available in for every ensemble."
+        "Note: all of the move fractions must sum to 1, or the control file writer will fail. "
+        "".format(_get_default_variables_dict()["MEMC-2-LiqFreq"]),
         "IntraMEMC-3Freq": "MEMC MC moves (all ensembles)                     : "
         "int or float (0 <= value <= 1), default are specific for each ensemble {}. "
         "Fractional percentage at which specified number of small molecule kind will be "
@@ -795,6 +807,18 @@ def _get_all_possible_input_variables(description=False):
         "Note: all of the move types are not available in for every ensemble."
         "Note: all of the move fractions must sum to 1, or the control file writer will fail. "
         "".format(_get_default_variables_dict()["MEMC-3Freq"]),
+        "MEMC-3-LiqFreq": "MEMC MC moves (only GEMC_NPT, GEMC_NVT, and GCMC) : "
+        "int or float (0 <= value <= 1), default are specific for each ensemble {}. "
+        "Fractional percentage at which specified number of small molecule kind will be exchanged "
+        "with a specified large molecule kind in defined sub-volume, between simulation boxes. "
+        "Specified atom of the large molecule kind will be used to insert the large molecule "
+        "using coupled-decoupled configurational-bias. This move need additional information "
+        "such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind, ExchangeLargeKind, "
+        "and LargeKindBackBone. "
+        "Design for LLE"
+        "Note: all of the move types are not available in for every ensemble."
+        "Note: all of the move fractions must sum to 1, or the control file writer will fail. "
+        "".format(_get_default_variables_dict()["MEMC-3-LiqFreq"]),
         # MEMC move parameters
         "ExchangeVolumeDim": "MEMC parameters (all ensembles)                   : "
         "list of 3 floats or integers "
@@ -1185,6 +1209,13 @@ def _get_default_variables_dict():
             "GEMC_NPT": 0.00,
             "GCMC": 0.00,
         },
+        "MEMC-2-LiqFreq": {
+            "NVT": 0.00,
+            "NPT": 0.00,
+            "GEMC_NVT": 0.00,
+            "GEMC_NPT": 0.00,
+            "GCMC": 0.00,
+        },
         "IntraMEMC-3Freq": {
             "NVT": 0.00,
             "NPT": 0.00,
@@ -1193,6 +1224,13 @@ def _get_default_variables_dict():
             "GCMC": 0.00,
         },
         "MEMC-3Freq": {
+            "NVT": 0.00,
+            "NPT": 0.00,
+            "GEMC_NVT": 0.00,
+            "GEMC_NPT": 0.00,
+            "GCMC": 0.00,
+        },
+        "MEMC-3-LiqFreq": {
             "NVT": 0.00,
             "NPT": 0.00,
             "GEMC_NVT": 0.00,
@@ -1421,8 +1459,10 @@ def _get_possible_ensemble_input_variables(ensemble_type):
         "MEMC-1Freq",
         "IntraMEMC-2Freq",
         "MEMC-2Freq",
+        "MEMC-2-LiqFreq",
         "IntraMEMC-3Freq",
         "MEMC-3Freq",
+        "MEMC-3-LiqFreq",
         "ExchangeVolumeDim",
         "MEMC_DataInput",
         "TargetedSwap_DataInput",
@@ -1508,972 +1548,988 @@ def _get_possible_ensemble_input_variables(ensemble_type):
 
 class GOMCControl:
     """
-    Constructs the GOMC control file with user selected variables.
-    The selected variables and Class attributes are mostly or nearly identical to the
-    GOMC command names. For many ensembles, the user may use the default input_variables_dict
-    variables, unless they are required for the specific ensemble (Example:
-    the GCMC ensemble requires the user to input the Chempot or Fugacity variables,
-    or the build will fail.)
-
-    Default settings for the GOMC configuration files are based upon
-    an educated guess, which should result in appropriate sampling for a
-    given ensemble/simulation type. However, there is no guarantee that
-    the default setting will provide the best or adequate sampling for
-    the selected system. The user can modify the configuration/control files
-    based on the simulation specifics or optimize the system beyond the standard
-    settings.  These override options are available via the keyword arguments
-    in input_variable_dict.
-
-    Parameters
-    ----------
-    charmm_object:  Charmm object
-        Charmm object is has been parameterized from the selected force field.,
-    ensemble_typ: str, ['NVT', 'NPT', 'GEMC_NPT', 'GCMC-NVT', 'GCMC']
-        The ensemble type of the simulation.
-    RunSteps: int (>0), must be an integer greater than zero.
-        Sets the total number of simulation steps.
-    Temperature: unyt.unyt_quantity in temperature units (> 1 K)
-        Temperature of system in unyt temperature units (written in Kelvin).
-    ff_psf_pdb_file_directory: str (optional), default=None (i.e., the current directory).
-        The full or relative directory added to the force field, psf, and pdb
-        file names, created via the Charmm object.
-    check_input_files_exist: bool, (default=True)
-        Check if the force field, psf, and pdb files exist. If input, it also checks if the Checkpoint,
-        binCoordinates_box_0, extendedSystem_box_0, binVelocities_box_0,
-        binCoordinates_box_1, extendedSystem_box_1, and binVelocities_box_1 files.
-        If the files are checked and do not exist, the writer will throw a ValueError.
-        True, check if the all the input files exist.
-        False, do not check if the all the input files exist.
-    Restart: boolean, default = False
-        Determines whether to restart the simulation from restart file
-        (``*_restart.pdb`` and ``*_restart.psf``) or not.
-    Checkpoint: list or bool (see below), default = False
-        If True:  Checkpoint = [True, str] ---> [True, checkpoint_filename]
-        If False: Checkpoint = False or [False, str] ---> [False, checkpoint_filename]
-        Checkpoint files guaruntee trajectory files can be concatenated, along with ensuring
-        no deviation from a single simulation’s results in a simulation which was interrupted
-        and restarted.
-        Determines whether to restart the simulation from checkpoint file or not. Restarting the simulation
-        with would result in an identical outcome, as if previous simulation was continued.
-        This is required for hybrid Monte-Carlo Molecular Dyanamics in open-ensembles (GCMC/GEMC)
-        to concatenate trajectory files since the molecular transfers rearranges the order of the molecules.
-        Checkpointing will ensure the molecules are loaded in the same order each cycle.
-        NOTE: the checkpoint_filename can be entered with the .chk extension, or without an extension; if it
-        does not have the file extension, the .chk extension will then be added to the filename.
-    ExpertMode: boolean, default = False
-        This allows the move ratios to be any value, regardless of the ensemble,
-        provided all the move ratios sum to 1. For example, this mode is utilized
-        to easily equilibrate a GCMC or GEMC ensemble in a pseudo NVT mode by removing
-        the requirement that the volume and swap moves must be non-zero.
-        In other words, when the volume and swap moves are zero, the GCMC and GEMC
-        ensembles will run pseudo NVT simulations in 1 and 2 simulation boxes, respectively.
-        The simulation's output and restart files will keep their original output structure
-        for the selected ensemble, which is advantageous when automating a workflow.
-    Parameters: str, (default=None)
-        Override all other force field directory and filename input with the correct extension (.inp or .par).
-        Note: the default directory is the current directory with the Charmm object file name.
-    Coordinates_box_0: str, (default=None)
-        Override all other box 0 pdb directory and filename inputs with the correct extension.
-        Note: the default directory is the current directory with the Charmm object file name.
-    Structure_box_0: str, (default=None)
-        Override all other box 0 psf directory and filename inputs with the correct extension.
-        Note: the default directory is the current directory with the Charmm object file name.
-    Coordinates_box_1: str, (default=None)
-        Override all other box 1 pdb directory and filename inputs with the correct extension.
-        Note: the default directory is the current directory with the Charmm object file name.
-    Structure_box_1: str, (default=None)
-        Override all other box 1  psf directory and filename inputs with the correct extension.
-        Note: the default directory is the current directory with the Charmm object file name.
-    binCoordinates_box_0: str, (default=None)
-        The box 0 binary coordinate file is used only for restarting a GOMC simulation,
-        which provides increased numerical accuracy.
-    extendedSystem_box_0: str, (default=None)
-        The box 0 vectors and origin file is used only for restarting a GOMC simulation.
-    binVelocities_box_0: str, (default=None)
-        The box 0 binary velocity file is used only for restarting a GOMC simulation,
-        which provides increased numerical accuracy. These velocities are only passed thru
-        GOMC since Monte Carlo simulations do not utilize any velocity information.
-    binCoordinates_box_1: str, (default=None)
-        The box 1 binary coordinate file is used only for restarting a GOMC simulation,
-        which provides increased numerical accuracy.
-    extendedSystem_box_1: str, (default=None)
-        The box 1 vectors and origin file is used only for restarting a GOMC simulation.
-    binVelocities_box_1: str, (default=None)
-        The box 1 binary velocity file is used only for restarting a GOMC simulation,
-        which provides increased numerical accuracy. These velocities are only passed thru
-        GOMC since Monte Carlo simulations do not utilize any velocity information.
-    input_variables_dict: dict, default = None
-        These input variables are optional and override the default settings.
-        Changing these variables likely required for more advanced systems.
-        The details of the acceptable input variables for the selected
-        ensembles can be found by running the code below in python,
-
-        >>> print_valid_ensemble_input_variables('GCMC', description = True)
-
-        which prints the input_variables with their subsection description
-        for the selected 'GCMC' ensemble (other ensembles can be set as well).
-
-        Example: input_variables_dict = {'PRNG': 123,
-                                          'ParaTypeCHARMM': True }
-
-    # *******************************************************************
-    # input_variables_dict options (keys and values) - (start)
-    # Note: the input_variables_dict keys are also attributes
-    # *******************************************************************
-    PRNG: string or int (>= 0) ("RANDOM" or int), default = "RANDOM"
-        PRNG = Pseudo-Random Number Generator (PRNG). There are two (2) options, entering
-        the string, "RANDOM", or a integer.
-
-        --- "RANDOM": selects a random seed number.  This will enter the line
-        "PRNG RANDOM" in the gomc configuration file.
-
-        --- integer: which defines the integer seed number for the simulation. This is
-        equivalent to entering the following two lines in the configuration file
-
-        line 1 = PRNG INTSEED
-
-        line 2 = Random_Seed user_selected_integer.
-
-        Example 1: for a random seed enter the string "RANDOM".
-
-        Example 2: for a specific seed number enter a integer of your choosing.
-
-    ParaTypeCHARMM: boolean, default = False
-        True if a CHARMM forcefield, False otherwise.
-        Note: This is changed by the MoSDeF-GOMC Charmm object if the
-        ParaTypeCHARMM or ParaTypeMie is detected.
-    ParaTypeMie: boolean, default = False
-        True if a Mie or Exp6 forcefield types, False otherwise.
-        Note: This is changed by the MoSDeF-GOMC Charmm object if the "
-        ParaTypeCHARMM or ParaTypeMie is detected.
-    ParaTypeMARTINI: boolean, default = False
-        True if a MARTINI forcefield, False otherwise.
-        Note: The ParaTypeMARTINI is not changed or detected by the MoSDeF-GOMC Charmm object.
-    RcutCoulomb_box_0: unyt.unyt_quantity in length units (>= 0), default = None
-        Sets a specific radius in box 0 (written in Angstroms) where the short-range electrostatic
-        energy will be calculated (i.e., The distance to truncate the
-        short-range electrostatic energy in box 0.)
-        Note: if None, GOMC will default to the Rcut value
-    RcutCoulomb_box_1: unyt.unyt_quantity in length units (>= 0), default = None
-        Sets a specific radius in box 1 (written in Angstroms) where the short-range electrostatic
-        energy will be calculated (i.e., The distance to truncate the
-        short-range electrostatic energy in box 0.)
-        Note: if None, GOMC will default to the Rcut value
-    Pressure: unyt.unyt_quantity in pressure units (>= 0), default = 1.01325 bar
-        The pressure (written in bar) is utilized for the NPT and GEMC_NPT simulations.
-    Rcut: unyt.unyt_quantity in length units (>= 0 and RcutLow < Rswitch < Rcut),
-        default = 10 angstroms
-        Sets a specific radius (written in Angstroms) that non-bonded interaction
-        energy and force will be considered and calculated using defined potential function.
-        The distance in Angstoms to truncate the LJ, Mie, or other VDW type potential at.
-        Note: Rswitch is only used when the "Potential" = SWITCH.
-    RcutLow: unyt.unyt_quantity in length units (>= 0 and RcutLow < Rswitch < Rcut),
-        default = 0 angstroms
-        Sets a specific minimum possible distance (written in Angstroms) that reject
-        any move that places any atom closer than specified distance.
-        The minimum possible distance between any atoms.
-        Sets a specific radius in Angstroms that non-bonded interaction
-        Note: Rswitch is only used when the "Potential" = SWITCH.
-        WARNING: When using a molecule that has charge atoms with non-bonded epsilon values of zero (i.e., water),
-        the RcutLow need to be greater than zero, typically 1 angstrom.
-        WARNING: When using the free energy calculations, RcutLow needs to be set to zero (RcutLow=0);
-        otherwise, the free energy calculations can produce results that are slightly off or wrong.
-    LRC: boolean, default = True
-        If True, the simulation considers the long range tail corrections for the
-        non-bonded VDW or dispersion interactions.
-        Note: In case of using SHIFT or SWITCH potential functions, LRC will be ignored.
-    IPC: boolean, default = False
-        If True, the simulation adds the impulse correction term to the pressure,
-        which considers to correct for the discontinuous Rcut potential
-        (i.e., a hard cutoff potential, meaning a potential without tail corrections)
-        the long range tail corrections for the non-bonded VDW or dispersion interactions.
-        If False, the impulse correction term to the pressure is not applied.
-        Note: This can not be used if LRC is True or the Potential is set to SWITCH, or SHIFT.
-    Exclude: str ["1-2", "1-3", or "1-4"], default = "1-3"
-        Note: In CHARMM force field, the 1-4 interaction needs to be considered.
-        Choosing "Excude 1-3", will modify 1-4 interaction based on 1-4 parameters
-        in parameter file. If a kind force field is used, where 1-4 interaction
-        needs to be ignored, such as TraPPE, either Exclude "1-4" needs to be
-        chosen or 1-4 parameter needs to be assigned to zero in the parameter file.
-
-        --- "1-2": All interaction pairs of bonded atoms, except the ones that
-        separated with one bond, will be considered and modified using 1-4
-        parameters defined in parameter file.
-
-        --- "1-3": All interaction pairs of bonded atoms, except the ones that
-        separated with one or two bonds, will be considered and modified using
-        1-4 parameters defined in parameter file.
-
-        --- "1-4": All interaction pairs of bonded atoms, except the ones that
-        separated with one, two or three bonds, will be considered using
-        non-bonded parameters defined in parameter file.
-
-    Potential: str, ["VDW", "EXP6", "SHIFT" or "SWITCH"], default = "VDW"
-        Defines the potential function type to calculate non-bonded dispersion
-        interaction energy and force between atoms.
-
-        ---    "VDW":   Non-bonded dispersion interaction energy and force
-        calculated based on n-6 (Lennard - Jones) equation. This
-        function will be discussed further in the Intermolecular energy
-        and Virial calculation section.
-
-        ---   "EXP6":   Non-bonded dispersion interaction energy and force calculated
-        based on exp-6 equation.
-
-        ---  "SHIFT":   This option forces the potential energy to be zero at Rcut distance.
-
-        --- "SWITCH":   This option smoothly forces the potential energy to be zero at
-        Rcut distance and starts modifying the potential at Rswitch
-        distance. Depending on force field type, specific potential
-        function will be applied.
-
-    Rswitch: unyt.unyt_quantity in length units (>= 0 and RcutLow < Rswitch < Rcut),
-        default = 9 angstroms
-        Note: Rswitch is only used when the SWITCH function is used
-        (i.e., "Potential" = SWITCH). The Rswitch distance is written in Angstrom. If the
-        “SWITCH” function is chosen, Rswitch needs to be defined, otherwise, the
-        program will be terminated. When using choosing "SWITCH" as potential function,
-        the Rswitch distance defines where the non-bonded interaction energy
-        modification is started, which is eventually truncated smoothly at Rcut
-        distance.
-    ElectroStatic: boolean, default = True
-        Considers the coulomb interactions or not. If True, coulomb interactions are
-        considered and false if not. Note: To simulate the polar molecule in MARTINI
-        force field, ElectroStatic needs to be turn on (i.e., True). The MARTINI force
-        field uses short-range coulomb interaction with constant Dielectric of 15.0.
-    Ewald: boolean, default = True
-        Considers the standard Ewald summation method for electrostatic calculations.
-        If True, Ewald summation calculation needs to be considered and false if not.
-        Note: By default, GOMC will set ElectroStatic to True if Ewald summation
-        method was used to calculate coulomb interaction.
-    CachedFourier: boolean, default = False
-        Considers storing the reciprocal terms for Ewald summation calculation in
-        order to improve the code performance. This option would increase the code
-        performance with the cost of memory usage. If True, to store reciprocal
-        terms of Ewald summation calculation and False if not.
-        Warning: Monte Carlo moves, such as MEMC-1, MEMC-2, MEMC-3,
-        IntraMEMC-1, IntraMEMC-2, and IntraMEMC-3 are not support with CachedFourier.
-    Tolerance: float (0.0 < float < 1.0), default = 1e-05
-        Sets the accuracy in Ewald summation calculation. Ewald separation parameter
-        and number of reciprocal vectors for the Ewald summation are determined
-        based on the accuracy parameter.
-    Dielectric: int or float (>= 0.0), default = 15
-        Sets dielectric value used in coulomb interaction when the Martini
-        force field is used. Note: In MARTINI force field, Dielectric needs to
-        be set to 15.0.
-    PressureCalc: list [bool , int (> 0)] or [bool , step_frequency],
-        default = [True, 10k] or [True , set via formula based on the number of RunSteps or 10k max]
-        Calculate the system pressure or not. bool = True, enables the pressure calculation
-        during the simulation, false disables the calculation. The int/step frequency sets the
-        frequency of calculating the pressure.
-    EqSteps: int (> 0), default = set via formula based on the number of RunSteps or 1M max
-        Sets the number of steps necessary to equilibrate the system.
-        Averaging will begin at this step.
-        Note: In GCMC simulations, the Histogram files will be outputed at EqSteps.
-    AdjSteps: int (> 0), default = set via formula based on the number of RunSteps or 1k max
-        Sets the number of steps per adjustment of the parameter associated with each move
-        (e.g. maximum translate distance, maximum rotation, maximum volume exchange, etc.).
-    VDWGeometricSigma: boolean, default = True
-        Use geometric mean, as required by OPLS force field,
-        to combining Lennard-Jones sigma parameters for different atom types.
-        If set to True, GOMC uses geometric mean to combine Lennard-Jones or VDW sigmas.
-        Note: The default setting is pulled from the force field XML, if not present it
-        defaults to geometric via MoSDeF's default setting of VDWGeometricSigma is True,
-        which uses the arithmetic mean when combining Lennard-Jones or "
-        VDW sigma parameters for different atom types.
-        NOTE: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
-        NOTE: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
-    useConstantArea: boolean,  default = False
-        Changes the volume of the simulation box by fixing the cross-sectional
-        area (x-y plane). If True, the volume will change only in z axis,
-        If False, the volume of the box will change in a way to maintain the constant
-        axis ratio.
-    FixVolBox0: boolean, default = False
-        Changing the volume of fluid phase (Box 1) to maintain the constant imposed
-        pressure and Temperature, while keeping the volume of adsorbed phase (Box 0) fixed.
-        Note: By default, GOMC will set useConstantArea to False if no value was set.
-        It means, the volume of the box will change in a way to maintain the constant
-        axis ratio.
-    ChemPot: dict {str (4 dig limit) , unyt.unyt_quantity in energy units (kcal/mol, kJ/mol, K)},
-        default = None
-        The chemical potentials are written in GOMC units of energy, K.
-        There is a 4 character limit for the string/residue name since the PDB/PSF
-        files have a 4 character limitation and require and exact match in the conf file.
-        Note: These strings must match the residue in the psf and psb files or it will fail.
-        The name of the residues and their corresponding chemical potential must specified
-        for every residue in the system (i.e., {"residue_name": chemical_potential}).
-        Note: IF 2 KEYS WITH THE SAME STRING/RESIDUE ARE PROVIDED, ONE WILL BE AUTOMATICALLY
-        OVERWRITTEN AND NO ERROR WILL BE THROWN IN THIS CONTROL FILE WRITER.
-
-        Example 1 (system with only water):  {"H2O": -4000 * unyt.K}
-
-        Example 2 (system with water and ethanol):  {"H2O": -4000 * unyt.K, "ETH": -8000 * unyt.K}
-
-    Fugacity: dict {str, unyt.unyt_quantity in pressure units (>= 0)}, default = None
-        The fugacity is written in GOMC units of pressure, bar.
-        There is a 4 character limit for the string/residue name since the PDB/PSF
-        files have a 4 character limitation and require and exact match in the conf file.
-        Note: These strings must match the residue in the psf and psb files or it will fail.
-        The name of the residues and their corresponding fugacity must specified
-        for every residue in the system (i.e., {"residue_name": fugacity}).
-        Note: IF 2 KEYS WITH THE SAME STRING/RESIDUE ARE PROVIDED, ONE WILL BE AUTOMATICALLY
-        OVERWRITTEN AND NO ERROR WILL BE THROWN IN THIS CONTROL FILE WRITER.
-
-        Example 1 (system with only water):  {"H2O": 1 * unyt.bar}
-
-        Example 2 (system with water and ethanol):  {"H2O": 0.5 * unyt.bar, "ETH": 10 * unyt.atm}
-
-    CBMC_First: int (>= 0), default = 12
-        The number of CD-CBMC trials to choose the first atom position
-        (Lennard-Jones trials for first seed growth).
-    CBMC_Nth: int (>= 0), default = 10
-        The Number of CD-CBMC trials to choose the later atom positions
-        (Lennard-Jones trials for first seed growth).
-    CBMC_Ang: int (>= 0), default = 50
-        The Number of CD-CBMC bending angle trials to perform for geometry
-        (per the coupled-decoupled CBMC scheme).
-    CBMC_Dih: int (>= 0), default = 50
-        The Number of CD-CBMC dihedral angle trials to perform for geometry
-        (per the coupled-decoupled CBMC scheme).
-    OutputName: str (NO SPACES), , default = "Output_data", default = [True, 1M] or
-        [True , set via formula based on the number of RunSteps or 1M max]
-        The UNIQUE STRING NAME, WITH NO SPACES, which is used for the
-        output block average, PDB, and PSF file names.
-    CoordinatesFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
-        default = [False, 1M] or [False , set via formula based on the number of RunSteps or M max]
-        Controls output of PDB file (coordinates). If bool is True, this
-        enables outputting the coordinate files at the integer frequency
-        (set steps_per_data_output_int), while "False" disables outputting
-        the coordinates.
-    DCDFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
-        default = [True, 1M] or [True , set via formula based on the number of RunSteps or M max]
-        Controls output of DCD file (coordinates). If bool is True, this
-        enables outputting the coordinate files at the integer frequency
-        (set steps_per_data_output_int), while "False" disables outputting
-        the coordinates.
-    RestartFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
-        default = [True, 1M] or [True , set via formula based on the number of RunSteps or 1M max]
-        This creates the PDB and PSF (coordinate and topology) files for
-        restarting the system at the set steps_per_data_output_int (frequency)
-        If bool is True, this enables outputting the PDB/PSF restart files at the
-        integer frequency (set steps_per_data_output_int), while “false”
-        disables outputting the PDB/PSF restart files.
-    CheckpointFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
-        default = [True, 1M] or [True , set via formula based on the number of RunSteps or 1M max]
-        Controls the output of the last state of simulation at a specified step,
-        in a binary file format (checkpoint.dat). Checkpoint file contains the
-        following information in full precision:
-
-            (1) Last simulation step that saved into checkpoint file
-
-            (2) Simulation cell dimensions and angles
-
-            (3) Maximum amount of displacement (Å), rotation (δ), and volume (Å^3)
-            that is used in the Displacement, Rotation, MultiParticle, and Volume moves
-
-            (4) Number of Monte Carlo move trial and acceptance
-
-            (5) All molecule’s coordinates
-
-            (6) Random number sequence
-
-        If bool is True, this enables outputing the checkpoint file at the
-        integer frequency (set steps_per_data_ouput_int),
-        while "False" disables outputting the checkpoint file.
-    ConsoleFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
-        default = [True, 10k] or [True , set via formula based on the number of RunSteps or 10k max]
-        Controls the output to the "console" or log file, which prints the
-        acceptance statistics, and run timing info. In addition, instantaneously-selected
-        thermodynamic properties will be output to this file.  If bool is True,
-        this enables outputting the console data at the integer frequency
-        (set steps_per_data_output_int), while "False" disables outputting the console
-        data file.
-    BlockAverageFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
-        default = [True, 10k] or [True , set via formula based on the number of RunSteps or 10k max]
-        Controls the block averages output of selected thermodynamic properties.
-        Block averages are averages of thermodynamic values of interest for chunks of the
-        simulation (for post-processing of averages or std. dev. in those values).
-        If bool is True, this enables outputting the block averaging data/file at the
-        integer frequency (set steps_per_data_output_int),  while "False"
-        disables outputting the block averaging data/file.
-    HistogramFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
-        default = [True, 10k] or [True , set via formula based on the number of RunSteps or 10k max]
-        Controls the histograms. Histograms are a binned listing of observation frequency
-        for a specific thermodynamic variable. In the GOMC code, they also control the output
-        of a file containing energy/molecule samples, which is only used for the "GCMC"
-        ensemble simulations for histogram reweighting purposes. If bool is True, this
-        enables outputting the data to the histogram data at the integer frequency
-        (set steps_per_data_output_int), while "False" disables outputting the histogram
-        data.
-    DistName: str (NO SPACES), default = "dis"
-        Short phrase which will be combined with RunNumber and RunLetter
-        to use in the name of the binned histogram for molecule distribution.
-    HistName: str (NO SPACES), default = "his"
-        Short phrase, which will be combined with RunNumber and RunLetter,
-        to use in the name of the energy/molecule count sample file.
-    RunNumber: int  ( > 0 ), default = 1
-        Sets a number, which is a part of DistName and HistName file name.
-    RunLetter: str (1 alphabetic character only), default = "a"
-        Sets a letter, which is a part of DistName and HistName file name.
-    SampleFreq: int ( > 0 ), default = 500
-        The number of steps per histogram sample or frequency.
-    OutEnergy: [bool, bool], default = [True, True]
-        The list provides the booleans to [block_averages_bool, console_output_bool].
-        This outputs the energy data into the block averages and console output/log
-    OutPressure: [bool, bool], default = [True, True]
-        The list provides the booleans to [block_averages_bool, console_output_bool].
-        This outputs the pressure data into the block averages and console output/log files.
-    OutMolNum: [bool, bool], default = [True, True]
-        The list provides the booleans to [block_averages_bool, console_output_bool].
-        This outputs the number of molecules data into the block averages and console
-        output/log files.
-    OutDensity: [bool, bool], default = [True, True]
-        The list provides the booleans to [block_averages_bool, console_output_bool].
-        This outputs the density data into the block averages and console output/log files.
-    OutVolume: [bool, bool], default = [True, True]
-        The list provides the booleans to [block_averages_bool, console_output_bool].
-        This outputs the volume data into the block averages and console output/log files.
-    OutSurfaceTension: [bool, bool], default = [False, False]
-        The list provides the booleans to [block_averages_bool, console_output_bool].
-        This outputs the surface tension data into the block averages and console
-        output/log files.
-    FreeEnergyCalc: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
-        default = None
-        bool = True enabling free energy calculation during the simulation, false disables
-        the calculation. The int/step frequency sets the frequency of calculating the free energy.
-        WARNING: When using the free energy calculations, RcutLow needs to be set to zero (RcutLow=0);
-        otherwise, the free energy calculations can produce results that are slightly off or wrong.
-    MoleculeType: list [str , int (> 0)] or ["residue_name" , residue_ID], default = None
-        The user must set this variable as there is no working default.
-        Note: ONLY 4 characters can be used for the string (i.e., "residue_name").
-        Sets the solute molecule kind (residue name) and molecule number (residue ID),
-        which absolute solvation free will be calculated for.
-    InitialState: int (>= 0), default = None
-        The user must set this variable as there is no working default.
-        The index of LambdaCoulomb and LambdaVDW vectors. Sets the index of the
-        LambdaCoulomb and LambdaVDW vectors, to determine the simulation lambda value for
-        VDW and Coulomb interactions.
-        WARNING: This must an integer within the vector count of the LambdaVDW and LambdaCoulomb,
-        in which the counting starts at 0.
-    LambdaVDW: list of floats (0 <= floats <= 1), default = None
-        The user must set this variable as there is no working default (default = {}).
-        Lambda values for VDW interaction in ascending order. Sets the intermediate
-        lambda states to which solute-solvent VDW interactions are scaled.
-
-        WARNING: This list must be the same length as the "LambdaCoulomb" list length.
-
-        WARNING: All lambda values must be stated in the ascending order,
-        starting with 0.0 and ending with 1.0; otherwise, the program will terminate.
-
-        Example of ascending order 1: [0.0, 0.1, 1.0]
-
-        Example of ascending order 2: [0.0, 0.1, 0.2, 0.4, 0.9, 1.0]
-
-    LambdaCoulomb: list of floats (0 <= floats <= 1), default = None
-        Lambda values for Coulombic interaction in ascending order. Sets the intermediate
-        lambda states to which solute-solvent Coulombic interactions are scaled.
-        GOMC defauts to the "LambdaVDW" values for the Coulombic interaction
-        if no "LambdaCoulomb" variable is set.
-
-        WARNING: This list must be the same length as the "LambdaVDW" list length.
-
-        WARNING: All lambda values must be stated in the ascending order,
-        starting with 0.0 and ending with 1.0; otherwise, the program will terminate.
-
-        Example of ascending order 1: [0.0, 0.1, 1.0]
-
-        Example of ascending order 2: [0.0, 0.1, 0.2, 0.4, 0.9, 1.0]
-
-    ScaleCoulomb: bool, default = False
-        Determines to scale the Coulombic interaction non-linearly
-        (soft-core scheme) or not.
-        True if the Coulombic interaction needs to be scaled non-linearly.
-        False if the Coulombic interaction needs to be scaled linearly.
-    ScalePower: int (>= 0), default = 2
-        The p value in the soft-core scaling scheme, where the distance
-        between solute and solvent is scaled non-linearly.
-    ScaleAlpha: int or float (>= 0), default = 0.5
-        The alpha value in the soft-core scaling scheme, where the distance
-        between solute and solvent is scaled non-linearly.
-    MinSigma: unyt.unyt_quantity in length units (>= 0), default = 3 angstroms
-        The minimum sigma value in the soft-core scaling scheme (written in Angstroms), where the
-        distance between solute and solvent is scaled non-linearly.
-    DisFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.15, 'NPT': 0.15, 'GEMC_NVT': 0.19, 'GEMC_NPT': 0.19, 'GCMC': 0.15}
-        Fractional percentage at which the displacement move will occur
-        (i.e., fraction of displacement moves).
-    RotFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.15, 'NPT': 0.15, 'GEMC_NVT': 0.2, 'GEMC_NPT': 0.2, 'GCMC': 0.15}
-        Fractional percentage at which the rotation move will occur.
-        (i.e., fraction of rotation moves).
-    IntraSwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.3, 'NPT': 0.29, 'GEMC_NVT': 0.1, 'GEMC_NPT': 0.1, 'GCMC': 0.1}
-        Fractional percentage at which the molecule will be removed from a
-        box and inserted into the same box using coupled-decoupled configurational-bias
-        algorithm. (i.e., fraction of intra-molecule swap moves).
-    SwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.2, 'GEMC_NPT': 0.2, 'GCMC': 0.35}
-        For Gibbs and Grand Canonical (GC) ensemble runs only: Fractional
-        percentage at which molecule swap move will occur using coupled-decoupled
-        configurational-bias. (i.e., fraction of molecule swaps moves).
-    RegrowthFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.3, 'NPT': 0.3, 'GEMC_NVT': 0.2, 'GEMC_NPT': 0.2, 'GCMC': 0.15}
-        Fractional percentage at which part of the molecule will be deleted and
-        then regrown using coupled- decoupled configurational-bias algorithm
-        (i.e., fraction of molecular growth moves).
-    CrankShaftFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.1, 'NPT': 0.1, 'GEMC_NVT': 0.1, 'GEMC_NPT': 0.1, 'GCMC': 0.1}
-        Fractional percentage at which crankshaft move will occur.
-        In this move, two atoms that are forming angle or dihedral are selected
-        randomly and form a shaft. Then any atoms or group that are within these
-        two selected atoms, will rotate around the shaft to sample intra-molecular
-        degree of freedom (i.e., fraction of crankshaft moves).
-    VolFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.01, 'GEMC_NVT': 0.01, 'GEMC_NPT': 0.01, 'GCMC': 0.0}
-        For isobaric-isothermal (NPT) ensemble and Gibbs ensemble
-        (GEMC_NPT and GEMC_NVT) runs only: Fractional percentage at
-        which a volume move will occur (i.e., fraction of Volume moves).
-    MultiParticleFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
-        Fractional percentage at which multi-particle move will occur.
-        In this move, all molecules in the selected simulation box will be rigidly
-        rotated or displaced simultaneously, along the calculated torque or force
-        respectively (i.e., fraction of multi-particle moves).
-        Note: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian
-        (MultiParticleBrownianFreq) cannot be used at the same time.
-    MultiParticleBrownianFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
-        Fractional percentage at which multi-particle brownian move will occur. In this
-        move, all molecules in the selected simulation box will be rigidly rotated or displaced
-        simultaneously, along the calculated torque or force, respectively
-        (i.e., fraction of Multi-Particle Brownian moves).
-        Note: all of the move types are not available in for every ensemble.
-        Note: all of the move fractions must sum to 1, or the control file writer will fail.
-        Note: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian
-        (MultiParticleBrownianFreq) cannot be used at the same time.
-    MultiParticleLiquid: bool, default=True (GEMC-only)
-        Use the multi-particle move in the liquid phase.
-        Note: GOMC determines the boxes are liquid or gas/vapor before
-        running each move, based on the calculated density of the GEMC boxes.
-    MultiParticleGas: bool, default=False (GEMC-only)
-        Use the multi-particle move in the gas/vapor phase.
-        Note: GOMC determines the boxes are liquid or gas/vapor before
-        running each move, based on the calculated density of the GEMC boxes.
-    IntraMEMC-1Freq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
-        Fractional percentage at which specified number of small molecule kind will be
-        exchanged with a specified large molecule kind in defined sub-volume within
-        same simulation box.  This move need additional information such as
-        ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind, and ExchangeLargeKind.
-    MEMC-1Freq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
-        Fractional percentage at which specified number of small molecule kind will
-        be exchanged with a specified large molecule kind in defined sub-volume,
-        between simulation boxes.  This move need additional information such as
-        ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind, and ExchangeLargeKind.
-    IntraMEMC-2Freq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
-        Fractional percentage at which specified number of small molecule kind
-        will be exchanged with a specified large molecule kind in defined sub-volume
-        within same simulation box. Backbone of small and large molecule kind will be
-        used to insert the large molecule more efficiently. This move need additional
-        information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
-        ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone.
-    MEMC-2Freq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
-        Fractional percentage at which specified number of small molecule kind will be
-        exchanged with a specified large molecule kind in defined sub-volume,
-        between simulation boxes. Backbone of small and large molecule kind will be
-        used to insert the large molecule more efficiently. This move need additional
-        information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
-        ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone.
-    IntraMEMC-3Freq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
-        Fractional percentage at which specified number of small molecule kind will be
-        exchanged with a specified large molecule kind in defined sub-volume within same
-        simulation box. Specified atom of the large molecule kind will be used to insert
-        the large molecule using coupled-decoupled configurational-bias. This move need
-        additional information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
-        ExchangeLargeKind, and LargeKindBackBone.
-    MEMC-3Freq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
-        Fractional percentage at which specified number of small molecule kind will be
-        exchanged with a specified large molecule kind in defined sub-volume,
-        between simulation boxes.  Specified atom of the large molecule kind will be
-        used to insert the large molecule using coupled-decoupled configurational-bias.
-        This move need additional information such as ExchangeVolumeDim,
-        ExchangeRatio, ExchangeSmallKind, ExchangeLargeKind, and LargeKindBackBone.
-    TargetedSwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0}
-        Fractional percentage at which targeted swap move will occur.
-        Note: This is only usable with the 'GCMC', 'GEMC_NVT', and 'GEMC_NPT' ensembles.
-        Note: This is used in conjunction with the "TargetedSwap_DataInput" variables.
-    IntraTargetedSwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
-        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0}
-        Note: This is used in conjunction with the "TargetedSwap_DataInput" variables.
-    TargetedSwap_DataInput: dict, default=None
-        A dictionary which can contain one or several targeted swap regions, each designated with
-        their own tag ID number (aka, subvolume number).
-        A few examples for TargetedSwap_DataInput input is provided below.
-        NOTE: MULTIPLE SIMULATION BOXES CAN BE UTILIZED BY SETTING MULTIPLE tag_ID_integer VALUES (INTEGERS VALUES),
-        NOTE: THIS IS REQUIRED WHEN USING EITHER THE "TargetedSwapFreq" OR "IntraTargetedSwapFreq" MC MOVES.
-        WARNING: THE tag_ID_integer VALUES MUST BE UNIQUE FOR EACH SUBVOLUME,
-        OR THE DICTIONARY WILL OVERWRITE THE PREVIOUS SUBVOLUME (tag_ID_integer) SECTION
-        WITH THE CURRENT tag_ID_integer AND ITS RESPECTIVE VALUES.
-
-        Example 1
-        input_variables_dict={"TargetedSwap_DataInput": {tag_ID_integer: {"SubVolumeType": "dynamic",
-        "SubVolumeBox": 0, "SubVolumeCenterList": ['0-10', 12, 15, '22-40'],
-        "SubVolumeDim": [1 * unyt.angstrom, 2 * unyt.angstrom, 3 * unyt.angstrom],
-        "SubVolumeResidueKind": "ALL", "SubVolumeRigidSwap": False, "SubVolumePBC": "XY",
-        "SubVolumeChemPot": {"MET": -21 * unyt.kcal / unyt.mol, "met": -31 * unyt.K}}}
-
-        Example 2
-        input_variables_dict={"TargetedSwap_DataInput": {tag_ID_integer: {"SubVolumeType": "static",
-        "SubVolumeBox": 0, "SubVolumeCenter": [1, 12, 15] * unyt.angstrom,
-        "SubVolumeDim": [3, 3, 3] * 10**(-10) * unyt.m,
-        "SubVolumeResidueKind": ["MET", "met"], "SubVolumeRigidSwap": False, "SubVolumePBC": "XYZ",
-        "SubVolumeFugacity": {"MET": 0.1 * unyt.bar, "met": 1 * unyt.bar}}}
-
-        The details of each key and value for the "TargetedSwap_DataInput" are provided below.
-
-        --- "SubVolumeType": str ("static" or "dynamic"), No default is provided.
-        The type of targeted swap box (subvolume) that will be created.
-        The "static" type will maintain the box (subvolume) in a fixed location during the whole simulation,
-        with the center of the box determined by the coordinates set in the
-        "SubvolumeCenter" parameter.
-        The "dynamic" type will allow for dynamic movement of the box (subvolume) based atom indices
-        provided in the SubvolumeCenterList variable. For the "dynamic" type, the user must define a
-        list of atom indices using "SubVolumeCenterList" keyword; the geometric center of the
-        provided atom indices will be used as the center of subVolume. User must ensure that the
-        atoms defined in the atom list remain in the simulation box (by setting the Beta value to 2 in PDB file).
-
-        --- "SubVolumeBox": int (0 or 1), No default is provided.
-        The simulation box in which the targeted swap subvolume will be applied.
-        NOTE: Only box zero (0) can be used for the GCMC, NPT, and NVT ensembles.
-
-        --- "SubVolumeCenter": list of three (3) unyt.unyt_quantity in length units, [x-axis, y-axis, z-axis],
-        No default is provided.
-        The simulation box is centered on this x, y, and z-axis points (written in Angstroms), which is only
-        utilized when "SubVolumeType" is set to "static".
-
-        --- "SubVolumeCenterList": list of int and/or str (>=0), [atom_index, ..., atom_index],
-        No default is provided.
-        The simulation box subVolume is centered on the geometric center of the provided atom indices, which is
-        only used when the "SubVolumeType" is set to "dynamic". For example, [0-10', 12, 15] means that
-        atom indices 0 to 10, 12 and 15 are used as the geometric center of the simulation box subVolume.
-        NOTE: THE ATOM INDICES RANGES MUST BE A STRING IN THE FORM '2-20', WITH THE FIRST ATOM INDICES BEING
-        SMALLER THAN THE SECOND (i.e, 'a-b', where a < b). ALL SINGULAR ATOM INDICES MUST BE INTEGERS.
-        NOTE: THE SAME ATOM INDICES CAN BE USED 2, 3 OR X TIMES TO WEIGHT that atom 2, 3, OR X TIMES MORE
-        IN THE GEOMETRIC CENTERING CALCULATION.
-        NOTE: THE ATOM INDICES START AT ZERO (0), WHILE THE PDB AND PSF FILES START AT ONE (1).
-        THEREFORE, YOU NEED TO BE CAREFUL WHEN SETTING THE INDICES FROM THE PDB OR PSF VALUES AS THEY ARE
-        ONE (1) NUMBER OFF.
-
-        --- "SubVolumeDim": list of three (3) unyt.unyt_quantity in length units (>= 0),
-        [x-axis, y-axis, z-axis], No default is provided.
-        This sets the size of the simulation box (subVolume) in the x, y, and z-axis (written in Angstroms).
-
-        --- "SubVolumeResidueKind": str or list of str, "ALL" or "residue"
-        or ["ALL"] or [residue_str, ..., residue_str], No default is provided.
-        The residues that will be used in the "TargetedSwap_DataInput" subvolume.
-        Alternatively, the user can just set the value to ["ALL"] or "ALL", which covers all the residues.
-
-        --- "SubVolumeRigidSwap": bool, default = True
-        Choose whether to use a rigid or flexible molecule insertion using CD-CBMC for the subVolume.
-        True uses a rigid molecule insertion, while False uses a flexible molecule insertion
-
-        --- "SubVolumePBC": str ('X', 'XY', 'XZ', 'XYZ', 'Y', 'YZ', or 'Z'), default = 'XYZ'.
-        Apply periodic boundary condition (PBC) in selected axes for the subVolume.
-        Example 1, 'X' applies PBC only in the X axis. Example 2, 'XY' applies PBC only in the X and Y axes.
-        Example 3, 'XYZ' applies PBC in the X, Y, and Z axes.
-
-        --- "SubVolumeChemPot": dict {str (4 dig limit) ,
-        unyt.unyt_quantity in energy units (kcal/mol, kJ/mol, or K)}}, No default is provided.
-        The chemical potentials are written in GOMC units of energy, K.
-        If no SubVolumeChemPot is provided the default system chemical potential values are used.
-        There is a 4 character limit for the string/residue name since the PDB/PSF
-        files have a 4 character limitation and require an exact match in the conf file.
-        Note: These strings must match the residue in the psf and psb files or it will fail.
-        The name of the residues and their corresponding chemical potential must be specified
-        for every residue in the system (i.e., {"residue_name": chemical_potential}).
-        Note: THIS IS ONLY REQUIRED FOR THE GCMC ENSEMBLE.
-        Note: IF 2 KEYS WITH THE SAME STRING/RESIDUE ARE PROVIDED, ONE WILL BE AUTOMATICALLY
-        OVERWRITTEN AND NO ERROR WILL BE THROWN IN THIS CONTROL FILE WRITER.
-        Note: ONLY THE "SubVolumeChemPot" OR THE "SubVolumeFugacity" CAN BE USED FOR ALL THE
-        TARGET SWAP BOXES (SUBVOLUMES). IF MIX OF "SubVolumeChemPot" AND "SubVolumeFugacity" ARE
-        USED THE CONTROL FILE WRITER WILL THROW AN ERROR.
-
-        --- "SubVolumeFugacity": dict {str , unyt.unyt_quantity in pressure units (>= 0)}, No default is provided.
-        The fugacity is written in GOMC units of pressure, bar.
-        If no "SubVolumeFugacity" is provided the default system fugacity values are used.
-        There is a 4 character limit for the string/residue name since the PDB/PSF
-        files have a 4 character limitation and require an exact match in the conf file.
-        Note: These strings must match the residue in the psf and psb files or it will fail.
-        The name of the residues and their corresponding fugacity must be specified
-        for every residue in the system (i.e., {"residue_name": fugacity}).
-        Note: THIS IS ONLY REQUIRED FOR THE GCMC ENSEMBLE.
-        Note: IF 2 KEYS WITH THE SAME STRING/RESIDUE ARE PROVIDED, ONE WILL BE AUTOMATICALLY
-        OVERWRITTEN AND NO ERROR WILL BE THROWN IN THIS CONTROL FILE WRITER.
-        Note: ONLY THE "SubVolumeChemPot" OR THE "SubVolumeFugacity" CAN BE USED FOR ALL THE
-        TARGET SWAP BOXES (SUBVOLUMES). IF MIX OF "SubVolumeChemPot" AND "SubVolumeFugacity" ARE
-        USED THE CONTROL FILE WRITER WILL THROW AN ERROR.
-
-    ExchangeVolumeDim: list of 3 floats or integers or [X-dimension, Y-dimension, Z-dimension],
-        default = [1.0, 1.0, 1.0]
-        To use all variations of MEMC and Intra-MEMC Monte Carlo moves, the exchange
-        subvolume must be defined. The exchange sub-volume is defined as an orthogonal box
-        with x, y, and z-dimensions, where small molecule/molecules kind will be selected
-        from to be exchanged with a large molecule kind.
-        Note: Currently, the X and Y dimension cannot be set independently (X = Y = max(X, Y)).
-        Note: A heuristic for setting good values of the x, y, and z-dimensions is to use
-        the geometric size of the large molecule plus 1-2 Å in each dimension.
-        Note: In case of exchanging 1 small molecule kind with 1 large molecule kind in
-        IntraMEMC-2, IntraMEMC-3, MEMC-2, MEMC-3 Monte Carlo moves, the sub-volume
-        dimension has no effect on acceptance rate.
-    MEMC_DataInput: nested lists, default = None
-        Enter data as a list with some sub-lists as follows:
-        [[ExchangeRatio_int (> 0), ExchangeLargeKind_str,
-        [LargeKindBackBone_atom_1_str_or_NONE, LargeKindBackBone_atom_2_str_or_NONE ],
-        ExchangeSmallKind_str, [SmallKindBackBone_atom_1_str_or_NONE, SmallKindBackBone_atom_2_str_or_NONE ]],
-        ...,
-        [ExchangeRatio_int (> 0), ExchangeLargeKind_str,
-        [LargeKindBackBone_atom_1_str_or_NONE, LargeKindBackBone_atom_2_str_or_NONE ],
-        ExchangeSmallKind_str, [SmallKindBackBone_atom_1_str_or_NONE, SmallKindBackBone_atom_2_str_or_NONE ].
-        NOTE: CURRENTLY ALL THESE INPUTS NEED TO BE SPECIFIED, REGARDLESS OF THE MEMC TYPE
-        SELECTION. IF THE SmallKindBackBone or LargeKindBackBone IS NOT REQUIRED FOR THE
-        MEMC TYPE, None CAN BE USED IN PLACE OF A STRING.
-
-        Note: These strings must match the residue in the psf and psb files or it will fail.
-        It is recommended that the user print the Charmm object psf and pdb files
-        and review the residue names that match the atom name before using the in
-        the MEMC_DataInput variable input.
-
-        Note: see the below data explanations for the ExchangeRatio, ExchangeSmallKind,
-        ExchangeLargeKind, LargeKindBackBone, SmallKindBackBone.
-
-        Example 1 (MEMC-1): [ [1, 'WAT', [None, None], 'wat', [None, None]] ,
-        [1, 'WAT', [None, None], 'wat', [None, None]]
-
-        Example 2 (MEMC-2): [ [1, 'WAT', ['O1', 'H1'], 'wat', ['O1', 'H1' ]] ,
-        [1, 'WAT', ['H1', 'H2'], 'wat', ['H1', 'H2' ]]
-
-        Example 3 (MEMC-3): [ [2, 'WAT', 'O1', 'H1'], 'wat', [None, None]] ,
-        [2, 'WAT', ['H1', 'H2'], 'wat', [None, None]]
-
-        --- ExchangeRatio     = MEMC parameters (all ensembles): int (> 0), default = None
-        The Ratio of exchanging small molecule/molecules with 1 large molecule.
-        To use all variation of MEMC and Intra-MEMC Monte Carlo moves,
-        the exchange ratio must be defined. The exchange ratio defines how
-        many small molecule will be exchanged with 1 large molecule. For each
-        large-small molecule pairs, one exchange ratio must be defined.
-
-        --- ExchangeSmallKind = MEMC parameters (all ensembles):  str, default = None
-        The small molecule kind (resname) to be exchanged.
-        Note: ONLY 4 characters can be used for the strings.
-        To use all variation of MEMC and Intra-MEMC Monte Carlo moves,
-        the small molecule kind to be exchanged with a large molecule
-        kind must be defined. Multiple small molecule kind can be specified.
-
-        --- ExchangeLargeKind = MEMC parameters (all ensembles):  str, default = None
-        The large molecule kind (resname) to be exchanged.
-        Note: ONLY 4 characters can be used for the strings.
-        To use all variation of MEMC and Intra-MEMC Monte Carlo moves,
-        the large molecule kind to be exchanged with small molecule
-        kind must be defined. Multiple large molecule kind can be specified.
-
-        --- LargeKindBackBone = MEMC parameters (all ensembles): list [str, str] or [None, None], default = None
-        Note: ONLY 4 characters can be used for the strings.
-        The [None, None] values can only be used if that MEMC type does
-        not require them.  The strings for the the atom name 1 and atom name 2
-        that belong to the large molecule’s backbone
-        (i.e., [str_for_atom_name_1, str_for_atom_name_2])
-        To use MEMC-2, MEMC-3, IntraMEMC-2, and IntraMEMC-3 Monte Carlo moves, the
-        large molecule backbone must be defined. The backbone of the molecule is defined
-        as a vector that connects two atoms belong to the large molecule. The large
-        molecule backbone will be used to align the sub-volume in MEMC-2 and IntraMEMC-2
-        moves, while in MEMC-3 and IntraMEMC-3 moves, it uses the atom name to start
-        growing the large molecule using coupled-decoupled configurational-bias. For
-        each large-small molecule pairs, two atom names must be defined.
-        Note: all atom names in the molecule must be unique.
-        Note: In MEMC-3 and IntraMEMC-3 Monte Carlo moves, both atom names must be same,
-        otherwise program will be terminated.
-        Note: If the large molecule has only one atom (mono atomic molecules),
-        same atom name must be used for str_for_atom_name_1 and str_for_atom_name_2
-        of the LargeKindBackBone.
-
-        --- SmallKindBackBone = MEMC parameters (all ensembles): list [str, str] or [None, None], default = None
-        Note: ONLY 4 characters can be used for the strings.
-        The [None, None] values can only be used if that MEMC type does not
-        require them. The strings for the the atom name 1 and atom name 2 that
-        belong to the small molecule’s backbone
-        (i.e., [str_for_atom_name_1, str_for_atom_name_2])
-        To use MEMC-2, and IntraMEMC-2 Monte Carlo moves, the small molecule backbone
-        must be defined. The backbone of the molecule is defined as a vector that
-        connects two atoms belong to the small molecule and will be used to align the
-        sub-volume. For each large-small molecule pairs, two atom names must be defined.
-        Note: all atom names in the molecule must be unique.
-        Note: If the small molecule has only one atom (mono atomic molecules), same atom
-        name must be used str_for_atom_name_1 and str_for_atom_name_2
-        of the SmallKindBackBone.
-
-    # *******************************************************************
-    # input_variables_dict options (keys and values) - (end)
-    # Note: the input_variables_dict keys are also attributes
-    # *******************************************************************
-
-    Attributes
-    ----------
-    input_error: bool
-        This error is typically incurred from an error in the user input values.
-        However, it could also be due to a bug, provided the user is inputting
-        the data as this Class intends.
-    all_failed_input_List: list
-        A list of all the inputs that failed, but there may be some inputs that
-        are not possible to put on this list.
-    ensemble_typ: str, ['NVT', 'NPT', 'GEMC_NPT', 'GCMC-NVT', 'GCMC']
-        The ensemble type of the simulation.
-    RunSteps: int (>0), must be an integer greater than zero.
-        Sets the total number of simulation steps.
-    Temperature: unyt.unyt_quantity in temperature units (> 1 K)
-        Temperature of system in unyt temperature units (written in Kelvin).
-    ff_psf_pdb_file_directory: str (optional), default=None (i.e., the current directory).
-        The full or relative directory added to the force field, psf, and pdb
-        file names, created via the Charmm object.
-    check_input_files_exist: bool, (default=True)
-        Check if the force field, psf, and pdb files exist. If input, it also checks if the Checkpoint,
-        binCoordinates_box_0, extendedSystem_box_0, binVelocities_box_0,
-        binCoordinates_box_1, extendedSystem_box_1, and binVelocities_box_1 files.
-        If the files are checked and do not exist, the writer will throw a ValueError.
-        True, check if the all the input files exist.
-        False, do not check if the all the input files exist.
-    Restart: boolean, default = False
-        Determines whether to restart the simulation from restart file
-        (``*_restart.pdb`` and ``*_restart.psf``) or not.
-    Checkpoint: list (see below), default = [False, '']
-        If True:  Checkpoint = [True, str] ---> [True, checkpoint_filename]
-        If False: Checkpoint = [False, str] ---> [False, checkpoint_filename]
-        Checkpoint files guaruntee trajectory files can be concatenated, along with ensuring
-        no deviation from a single simulation’s results in a simulation which was interrupted
-        and restarted.
-        Determines whether to restart the simulation from checkpoint file or not. Restarting the simulation
-        with would result in an identical outcome, as if previous simulation was continued.
-        This is required for hybrid Monte-Carlo Molecular Dyanamics in open-ensembles (GCMC/GEMC)
-        to concatenate trajectory files since the molecular transfers rearranges the order of the molecules.
-        Checkpointing will ensure the molecules are loaded in the same order each cycle.
-        NOTE: the checkpoint_filename can be entered with the .chk extension, or without an extension; if it
-        does not have the file extension, the .chk extension will then be added to the filename.
-    Parameters: str, (default=None)
-        Override all other force field directory and filename input with the correct extension (.inp or .par).
-        Note: the default directory is the current directory with the Charmm object file name.
-    Coordinates_box_0: str, (default=None)
-        Override all other box 0 pdb directory and filename inputs with the correct extension.
-        Note: the default directory is the current directory with the Charmm object file name.
-    Structure_box_0: str, (default=None)
-        Override all other box 0 psf directory and filename inputs with the correct extension.
-        Note: the default directory is the current directory with the Charmm object file name.
-    Coordinates_box_1: str, (default=None)
-        Override all other box 1 pdb directory and filename inputs with the correct extension.
-        Note: the default directory is the current directory with the Charmm object file name.
-    Structure_box_1: str, (default=None)
-        Override all other box 1  psf directory and filename inputs with the correct extension.
-        Note: the default directory is the current directory with the Charmm object file name.
-    binCoordinates_box_0: str, (default=None)
-        The box 0 binary coordinate file is used only for restarting a GOMC simulation,
-        which provides increased numerical accuracy.
-    extendedSystem_box_0: str, (default=None)
-        The box 0 vectors and origin file is used only for restarting a GOMC simulation.
-    binVelocities_box_0: str, (default=None)
-        The box 0 binary velocity file is used only for restarting a GOMC simulation,
-        which provides increased numerical accuracy. These velocities are only passed thru
-        GOMC since Monte Carlo simulations do not utilize any velocity information.
-    binCoordinates_box_1: str, (default=None)
-        The box 1 binary coordinate file is used only for restarting a GOMC simulation,
-        which provides increased numerical accuracy.
-    extendedSystem_box_1: str, (default=None)
-        The box 1 vectors and origin file is used only for restarting a GOMC simulation.
-    binVelocities_box_1: str, (default=None)
-        The box 1 binary velocity file is used only for restarting a GOMC simulation,
-        which provides increased numerical accuracy. These velocities are only passed thru
-        GOMC since Monte Carlo simulations do not utilize any velocity information.
-    input_variables_dict: dict, default = None
-        These input variables are optional and override the default settings.
-        Changing these variables likely required for more advanced systems.
-        The details of the acceptable input variables for the selected
-        ensembles can be found by running the code below in python,
-
-        >>> print_valid_ensemble_input_variables('GCMC', description = True)
-
-        which prints the input_variables with their subsection description
-        for the selected 'GCMC' ensemble (other ensembles can be set as well).
-        Example: input_variables_dict = {'PRNG': 123,
-                                          'ParaTypeCHARMM': True }
-    conf_filename: str
-        The name of the GOMC contol file, which will be created.  The extension
-        of the GOMC control file can be .conf, or no extension can be provided.
-        If no extension is provided, this writer will automatically add the
-        .conf extension to the provided string.
-    box_0_vectors: numpy.ndarray, [[float float float], [float float float], [float float float]]
-        Three (3) sets vectors for box 0 each with 3 float values, which represent
-        the vectors for the Charmm-style systems (units in Angstroms (Ang))
-    box_1_vectors: numpy.ndarray, [[float float float], [float float float], [float float float]]
-        Three (3) sets vectors for box 1 each with 3 float values, which represent
-        the vectors for the Charmm-style systems (units in Angstroms (Ang))
-    electrostatic_1_4: float or int
-        The non-bonded 1-4 coulombic scaling factor, which is the
-        same for all the residues/molecules, regardless if
-        differenct force fields are utilized.
-    residues: list, [str, ..., str]
-        Labels of unique residues in the Compound. Residues are assigned by
-        checking against Compound.name.  Only supply residue names as 4 character
-        strings, as the residue names are truncated to 4 characters to fit in the
-        psf and pdb file.
-    all_res_unique_atom_name_dict: dict, {str: [str, ..., str]}
-        A dictionary that provides the residue names (keys) and a list
-        of the unique atom names in the residue (value), for the
-        combined structures (box 0 and box 1 (if supplied)).
-    any input_variables_dict key: varies (see each input_variables_dict key and value)
-        Any of the input variables keys is also an Attribute and can be called
-        the same way.  Please see the input_variables_dict keys in the
-        Parameters section above for all the available attributes.
-
-    Notes
-    -------
-    The user input variables (input_variables_dict) and the specific
-    ensembles.
-
-    The details of the required inputs for the selected
-    ensembles can be found by running this python workbook,
-
-    >>> print_valid_required_input_variables('NVT', description = True)
-
-    which prints the required inputs with their subsection description
-    for the selected 'NVT' ensemble (other ensembles can be set as well).
-
-    The details of the input variables for the selected
-    ensembles can be found by running this python workbook,
-
-    >>> print_valid_ensemble_input_variables('NPT', description = True)
-
-    which prints the input variables with their subsection description
-    for the selected 'NPT' ensemble (other ensembles can be set as well).
-
-    Note: The box units imported are in nm (standard MoSDeF units).
-    The units for this writer are auto-scaled to Angstroms, so they
-    can be directly used in the GOMC or NAMD engines.
-
-    Note: all of the move types are not available in for every ensemble.
-
-    Note: all of the move fractions must sum to 1, or the control file
-    writer will fail.
-
-    Note: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
-    Note: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
-
-    The input variables (input_variables_dict) and text extracted with permission from
-    the GOMC manual version 2.60. Some of the text was modified from its original version.
-    Cite: Potoff, Jeffrey; Schwiebert, Loren; et. al. GOMC Documentation.
-    https://raw.githubusercontent.com/GOMC-WSU/GOMC/master/GOMC_Manual.pdf, 2021.
+     Constructs the GOMC control file with user selected variables.
+     The selected variables and Class attributes are mostly or nearly identical to the
+     GOMC command names. For many ensembles, the user may use the default input_variables_dict
+     variables, unless they are required for the specific ensemble (Example:
+     the GCMC ensemble requires the user to input the Chempot or Fugacity variables,
+     or the build will fail.)
+
+     Default settings for the GOMC configuration files are based upon
+     an educated guess, which should result in appropriate sampling for a
+     given ensemble/simulation type. However, there is no guarantee that
+     the default setting will provide the best or adequate sampling for
+     the selected system. The user can modify the configuration/control files
+     based on the simulation specifics or optimize the system beyond the standard
+     settings.  These override options are available via the keyword arguments
+     in input_variable_dict.
+
+     Parameters
+     ----------
+     charmm_object:  Charmm object
+         Charmm object is has been parameterized from the selected force field.,
+     ensemble_typ: str, ['NVT', 'NPT', 'GEMC_NPT', 'GCMC-NVT', 'GCMC']
+         The ensemble type of the simulation.
+     RunSteps: int (>0), must be an integer greater than zero.
+         Sets the total number of simulation steps.
+     Temperature: unyt.unyt_quantity in temperature units (> 1 K)
+         Temperature of system in unyt temperature units (written in Kelvin).
+     ff_psf_pdb_file_directory: str (optional), default=None (i.e., the current directory).
+         The full or relative directory added to the force field, psf, and pdb
+         file names, created via the Charmm object.
+     check_input_files_exist: bool, (default=True)
+         Check if the force field, psf, and pdb files exist. If input, it also checks if the Checkpoint,
+         binCoordinates_box_0, extendedSystem_box_0, binVelocities_box_0,
+         binCoordinates_box_1, extendedSystem_box_1, and binVelocities_box_1 files.
+         If the files are checked and do not exist, the writer will throw a ValueError.
+         True, check if the all the input files exist.
+         False, do not check if the all the input files exist.
+     Restart: boolean, default = False
+         Determines whether to restart the simulation from restart file
+         (``*_restart.pdb`` and ``*_restart.psf``) or not.
+     Checkpoint: list or bool (see below), default = False
+         If True:  Checkpoint = [True, str] ---> [True, checkpoint_filename]
+         If False: Checkpoint = False or [False, str] ---> [False, checkpoint_filename]
+         Checkpoint files guaruntee trajectory files can be concatenated, along with ensuring
+         no deviation from a single simulation’s results in a simulation which was interrupted
+         and restarted.
+         Determines whether to restart the simulation from checkpoint file or not. Restarting the simulation
+         with would result in an identical outcome, as if previous simulation was continued.
+         This is required for hybrid Monte-Carlo Molecular Dyanamics in open-ensembles (GCMC/GEMC)
+         to concatenate trajectory files since the molecular transfers rearranges the order of the molecules.
+         Checkpointing will ensure the molecules are loaded in the same order each cycle.
+         NOTE: the checkpoint_filename can be entered with the .chk extension, or without an extension; if it
+         does not have the file extension, the .chk extension will then be added to the filename.
+     ExpertMode: boolean, default = False
+         This allows the move ratios to be any value, regardless of the ensemble,
+         provided all the move ratios sum to 1. For example, this mode is utilized
+         to easily equilibrate a GCMC or GEMC ensemble in a pseudo NVT mode by removing
+         the requirement that the volume and swap moves must be non-zero.
+         In other words, when the volume and swap moves are zero, the GCMC and GEMC
+         ensembles will run pseudo NVT simulations in 1 and 2 simulation boxes, respectively.
+         The simulation's output and restart files will keep their original output structure
+         for the selected ensemble, which is advantageous when automating a workflow.
+     Parameters: str, (default=None)
+         Override all other force field directory and filename input with the correct extension (.inp or .par).
+         Note: the default directory is the current directory with the Charmm object file name.
+     Coordinates_box_0: str, (default=None)
+         Override all other box 0 pdb directory and filename inputs with the correct extension.
+         Note: the default directory is the current directory with the Charmm object file name.
+     Structure_box_0: str, (default=None)
+         Override all other box 0 psf directory and filename inputs with the correct extension.
+         Note: the default directory is the current directory with the Charmm object file name.
+     Coordinates_box_1: str, (default=None)
+         Override all other box 1 pdb directory and filename inputs with the correct extension.
+         Note: the default directory is the current directory with the Charmm object file name.
+     Structure_box_1: str, (default=None)
+         Override all other box 1  psf directory and filename inputs with the correct extension.
+         Note: the default directory is the current directory with the Charmm object file name.
+     binCoordinates_box_0: str, (default=None)
+         The box 0 binary coordinate file is used only for restarting a GOMC simulation,
+         which provides increased numerical accuracy.
+     extendedSystem_box_0: str, (default=None)
+         The box 0 vectors and origin file is used only for restarting a GOMC simulation.
+     binVelocities_box_0: str, (default=None)
+         The box 0 binary velocity file is used only for restarting a GOMC simulation,
+         which provides increased numerical accuracy. These velocities are only passed thru
+         GOMC since Monte Carlo simulations do not utilize any velocity information.
+     binCoordinates_box_1: str, (default=None)
+         The box 1 binary coordinate file is used only for restarting a GOMC simulation,
+         which provides increased numerical accuracy.
+     extendedSystem_box_1: str, (default=None)
+         The box 1 vectors and origin file is used only for restarting a GOMC simulation.
+     binVelocities_box_1: str, (default=None)
+         The box 1 binary velocity file is used only for restarting a GOMC simulation,
+         which provides increased numerical accuracy. These velocities are only passed thru
+         GOMC since Monte Carlo simulations do not utilize any velocity information.
+     input_variables_dict: dict, default = None
+         These input variables are optional and override the default settings.
+         Changing these variables likely required for more advanced systems.
+         The details of the acceptable input variables for the selected
+         ensembles can be found by running the code below in python,
+
+         >>> print_valid_ensemble_input_variables('GCMC', description = True)
+
+         which prints the input_variables with their subsection description
+         for the selected 'GCMC' ensemble (other ensembles can be set as well).
+
+         Example: input_variables_dict = {'PRNG': 123,
+                                           'ParaTypeCHARMM': True }
+
+     # *******************************************************************
+     # input_variables_dict options (keys and values) - (start)
+     # Note: the input_variables_dict keys are also attributes
+     # *******************************************************************
+     PRNG: string or int (>= 0) ("RANDOM" or int), default = "RANDOM"
+         PRNG = Pseudo-Random Number Generator (PRNG). There are two (2) options, entering
+         the string, "RANDOM", or a integer.
+
+         --- "RANDOM": selects a random seed number.  This will enter the line
+         "PRNG RANDOM" in the gomc configuration file.
+
+         --- integer: which defines the integer seed number for the simulation. This is
+         equivalent to entering the following two lines in the configuration file
+
+         line 1 = PRNG INTSEED
+
+         line 2 = Random_Seed user_selected_integer.
+
+         Example 1: for a random seed enter the string "RANDOM".
+
+         Example 2: for a specific seed number enter a integer of your choosing.
+
+     ParaTypeCHARMM: boolean, default = False
+         True if a CHARMM forcefield, False otherwise.
+         Note: This is changed by the MoSDeF-GOMC Charmm object if the
+         ParaTypeCHARMM or ParaTypeMie is detected.
+     ParaTypeMie: boolean, default = False
+         True if a Mie or Exp6 forcefield types, False otherwise.
+         Note: This is changed by the MoSDeF-GOMC Charmm object if the "
+         ParaTypeCHARMM or ParaTypeMie is detected.
+     ParaTypeMARTINI: boolean, default = False
+         True if a MARTINI forcefield, False otherwise.
+         Note: The ParaTypeMARTINI is not changed or detected by the MoSDeF-GOMC Charmm object.
+     RcutCoulomb_box_0: unyt.unyt_quantity in length units (>= 0), default = None
+         Sets a specific radius in box 0 (written in Angstroms) where the short-range electrostatic
+         energy will be calculated (i.e., The distance to truncate the
+         short-range electrostatic energy in box 0.)
+         Note: if None, GOMC will default to the Rcut value
+     RcutCoulomb_box_1: unyt.unyt_quantity in length units (>= 0), default = None
+         Sets a specific radius in box 1 (written in Angstroms) where the short-range electrostatic
+         energy will be calculated (i.e., The distance to truncate the
+         short-range electrostatic energy in box 0.)
+         Note: if None, GOMC will default to the Rcut value
+     Pressure: unyt.unyt_quantity in pressure units (>= 0), default = 1.01325 bar
+         The pressure (written in bar) is utilized for the NPT and GEMC_NPT simulations.
+     Rcut: unyt.unyt_quantity in length units (>= 0 and RcutLow < Rswitch < Rcut),
+         default = 10 angstroms
+         Sets a specific radius (written in Angstroms) that non-bonded interaction
+         energy and force will be considered and calculated using defined potential function.
+         The distance in Angstoms to truncate the LJ, Mie, or other VDW type potential at.
+         Note: Rswitch is only used when the "Potential" = SWITCH.
+     RcutLow: unyt.unyt_quantity in length units (>= 0 and RcutLow < Rswitch < Rcut),
+         default = 0 angstroms
+         Sets a specific minimum possible distance (written in Angstroms) that reject
+         any move that places any atom closer than specified distance.
+         The minimum possible distance between any atoms.
+         Sets a specific radius in Angstroms that non-bonded interaction
+         Note: Rswitch is only used when the "Potential" = SWITCH.
+         WARNING: When using a molecule that has charge atoms with non-bonded epsilon values of zero (i.e., water),
+         the RcutLow need to be greater than zero, typically 1 angstrom.
+         WARNING: When using the free energy calculations, RcutLow needs to be set to zero (RcutLow=0);
+         otherwise, the free energy calculations can produce results that are slightly off or wrong.
+     LRC: boolean, default = True
+         If True, the simulation considers the long range tail corrections for the
+         non-bonded VDW or dispersion interactions.
+         Note: In case of using SHIFT or SWITCH potential functions, LRC will be ignored.
+     IPC: boolean, default = False
+         If True, the simulation adds the impulse correction term to the pressure,
+         which considers to correct for the discontinuous Rcut potential
+         (i.e., a hard cutoff potential, meaning a potential without tail corrections)
+         the long range tail corrections for the non-bonded VDW or dispersion interactions.
+         If False, the impulse correction term to the pressure is not applied.
+         Note: This can not be used if LRC is True or the Potential is set to SWITCH, or SHIFT.
+     Exclude: str ["1-2", "1-3", or "1-4"], default = "1-3"
+         Note: In CHARMM force field, the 1-4 interaction needs to be considered.
+         Choosing "Excude 1-3", will modify 1-4 interaction based on 1-4 parameters
+         in parameter file. If a kind force field is used, where 1-4 interaction
+         needs to be ignored, such as TraPPE, either Exclude "1-4" needs to be
+         chosen or 1-4 parameter needs to be assigned to zero in the parameter file.
+
+         --- "1-2": All interaction pairs of bonded atoms, except the ones that
+         separated with one bond, will be considered and modified using 1-4
+         parameters defined in parameter file.
+
+         --- "1-3": All interaction pairs of bonded atoms, except the ones that
+         separated with one or two bonds, will be considered and modified using
+         1-4 parameters defined in parameter file.
+
+         --- "1-4": All interaction pairs of bonded atoms, except the ones that
+         separated with one, two or three bonds, will be considered using
+         non-bonded parameters defined in parameter file.
+
+     Potential: str, ["VDW", "EXP6", "SHIFT" or "SWITCH"], default = "VDW"
+         Defines the potential function type to calculate non-bonded dispersion
+         interaction energy and force between atoms.
+
+         ---    "VDW":   Non-bonded dispersion interaction energy and force
+         calculated based on n-6 (Lennard - Jones) equation. This
+         function will be discussed further in the Intermolecular energy
+         and Virial calculation section.
+
+         ---   "EXP6":   Non-bonded dispersion interaction energy and force calculated
+         based on exp-6 equation.
+
+         ---  "SHIFT":   This option forces the potential energy to be zero at Rcut distance.
+
+         --- "SWITCH":   This option smoothly forces the potential energy to be zero at
+         Rcut distance and starts modifying the potential at Rswitch
+         distance. Depending on force field type, specific potential
+         function will be applied.
+
+     Rswitch: unyt.unyt_quantity in length units (>= 0 and RcutLow < Rswitch < Rcut),
+         default = 9 angstroms
+         Note: Rswitch is only used when the SWITCH function is used
+         (i.e., "Potential" = SWITCH). The Rswitch distance is written in Angstrom. If the
+         “SWITCH” function is chosen, Rswitch needs to be defined, otherwise, the
+         program will be terminated. When using choosing "SWITCH" as potential function,
+         the Rswitch distance defines where the non-bonded interaction energy
+         modification is started, which is eventually truncated smoothly at Rcut
+         distance.
+     ElectroStatic: boolean, default = True
+         Considers the coulomb interactions or not. If True, coulomb interactions are
+         considered and false if not. Note: To simulate the polar molecule in MARTINI
+         force field, ElectroStatic needs to be turn on (i.e., True). The MARTINI force
+         field uses short-range coulomb interaction with constant Dielectric of 15.0.
+     Ewald: boolean, default = True
+         Considers the standard Ewald summation method for electrostatic calculations.
+         If True, Ewald summation calculation needs to be considered and false if not.
+         Note: By default, GOMC will set ElectroStatic to True if Ewald summation
+         method was used to calculate coulomb interaction.
+     CachedFourier: boolean, default = False
+         Considers storing the reciprocal terms for Ewald summation calculation in
+         order to improve the code performance. This option would increase the code
+         performance with the cost of memory usage. If True, to store reciprocal
+         terms of Ewald summation calculation and False if not.
+         Warning: Monte Carlo moves, such as MEMC-1, MEMC-2, MEMC-3,
+         IntraMEMC-1, IntraMEMC-2, and IntraMEMC-3 are not support with CachedFourier.
+     Tolerance: float (0.0 < float < 1.0), default = 1e-05
+         Sets the accuracy in Ewald summation calculation. Ewald separation parameter
+         and number of reciprocal vectors for the Ewald summation are determined
+         based on the accuracy parameter.
+     Dielectric: int or float (>= 0.0), default = 15
+         Sets dielectric value used in coulomb interaction when the Martini
+         force field is used. Note: In MARTINI force field, Dielectric needs to
+         be set to 15.0.
+     PressureCalc: list [bool , int (> 0)] or [bool , step_frequency],
+         default = [True, 10k] or [True , set via formula based on the number of RunSteps or 10k max]
+         Calculate the system pressure or not. bool = True, enables the pressure calculation
+         during the simulation, false disables the calculation. The int/step frequency sets the
+         frequency of calculating the pressure.
+     EqSteps: int (> 0), default = set via formula based on the number of RunSteps or 1M max
+         Sets the number of steps necessary to equilibrate the system.
+         Averaging will begin at this step.
+         Note: In GCMC simulations, the Histogram files will be outputed at EqSteps.
+     AdjSteps: int (> 0), default = set via formula based on the number of RunSteps or 1k max
+         Sets the number of steps per adjustment of the parameter associated with each move
+         (e.g. maximum translate distance, maximum rotation, maximum volume exchange, etc.).
+     VDWGeometricSigma: boolean, default = True
+         Use geometric mean, as required by OPLS force field,
+         to combining Lennard-Jones sigma parameters for different atom types.
+         If set to True, GOMC uses geometric mean to combine Lennard-Jones or VDW sigmas.
+         Note: The default setting is pulled from the force field XML, if not present it
+         defaults to geometric via MoSDeF's default setting of VDWGeometricSigma is True,
+         which uses the arithmetic mean when combining Lennard-Jones or "
+         VDW sigma parameters for different atom types.
+         NOTE: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
+         NOTE: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
+     useConstantArea: boolean,  default = False
+         Changes the volume of the simulation box by fixing the cross-sectional
+         area (x-y plane). If True, the volume will change only in z axis,
+         If False, the volume of the box will change in a way to maintain the constant
+         axis ratio.
+     FixVolBox0: boolean, default = False
+         Changing the volume of fluid phase (Box 1) to maintain the constant imposed
+         pressure and Temperature, while keeping the volume of adsorbed phase (Box 0) fixed.
+         Note: By default, GOMC will set useConstantArea to False if no value was set.
+         It means, the volume of the box will change in a way to maintain the constant
+         axis ratio.
+     ChemPot: dict {str (4 dig limit) , unyt.unyt_quantity in energy units (kcal/mol, kJ/mol, K)},
+         default = None
+         The chemical potentials are written in GOMC units of energy, K.
+         There is a 4 character limit for the string/residue name since the PDB/PSF
+         files have a 4 character limitation and require and exact match in the conf file.
+         Note: These strings must match the residue in the psf and psb files or it will fail.
+         The name of the residues and their corresponding chemical potential must specified
+         for every residue in the system (i.e., {"residue_name": chemical_potential}).
+         Note: IF 2 KEYS WITH THE SAME STRING/RESIDUE ARE PROVIDED, ONE WILL BE AUTOMATICALLY
+         OVERWRITTEN AND NO ERROR WILL BE THROWN IN THIS CONTROL FILE WRITER.
+
+         Example 1 (system with only water):  {"H2O": -4000 * unyt.K}
+
+         Example 2 (system with water and ethanol):  {"H2O": -4000 * unyt.K, "ETH": -8000 * unyt.K}
+
+     Fugacity: dict {str, unyt.unyt_quantity in pressure units (>= 0)}, default = None
+         The fugacity is written in GOMC units of pressure, bar.
+         There is a 4 character limit for the string/residue name since the PDB/PSF
+         files have a 4 character limitation and require and exact match in the conf file.
+         Note: These strings must match the residue in the psf and psb files or it will fail.
+         The name of the residues and their corresponding fugacity must specified
+         for every residue in the system (i.e., {"residue_name": fugacity}).
+         Note: IF 2 KEYS WITH THE SAME STRING/RESIDUE ARE PROVIDED, ONE WILL BE AUTOMATICALLY
+         OVERWRITTEN AND NO ERROR WILL BE THROWN IN THIS CONTROL FILE WRITER.
+
+         Example 1 (system with only water):  {"H2O": 1 * unyt.bar}
+
+         Example 2 (system with water and ethanol):  {"H2O": 0.5 * unyt.bar, "ETH": 10 * unyt.atm}
+
+     CBMC_First: int (>= 0), default = 12
+         The number of CD-CBMC trials to choose the first atom position
+         (Lennard-Jones trials for first seed growth).
+     CBMC_Nth: int (>= 0), default = 10
+         The Number of CD-CBMC trials to choose the later atom positions
+         (Lennard-Jones trials for first seed growth).
+     CBMC_Ang: int (>= 0), default = 50
+         The Number of CD-CBMC bending angle trials to perform for geometry
+         (per the coupled-decoupled CBMC scheme).
+     CBMC_Dih: int (>= 0), default = 50
+         The Number of CD-CBMC dihedral angle trials to perform for geometry
+         (per the coupled-decoupled CBMC scheme).
+     OutputName: str (NO SPACES), , default = "Output_data", default = [True, 1M] or
+         [True , set via formula based on the number of RunSteps or 1M max]
+         The UNIQUE STRING NAME, WITH NO SPACES, which is used for the
+         output block average, PDB, and PSF file names.
+     CoordinatesFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
+         default = [False, 1M] or [False , set via formula based on the number of RunSteps or M max]
+         Controls output of PDB file (coordinates). If bool is True, this
+         enables outputting the coordinate files at the integer frequency
+         (set steps_per_data_output_int), while "False" disables outputting
+         the coordinates.
+     DCDFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
+         default = [True, 1M] or [True , set via formula based on the number of RunSteps or M max]
+         Controls output of DCD file (coordinates). If bool is True, this
+         enables outputting the coordinate files at the integer frequency
+         (set steps_per_data_output_int), while "False" disables outputting
+         the coordinates.
+     RestartFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
+         default = [True, 1M] or [True , set via formula based on the number of RunSteps or 1M max]
+         This creates the PDB and PSF (coordinate and topology) files for
+         restarting the system at the set steps_per_data_output_int (frequency)
+         If bool is True, this enables outputting the PDB/PSF restart files at the
+         integer frequency (set steps_per_data_output_int), while “false”
+         disables outputting the PDB/PSF restart files.
+     CheckpointFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
+         default = [True, 1M] or [True , set via formula based on the number of RunSteps or 1M max]
+         Controls the output of the last state of simulation at a specified step,
+         in a binary file format (checkpoint.dat). Checkpoint file contains the
+         following information in full precision:
+
+             (1) Last simulation step that saved into checkpoint file
+
+             (2) Simulation cell dimensions and angles
+
+             (3) Maximum amount of displacement (Å), rotation (δ), and volume (Å^3)
+             that is used in the Displacement, Rotation, MultiParticle, and Volume moves
+
+             (4) Number of Monte Carlo move trial and acceptance
+
+             (5) All molecule’s coordinates
+
+             (6) Random number sequence
+
+         If bool is True, this enables outputing the checkpoint file at the
+         integer frequency (set steps_per_data_ouput_int),
+         while "False" disables outputting the checkpoint file.
+     ConsoleFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
+         default = [True, 10k] or [True , set via formula based on the number of RunSteps or 10k max]
+         Controls the output to the "console" or log file, which prints the
+         acceptance statistics, and run timing info. In addition, instantaneously-selected
+         thermodynamic properties will be output to this file.  If bool is True,
+         this enables outputting the console data at the integer frequency
+         (set steps_per_data_output_int), while "False" disables outputting the console
+         data file.
+     BlockAverageFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
+         default = [True, 10k] or [True , set via formula based on the number of RunSteps or 10k max]
+         Controls the block averages output of selected thermodynamic properties.
+         Block averages are averages of thermodynamic values of interest for chunks of the
+         simulation (for post-processing of averages or std. dev. in those values).
+         If bool is True, this enables outputting the block averaging data/file at the
+         integer frequency (set steps_per_data_output_int),  while "False"
+         disables outputting the block averaging data/file.
+     HistogramFreq: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
+         default = [True, 10k] or [True , set via formula based on the number of RunSteps or 10k max]
+         Controls the histograms. Histograms are a binned listing of observation frequency
+         for a specific thermodynamic variable. In the GOMC code, they also control the output
+         of a file containing energy/molecule samples, which is only used for the "GCMC"
+         ensemble simulations for histogram reweighting purposes. If bool is True, this
+         enables outputting the data to the histogram data at the integer frequency
+         (set steps_per_data_output_int), while "False" disables outputting the histogram
+         data.
+     DistName: str (NO SPACES), default = "dis"
+         Short phrase which will be combined with RunNumber and RunLetter
+         to use in the name of the binned histogram for molecule distribution.
+     HistName: str (NO SPACES), default = "his"
+         Short phrase, which will be combined with RunNumber and RunLetter,
+         to use in the name of the energy/molecule count sample file.
+     RunNumber: int  ( > 0 ), default = 1
+         Sets a number, which is a part of DistName and HistName file name.
+     RunLetter: str (1 alphabetic character only), default = "a"
+         Sets a letter, which is a part of DistName and HistName file name.
+     SampleFreq: int ( > 0 ), default = 500
+         The number of steps per histogram sample or frequency.
+     OutEnergy: [bool, bool], default = [True, True]
+         The list provides the booleans to [block_averages_bool, console_output_bool].
+         This outputs the energy data into the block averages and console output/log
+     OutPressure: [bool, bool], default = [True, True]
+         The list provides the booleans to [block_averages_bool, console_output_bool].
+         This outputs the pressure data into the block averages and console output/log files.
+     OutMolNum: [bool, bool], default = [True, True]
+         The list provides the booleans to [block_averages_bool, console_output_bool].
+         This outputs the number of molecules data into the block averages and console
+         output/log files.
+     OutDensity: [bool, bool], default = [True, True]
+         The list provides the booleans to [block_averages_bool, console_output_bool].
+         This outputs the density data into the block averages and console output/log files.
+     OutVolume: [bool, bool], default = [True, True]
+         The list provides the booleans to [block_averages_bool, console_output_bool].
+         This outputs the volume data into the block averages and console output/log files.
+     OutSurfaceTension: [bool, bool], default = [False, False]
+         The list provides the booleans to [block_averages_bool, console_output_bool].
+         This outputs the surface tension data into the block averages and console
+         output/log files.
+     FreeEnergyCalc: list [bool , int (> 0)] or [Generate_data_bool , steps_per_data_output_int],
+         default = None
+         bool = True enabling free energy calculation during the simulation, false disables
+         the calculation. The int/step frequency sets the frequency of calculating the free energy.
+         WARNING: When using the free energy calculations, RcutLow needs to be set to zero (RcutLow=0);
+         otherwise, the free energy calculations can produce results that are slightly off or wrong.
+     MoleculeType: list [str , int (> 0)] or ["residue_name" , residue_ID], default = None
+         The user must set this variable as there is no working default.
+         Note: ONLY 4 characters can be used for the string (i.e., "residue_name").
+         Sets the solute molecule kind (residue name) and molecule number (residue ID),
+         which absolute solvation free will be calculated for.
+     InitialState: int (>= 0), default = None
+         The user must set this variable as there is no working default.
+         The index of LambdaCoulomb and LambdaVDW vectors. Sets the index of the
+         LambdaCoulomb and LambdaVDW vectors, to determine the simulation lambda value for
+         VDW and Coulomb interactions.
+         WARNING: This must an integer within the vector count of the LambdaVDW and LambdaCoulomb,
+         in which the counting starts at 0.
+     LambdaVDW: list of floats (0 <= floats <= 1), default = None
+         The user must set this variable as there is no working default (default = {}).
+         Lambda values for VDW interaction in ascending order. Sets the intermediate
+         lambda states to which solute-solvent VDW interactions are scaled.
+
+         WARNING: This list must be the same length as the "LambdaCoulomb" list length.
+
+         WARNING: All lambda values must be stated in the ascending order,
+         starting with 0.0 and ending with 1.0; otherwise, the program will terminate.
+
+         Example of ascending order 1: [0.0, 0.1, 1.0]
+
+         Example of ascending order 2: [0.0, 0.1, 0.2, 0.4, 0.9, 1.0]
+
+     LambdaCoulomb: list of floats (0 <= floats <= 1), default = None
+         Lambda values for Coulombic interaction in ascending order. Sets the intermediate
+         lambda states to which solute-solvent Coulombic interactions are scaled.
+         GOMC defauts to the "LambdaVDW" values for the Coulombic interaction
+         if no "LambdaCoulomb" variable is set.
+
+         WARNING: This list must be the same length as the "LambdaVDW" list length.
+
+         WARNING: All lambda values must be stated in the ascending order,
+         starting with 0.0 and ending with 1.0; otherwise, the program will terminate.
+
+         Example of ascending order 1: [0.0, 0.1, 1.0]
+
+         Example of ascending order 2: [0.0, 0.1, 0.2, 0.4, 0.9, 1.0]
+
+     ScaleCoulomb: bool, default = False
+         Determines to scale the Coulombic interaction non-linearly
+         (soft-core scheme) or not.
+         True if the Coulombic interaction needs to be scaled non-linearly.
+         False if the Coulombic interaction needs to be scaled linearly.
+     ScalePower: int (>= 0), default = 2
+         The p value in the soft-core scaling scheme, where the distance
+         between solute and solvent is scaled non-linearly.
+     ScaleAlpha: int or float (>= 0), default = 0.5
+         The alpha value in the soft-core scaling scheme, where the distance
+         between solute and solvent is scaled non-linearly.
+     MinSigma: unyt.unyt_quantity in length units (>= 0), default = 3 angstroms
+         The minimum sigma value in the soft-core scaling scheme (written in Angstroms), where the
+         distance between solute and solvent is scaled non-linearly.
+     DisFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.15, 'NPT': 0.15, 'GEMC_NVT': 0.19, 'GEMC_NPT': 0.19, 'GCMC': 0.15}
+         Fractional percentage at which the displacement move will occur
+         (i.e., fraction of displacement moves).
+     RotFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.15, 'NPT': 0.15, 'GEMC_NVT': 0.2, 'GEMC_NPT': 0.2, 'GCMC': 0.15}
+         Fractional percentage at which the rotation move will occur.
+         (i.e., fraction of rotation moves).
+     IntraSwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.3, 'NPT': 0.29, 'GEMC_NVT': 0.1, 'GEMC_NPT': 0.1, 'GCMC': 0.1}
+         Fractional percentage at which the molecule will be removed from a
+         box and inserted into the same box using coupled-decoupled configurational-bias
+         algorithm. (i.e., fraction of intra-molecule swap moves).
+     SwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.2, 'GEMC_NPT': 0.2, 'GCMC': 0.35}
+         For Gibbs and Grand Canonical (GC) ensemble runs only: Fractional
+         percentage at which molecule swap move will occur using coupled-decoupled
+         configurational-bias. (i.e., fraction of molecule swaps moves).
+     RegrowthFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.3, 'NPT': 0.3, 'GEMC_NVT': 0.2, 'GEMC_NPT': 0.2, 'GCMC': 0.15}
+         Fractional percentage at which part of the molecule will be deleted and
+         then regrown using coupled- decoupled configurational-bias algorithm
+         (i.e., fraction of molecular growth moves).
+     CrankShaftFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.1, 'NPT': 0.1, 'GEMC_NVT': 0.1, 'GEMC_NPT': 0.1, 'GCMC': 0.1}
+         Fractional percentage at which crankshaft move will occur.
+         In this move, two atoms that are forming angle or dihedral are selected
+         randomly and form a shaft. Then any atoms or group that are within these
+         two selected atoms, will rotate around the shaft to sample intra-molecular
+         degree of freedom (i.e., fraction of crankshaft moves).
+     VolFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.01, 'GEMC_NVT': 0.01, 'GEMC_NPT': 0.01, 'GCMC': 0.0}
+         For isobaric-isothermal (NPT) ensemble and Gibbs ensemble
+         (GEMC_NPT and GEMC_NVT) runs only: Fractional percentage at
+         which a volume move will occur (i.e., fraction of Volume moves).
+     MultiParticleFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+         Fractional percentage at which multi-particle move will occur.
+         In this move, all molecules in the selected simulation box will be rigidly
+         rotated or displaced simultaneously, along the calculated torque or force
+         respectively (i.e., fraction of multi-particle moves).
+         Note: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian
+         (MultiParticleBrownianFreq) cannot be used at the same time.
+     MultiParticleBrownianFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+         Fractional percentage at which multi-particle brownian move will occur. In this
+         move, all molecules in the selected simulation box will be rigidly rotated or displaced
+         simultaneously, along the calculated torque or force, respectively
+         (i.e., fraction of Multi-Particle Brownian moves).
+         Note: all of the move types are not available in for every ensemble.
+         Note: all of the move fractions must sum to 1, or the control file writer will fail.
+         Note: Both MultiParticle (MultiParticleFreq) and MultiParticleBrownian
+         (MultiParticleBrownianFreq) cannot be used at the same time.
+     MultiParticleLiquid: bool, default=True (GEMC-only)
+         Use the multi-particle move in the liquid phase.
+         Note: GOMC determines the boxes are liquid or gas/vapor before
+         running each move, based on the calculated density of the GEMC boxes.
+     MultiParticleGas: bool, default=False (GEMC-only)
+         Use the multi-particle move in the gas/vapor phase.
+         Note: GOMC determines the boxes are liquid or gas/vapor before
+         running each move, based on the calculated density of the GEMC boxes.
+     IntraMEMC-1Freq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+         Fractional percentage at which specified number of small molecule kind will be
+         exchanged with a specified large molecule kind in defined sub-volume within
+         same simulation box.  This move need additional information such as
+         ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind, and ExchangeLargeKind.
+     MEMC-1Freq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+         Fractional percentage at which specified number of small molecule kind will
+         be exchanged with a specified large molecule kind in defined sub-volume,
+         between simulation boxes.  This move need additional information such as
+         ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind, and ExchangeLargeKind.
+     IntraMEMC-2Freq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+         Fractional percentage at which specified number of small molecule kind
+         will be exchanged with a specified large molecule kind in defined sub-volume
+         within same simulation box. Backbone of small and large molecule kind will be
+         used to insert the large molecule more efficiently. This move need additional
+         information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
+         ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone.
+     MEMC-2Freq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+         Fractional percentage at which specified number of small molecule kind will be
+         exchanged with a specified large molecule kind in defined sub-volume,
+         between simulation boxes. Backbone of small and large molecule kind will be
+         used to insert the large molecule more efficiently. This move need additional
+         information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
+         ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone.
+     MEMC-2-LiqFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+         Fractional percentage at which specified number of small molecule kind will be
+         exchanged with a specified large molecule kind in defined sub-volume,
+         between simulation boxes. Backbone of small and large molecule kind will be
+         used to insert the large molecule more efficiently. This move need additional
+         information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
+         ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone. Designed for LLE.
+     IntraMEMC-3Freq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+         Fractional percentage at which specified number of small molecule kind will be
+         exchanged with a specified large molecule kind in defined sub-volume within same
+         simulation box. Specified atom of the large molecule kind will be used to insert
+         the large molecule using coupled-decoupled configurational-bias. This move need
+         additional information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
+         ExchangeLargeKind, and LargeKindBackBone.
+     MEMC-3Freq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+         Fractional percentage at which specified number of small molecule kind will be
+         exchanged with a specified large molecule kind in defined sub-volume,
+         between simulation boxes.  Specified atom of the large molecule kind will be
+         used to insert the large molecule using coupled-decoupled configurational-bias.
+         This move need additional information such as ExchangeVolumeDim,
+         ExchangeRatio, ExchangeSmallKind, ExchangeLargeKind, and LargeKindBackBone.
+    MEMC-3-LiqFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+         Fractional percentage at which specified number of small molecule kind will be
+         exchanged with a specified large molecule kind in defined sub-volume,
+         between simulation boxes. Backbone of small and large molecule kind will be
+         used to insert the large molecule more efficiently. This move need additional
+         information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
+         ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone. Designed for LLE.
+     TargetedSwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0}
+         Fractional percentage at which targeted swap move will occur.
+         Note: This is only usable with the 'GCMC', 'GEMC_NVT', and 'GEMC_NPT' ensembles.
+         Note: This is used in conjunction with the "TargetedSwap_DataInput" variables.
+     IntraTargetedSwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0}
+         Note: This is used in conjunction with the "TargetedSwap_DataInput" variables.
+     TargetedSwap_DataInput: dict, default=None
+         A dictionary which can contain one or several targeted swap regions, each designated with
+         their own tag ID number (aka, subvolume number).
+         A few examples for TargetedSwap_DataInput input is provided below.
+         NOTE: MULTIPLE SIMULATION BOXES CAN BE UTILIZED BY SETTING MULTIPLE tag_ID_integer VALUES (INTEGERS VALUES),
+         NOTE: THIS IS REQUIRED WHEN USING EITHER THE "TargetedSwapFreq" OR "IntraTargetedSwapFreq" MC MOVES.
+         WARNING: THE tag_ID_integer VALUES MUST BE UNIQUE FOR EACH SUBVOLUME,
+         OR THE DICTIONARY WILL OVERWRITE THE PREVIOUS SUBVOLUME (tag_ID_integer) SECTION
+         WITH THE CURRENT tag_ID_integer AND ITS RESPECTIVE VALUES.
+
+         Example 1
+         input_variables_dict={"TargetedSwap_DataInput": {tag_ID_integer: {"SubVolumeType": "dynamic",
+         "SubVolumeBox": 0, "SubVolumeCenterList": ['0-10', 12, 15, '22-40'],
+         "SubVolumeDim": [1 * unyt.angstrom, 2 * unyt.angstrom, 3 * unyt.angstrom],
+         "SubVolumeResidueKind": "ALL", "SubVolumeRigidSwap": False, "SubVolumePBC": "XY",
+         "SubVolumeChemPot": {"MET": -21 * unyt.kcal / unyt.mol, "met": -31 * unyt.K}}}
+
+         Example 2
+         input_variables_dict={"TargetedSwap_DataInput": {tag_ID_integer: {"SubVolumeType": "static",
+         "SubVolumeBox": 0, "SubVolumeCenter": [1, 12, 15] * unyt.angstrom,
+         "SubVolumeDim": [3, 3, 3] * 10**(-10) * unyt.m,
+         "SubVolumeResidueKind": ["MET", "met"], "SubVolumeRigidSwap": False, "SubVolumePBC": "XYZ",
+         "SubVolumeFugacity": {"MET": 0.1 * unyt.bar, "met": 1 * unyt.bar}}}
+
+         The details of each key and value for the "TargetedSwap_DataInput" are provided below.
+
+         --- "SubVolumeType": str ("static" or "dynamic"), No default is provided.
+         The type of targeted swap box (subvolume) that will be created.
+         The "static" type will maintain the box (subvolume) in a fixed location during the whole simulation,
+         with the center of the box determined by the coordinates set in the
+         "SubvolumeCenter" parameter.
+         The "dynamic" type will allow for dynamic movement of the box (subvolume) based atom indices
+         provided in the SubvolumeCenterList variable. For the "dynamic" type, the user must define a
+         list of atom indices using "SubVolumeCenterList" keyword; the geometric center of the
+         provided atom indices will be used as the center of subVolume. User must ensure that the
+         atoms defined in the atom list remain in the simulation box (by setting the Beta value to 2 in PDB file).
+
+         --- "SubVolumeBox": int (0 or 1), No default is provided.
+         The simulation box in which the targeted swap subvolume will be applied.
+         NOTE: Only box zero (0) can be used for the GCMC, NPT, and NVT ensembles.
+
+         --- "SubVolumeCenter": list of three (3) unyt.unyt_quantity in length units, [x-axis, y-axis, z-axis],
+         No default is provided.
+         The simulation box is centered on this x, y, and z-axis points (written in Angstroms), which is only
+         utilized when "SubVolumeType" is set to "static".
+
+         --- "SubVolumeCenterList": list of int and/or str (>=0), [atom_index, ..., atom_index],
+         No default is provided.
+         The simulation box subVolume is centered on the geometric center of the provided atom indices, which is
+         only used when the "SubVolumeType" is set to "dynamic". For example, [0-10', 12, 15] means that
+         atom indices 0 to 10, 12 and 15 are used as the geometric center of the simulation box subVolume.
+         NOTE: THE ATOM INDICES RANGES MUST BE A STRING IN THE FORM '2-20', WITH THE FIRST ATOM INDICES BEING
+         SMALLER THAN THE SECOND (i.e, 'a-b', where a < b). ALL SINGULAR ATOM INDICES MUST BE INTEGERS.
+         NOTE: THE SAME ATOM INDICES CAN BE USED 2, 3 OR X TIMES TO WEIGHT that atom 2, 3, OR X TIMES MORE
+         IN THE GEOMETRIC CENTERING CALCULATION.
+         NOTE: THE ATOM INDICES START AT ZERO (0), WHILE THE PDB AND PSF FILES START AT ONE (1).
+         THEREFORE, YOU NEED TO BE CAREFUL WHEN SETTING THE INDICES FROM THE PDB OR PSF VALUES AS THEY ARE
+         ONE (1) NUMBER OFF.
+
+         --- "SubVolumeDim": list of three (3) unyt.unyt_quantity in length units (>= 0),
+         [x-axis, y-axis, z-axis], No default is provided.
+         This sets the size of the simulation box (subVolume) in the x, y, and z-axis (written in Angstroms).
+
+         --- "SubVolumeResidueKind": str or list of str, "ALL" or "residue"
+         or ["ALL"] or [residue_str, ..., residue_str], No default is provided.
+         The residues that will be used in the "TargetedSwap_DataInput" subvolume.
+         Alternatively, the user can just set the value to ["ALL"] or "ALL", which covers all the residues.
+
+         --- "SubVolumeRigidSwap": bool, default = True
+         Choose whether to use a rigid or flexible molecule insertion using CD-CBMC for the subVolume.
+         True uses a rigid molecule insertion, while False uses a flexible molecule insertion
+
+         --- "SubVolumePBC": str ('X', 'XY', 'XZ', 'XYZ', 'Y', 'YZ', or 'Z'), default = 'XYZ'.
+         Apply periodic boundary condition (PBC) in selected axes for the subVolume.
+         Example 1, 'X' applies PBC only in the X axis. Example 2, 'XY' applies PBC only in the X and Y axes.
+         Example 3, 'XYZ' applies PBC in the X, Y, and Z axes.
+
+         --- "SubVolumeChemPot": dict {str (4 dig limit) ,
+         unyt.unyt_quantity in energy units (kcal/mol, kJ/mol, or K)}}, No default is provided.
+         The chemical potentials are written in GOMC units of energy, K.
+         If no SubVolumeChemPot is provided the default system chemical potential values are used.
+         There is a 4 character limit for the string/residue name since the PDB/PSF
+         files have a 4 character limitation and require an exact match in the conf file.
+         Note: These strings must match the residue in the psf and psb files or it will fail.
+         The name of the residues and their corresponding chemical potential must be specified
+         for every residue in the system (i.e., {"residue_name": chemical_potential}).
+         Note: THIS IS ONLY REQUIRED FOR THE GCMC ENSEMBLE.
+         Note: IF 2 KEYS WITH THE SAME STRING/RESIDUE ARE PROVIDED, ONE WILL BE AUTOMATICALLY
+         OVERWRITTEN AND NO ERROR WILL BE THROWN IN THIS CONTROL FILE WRITER.
+         Note: ONLY THE "SubVolumeChemPot" OR THE "SubVolumeFugacity" CAN BE USED FOR ALL THE
+         TARGET SWAP BOXES (SUBVOLUMES). IF MIX OF "SubVolumeChemPot" AND "SubVolumeFugacity" ARE
+         USED THE CONTROL FILE WRITER WILL THROW AN ERROR.
+
+         --- "SubVolumeFugacity": dict {str , unyt.unyt_quantity in pressure units (>= 0)}, No default is provided.
+         The fugacity is written in GOMC units of pressure, bar.
+         If no "SubVolumeFugacity" is provided the default system fugacity values are used.
+         There is a 4 character limit for the string/residue name since the PDB/PSF
+         files have a 4 character limitation and require an exact match in the conf file.
+         Note: These strings must match the residue in the psf and psb files or it will fail.
+         The name of the residues and their corresponding fugacity must be specified
+         for every residue in the system (i.e., {"residue_name": fugacity}).
+         Note: THIS IS ONLY REQUIRED FOR THE GCMC ENSEMBLE.
+         Note: IF 2 KEYS WITH THE SAME STRING/RESIDUE ARE PROVIDED, ONE WILL BE AUTOMATICALLY
+         OVERWRITTEN AND NO ERROR WILL BE THROWN IN THIS CONTROL FILE WRITER.
+         Note: ONLY THE "SubVolumeChemPot" OR THE "SubVolumeFugacity" CAN BE USED FOR ALL THE
+         TARGET SWAP BOXES (SUBVOLUMES). IF MIX OF "SubVolumeChemPot" AND "SubVolumeFugacity" ARE
+         USED THE CONTROL FILE WRITER WILL THROW AN ERROR.
+
+     ExchangeVolumeDim: list of 3 floats or integers or [X-dimension, Y-dimension, Z-dimension],
+         default = [1.0, 1.0, 1.0]
+         To use all variations of MEMC and Intra-MEMC Monte Carlo moves, the exchange
+         subvolume must be defined. The exchange sub-volume is defined as an orthogonal box
+         with x, y, and z-dimensions, where small molecule/molecules kind will be selected
+         from to be exchanged with a large molecule kind.
+         Note: Currently, the X and Y dimension cannot be set independently (X = Y = max(X, Y)).
+         Note: A heuristic for setting good values of the x, y, and z-dimensions is to use
+         the geometric size of the large molecule plus 1-2 Å in each dimension.
+         Note: In case of exchanging 1 small molecule kind with 1 large molecule kind in
+         IntraMEMC-2, IntraMEMC-3, MEMC-2, MEMC-3 Monte Carlo moves, the sub-volume
+         dimension has no effect on acceptance rate.
+     MEMC_DataInput: nested lists, default = None
+         Enter data as a list with some sub-lists as follows:
+         [[ExchangeRatio_int (> 0), ExchangeLargeKind_str,
+         [LargeKindBackBone_atom_1_str_or_NONE, LargeKindBackBone_atom_2_str_or_NONE ],
+         ExchangeSmallKind_str, [SmallKindBackBone_atom_1_str_or_NONE, SmallKindBackBone_atom_2_str_or_NONE ]],
+         ...,
+         [ExchangeRatio_int (> 0), ExchangeLargeKind_str,
+         [LargeKindBackBone_atom_1_str_or_NONE, LargeKindBackBone_atom_2_str_or_NONE ],
+         ExchangeSmallKind_str, [SmallKindBackBone_atom_1_str_or_NONE, SmallKindBackBone_atom_2_str_or_NONE ].
+         NOTE: CURRENTLY ALL THESE INPUTS NEED TO BE SPECIFIED, REGARDLESS OF THE MEMC TYPE
+         SELECTION. IF THE SmallKindBackBone or LargeKindBackBone IS NOT REQUIRED FOR THE
+         MEMC TYPE, None CAN BE USED IN PLACE OF A STRING.
+
+         Note: These strings must match the residue in the psf and psb files or it will fail.
+         It is recommended that the user print the Charmm object psf and pdb files
+         and review the residue names that match the atom name before using the in
+         the MEMC_DataInput variable input.
+
+         Note: see the below data explanations for the ExchangeRatio, ExchangeSmallKind,
+         ExchangeLargeKind, LargeKindBackBone, SmallKindBackBone.
+
+         Example 1 (MEMC-1): [ [1, 'WAT', [None, None], 'wat', [None, None]] ,
+         [1, 'WAT', [None, None], 'wat', [None, None]]
+
+         Example 2 (MEMC-2): [ [1, 'WAT', ['O1', 'H1'], 'wat', ['O1', 'H1' ]] ,
+         [1, 'WAT', ['H1', 'H2'], 'wat', ['H1', 'H2' ]]
+
+         Example 3 (MEMC-3): [ [2, 'WAT', 'O1', 'H1'], 'wat', [None, None]] ,
+         [2, 'WAT', ['H1', 'H2'], 'wat', [None, None]]
+
+         --- ExchangeRatio     = MEMC parameters (all ensembles): int (> 0), default = None
+         The Ratio of exchanging small molecule/molecules with 1 large molecule.
+         To use all variation of MEMC and Intra-MEMC Monte Carlo moves,
+         the exchange ratio must be defined. The exchange ratio defines how
+         many small molecule will be exchanged with 1 large molecule. For each
+         large-small molecule pairs, one exchange ratio must be defined.
+
+         --- ExchangeSmallKind = MEMC parameters (all ensembles):  str, default = None
+         The small molecule kind (resname) to be exchanged.
+         Note: ONLY 4 characters can be used for the strings.
+         To use all variation of MEMC and Intra-MEMC Monte Carlo moves,
+         the small molecule kind to be exchanged with a large molecule
+         kind must be defined. Multiple small molecule kind can be specified.
+
+         --- ExchangeLargeKind = MEMC parameters (all ensembles):  str, default = None
+         The large molecule kind (resname) to be exchanged.
+         Note: ONLY 4 characters can be used for the strings.
+         To use all variation of MEMC and Intra-MEMC Monte Carlo moves,
+         the large molecule kind to be exchanged with small molecule
+         kind must be defined. Multiple large molecule kind can be specified.
+
+         --- LargeKindBackBone = MEMC parameters (all ensembles): list [str, str] or [None, None], default = None
+         Note: ONLY 4 characters can be used for the strings.
+         The [None, None] values can only be used if that MEMC type does
+         not require them.  The strings for the the atom name 1 and atom name 2
+         that belong to the large molecule’s backbone
+         (i.e., [str_for_atom_name_1, str_for_atom_name_2])
+         To use MEMC-2, MEMC-3, IntraMEMC-2, and IntraMEMC-3 Monte Carlo moves, the
+         large molecule backbone must be defined. The backbone of the molecule is defined
+         as a vector that connects two atoms belong to the large molecule. The large
+         molecule backbone will be used to align the sub-volume in MEMC-2 and IntraMEMC-2
+         moves, while in MEMC-3 and IntraMEMC-3 moves, it uses the atom name to start
+         growing the large molecule using coupled-decoupled configurational-bias. For
+         each large-small molecule pairs, two atom names must be defined.
+         Note: all atom names in the molecule must be unique.
+         Note: In MEMC-3 and IntraMEMC-3 Monte Carlo moves, both atom names must be same,
+         otherwise program will be terminated.
+         Note: If the large molecule has only one atom (mono atomic molecules),
+         same atom name must be used for str_for_atom_name_1 and str_for_atom_name_2
+         of the LargeKindBackBone.
+
+         --- SmallKindBackBone = MEMC parameters (all ensembles): list [str, str] or [None, None], default = None
+         Note: ONLY 4 characters can be used for the strings.
+         The [None, None] values can only be used if that MEMC type does not
+         require them. The strings for the the atom name 1 and atom name 2 that
+         belong to the small molecule’s backbone
+         (i.e., [str_for_atom_name_1, str_for_atom_name_2])
+         To use MEMC-2, and IntraMEMC-2 Monte Carlo moves, the small molecule backbone
+         must be defined. The backbone of the molecule is defined as a vector that
+         connects two atoms belong to the small molecule and will be used to align the
+         sub-volume. For each large-small molecule pairs, two atom names must be defined.
+         Note: all atom names in the molecule must be unique.
+         Note: If the small molecule has only one atom (mono atomic molecules), same atom
+         name must be used str_for_atom_name_1 and str_for_atom_name_2
+         of the SmallKindBackBone.
+
+     # *******************************************************************
+     # input_variables_dict options (keys and values) - (end)
+     # Note: the input_variables_dict keys are also attributes
+     # *******************************************************************
+
+     Attributes
+     ----------
+     input_error: bool
+         This error is typically incurred from an error in the user input values.
+         However, it could also be due to a bug, provided the user is inputting
+         the data as this Class intends.
+     all_failed_input_List: list
+         A list of all the inputs that failed, but there may be some inputs that
+         are not possible to put on this list.
+     ensemble_typ: str, ['NVT', 'NPT', 'GEMC_NPT', 'GCMC-NVT', 'GCMC']
+         The ensemble type of the simulation.
+     RunSteps: int (>0), must be an integer greater than zero.
+         Sets the total number of simulation steps.
+     Temperature: unyt.unyt_quantity in temperature units (> 1 K)
+         Temperature of system in unyt temperature units (written in Kelvin).
+     ff_psf_pdb_file_directory: str (optional), default=None (i.e., the current directory).
+         The full or relative directory added to the force field, psf, and pdb
+         file names, created via the Charmm object.
+     check_input_files_exist: bool, (default=True)
+         Check if the force field, psf, and pdb files exist. If input, it also checks if the Checkpoint,
+         binCoordinates_box_0, extendedSystem_box_0, binVelocities_box_0,
+         binCoordinates_box_1, extendedSystem_box_1, and binVelocities_box_1 files.
+         If the files are checked and do not exist, the writer will throw a ValueError.
+         True, check if the all the input files exist.
+         False, do not check if the all the input files exist.
+     Restart: boolean, default = False
+         Determines whether to restart the simulation from restart file
+         (``*_restart.pdb`` and ``*_restart.psf``) or not.
+     Checkpoint: list (see below), default = [False, '']
+         If True:  Checkpoint = [True, str] ---> [True, checkpoint_filename]
+         If False: Checkpoint = [False, str] ---> [False, checkpoint_filename]
+         Checkpoint files guaruntee trajectory files can be concatenated, along with ensuring
+         no deviation from a single simulation’s results in a simulation which was interrupted
+         and restarted.
+         Determines whether to restart the simulation from checkpoint file or not. Restarting the simulation
+         with would result in an identical outcome, as if previous simulation was continued.
+         This is required for hybrid Monte-Carlo Molecular Dyanamics in open-ensembles (GCMC/GEMC)
+         to concatenate trajectory files since the molecular transfers rearranges the order of the molecules.
+         Checkpointing will ensure the molecules are loaded in the same order each cycle.
+         NOTE: the checkpoint_filename can be entered with the .chk extension, or without an extension; if it
+         does not have the file extension, the .chk extension will then be added to the filename.
+     Parameters: str, (default=None)
+         Override all other force field directory and filename input with the correct extension (.inp or .par).
+         Note: the default directory is the current directory with the Charmm object file name.
+     Coordinates_box_0: str, (default=None)
+         Override all other box 0 pdb directory and filename inputs with the correct extension.
+         Note: the default directory is the current directory with the Charmm object file name.
+     Structure_box_0: str, (default=None)
+         Override all other box 0 psf directory and filename inputs with the correct extension.
+         Note: the default directory is the current directory with the Charmm object file name.
+     Coordinates_box_1: str, (default=None)
+         Override all other box 1 pdb directory and filename inputs with the correct extension.
+         Note: the default directory is the current directory with the Charmm object file name.
+     Structure_box_1: str, (default=None)
+         Override all other box 1  psf directory and filename inputs with the correct extension.
+         Note: the default directory is the current directory with the Charmm object file name.
+     binCoordinates_box_0: str, (default=None)
+         The box 0 binary coordinate file is used only for restarting a GOMC simulation,
+         which provides increased numerical accuracy.
+     extendedSystem_box_0: str, (default=None)
+         The box 0 vectors and origin file is used only for restarting a GOMC simulation.
+     binVelocities_box_0: str, (default=None)
+         The box 0 binary velocity file is used only for restarting a GOMC simulation,
+         which provides increased numerical accuracy. These velocities are only passed thru
+         GOMC since Monte Carlo simulations do not utilize any velocity information.
+     binCoordinates_box_1: str, (default=None)
+         The box 1 binary coordinate file is used only for restarting a GOMC simulation,
+         which provides increased numerical accuracy.
+     extendedSystem_box_1: str, (default=None)
+         The box 1 vectors and origin file is used only for restarting a GOMC simulation.
+     binVelocities_box_1: str, (default=None)
+         The box 1 binary velocity file is used only for restarting a GOMC simulation,
+         which provides increased numerical accuracy. These velocities are only passed thru
+         GOMC since Monte Carlo simulations do not utilize any velocity information.
+     input_variables_dict: dict, default = None
+         These input variables are optional and override the default settings.
+         Changing these variables likely required for more advanced systems.
+         The details of the acceptable input variables for the selected
+         ensembles can be found by running the code below in python,
+
+         >>> print_valid_ensemble_input_variables('GCMC', description = True)
+
+         which prints the input_variables with their subsection description
+         for the selected 'GCMC' ensemble (other ensembles can be set as well).
+         Example: input_variables_dict = {'PRNG': 123,
+                                           'ParaTypeCHARMM': True }
+     conf_filename: str
+         The name of the GOMC contol file, which will be created.  The extension
+         of the GOMC control file can be .conf, or no extension can be provided.
+         If no extension is provided, this writer will automatically add the
+         .conf extension to the provided string.
+     box_0_vectors: numpy.ndarray, [[float float float], [float float float], [float float float]]
+         Three (3) sets vectors for box 0 each with 3 float values, which represent
+         the vectors for the Charmm-style systems (units in Angstroms (Ang))
+     box_1_vectors: numpy.ndarray, [[float float float], [float float float], [float float float]]
+         Three (3) sets vectors for box 1 each with 3 float values, which represent
+         the vectors for the Charmm-style systems (units in Angstroms (Ang))
+     electrostatic_1_4: float or int
+         The non-bonded 1-4 coulombic scaling factor, which is the
+         same for all the residues/molecules, regardless if
+         differenct force fields are utilized.
+     residues: list, [str, ..., str]
+         Labels of unique residues in the Compound. Residues are assigned by
+         checking against Compound.name.  Only supply residue names as 4 character
+         strings, as the residue names are truncated to 4 characters to fit in the
+         psf and pdb file.
+     all_res_unique_atom_name_dict: dict, {str: [str, ..., str]}
+         A dictionary that provides the residue names (keys) and a list
+         of the unique atom names in the residue (value), for the
+         combined structures (box 0 and box 1 (if supplied)).
+     any input_variables_dict key: varies (see each input_variables_dict key and value)
+         Any of the input variables keys is also an Attribute and can be called
+         the same way.  Please see the input_variables_dict keys in the
+         Parameters section above for all the available attributes.
+
+     Notes
+     -------
+     The user input variables (input_variables_dict) and the specific
+     ensembles.
+
+     The details of the required inputs for the selected
+     ensembles can be found by running this python workbook,
+
+     >>> print_valid_required_input_variables('NVT', description = True)
+
+     which prints the required inputs with their subsection description
+     for the selected 'NVT' ensemble (other ensembles can be set as well).
+
+     The details of the input variables for the selected
+     ensembles can be found by running this python workbook,
+
+     >>> print_valid_ensemble_input_variables('NPT', description = True)
+
+     which prints the input variables with their subsection description
+     for the selected 'NPT' ensemble (other ensembles can be set as well).
+
+     Note: The box units imported are in nm (standard MoSDeF units).
+     The units for this writer are auto-scaled to Angstroms, so they
+     can be directly used in the GOMC or NAMD engines.
+
+     Note: all of the move types are not available in for every ensemble.
+
+     Note: all of the move fractions must sum to 1, or the control file
+     writer will fail.
+
+     Note: In GOMC, for Mie FFs the following is always true --> n_ij = (n_ii + n_jj)/2.
+     Note: In GOMC, for Exp FFs the following is always true --> alpha_ij = (alpha_ii * alpha_jj)**0.5.
+
+     The input variables (input_variables_dict) and text extracted with permission from
+     the GOMC manual version 2.60. Some of the text was modified from its original version.
+     Cite: Potoff, Jeffrey; Schwiebert, Loren; et. al. GOMC Documentation.
+     https://raw.githubusercontent.com/GOMC-WSU/GOMC/master/GOMC_Manual.pdf, 2021.
     """
 
     def __init__(
@@ -3167,10 +3223,16 @@ class GOMCControl:
         self.MEMC_2Freq = default_input_variables_dict["MEMC-2Freq"][
             self.ensemble_type
         ]
+        self.MEMC_2LiqFreq = default_input_variables_dict["MEMC-2-LiqFreq"][
+            self.ensemble_type
+        ]
         self.IntraMEMC_3Freq = default_input_variables_dict["IntraMEMC-3Freq"][
             self.ensemble_type
         ]
         self.MEMC_3Freq = default_input_variables_dict["MEMC-3Freq"][
+            self.ensemble_type
+        ]
+        self.MEMC_3_LiqFreq = default_input_variables_dict["MEMC-3-LiqFreq"][
             self.ensemble_type
         ]
         self.TargetedSwapFreq = default_input_variables_dict[
@@ -3486,8 +3548,10 @@ class GOMCControl:
                 "MEMC-1Freq",
                 "IntraMEMC-2Freq",
                 "MEMC-2Freq",
+                "MEMC-2-LiqFreq",
                 "IntraMEMC-3Freq",
                 "MEMC-3Freq",
+                "MEMC-3-LiqFreq",
                 "TargetedSwapFreq",
                 "IntraTargetedSwapFreq",
             ]
@@ -3506,8 +3570,10 @@ class GOMCControl:
                 self.MEMC_1Freq = 0.00
                 self.IntraMEMC_2Freq = 0.00
                 self.MEMC_2Freq = 0.00
+                self.MEMC_2LiqFreq = 0.00
                 self.IntraMEMC_3Freq = 0.00
                 self.MEMC_3Freq = 0.00
+                self.MEMC_3LiqFreq = 0.00
                 self.TargetedSwapFreq = 0.00
                 self.IntraTargetedSwapFreq = 0.00
 
@@ -4670,7 +4736,21 @@ class GOMCControl:
                     self.MEMC_2Freq = self.input_variables_dict[key]
                 else:
                     self.MEMC_2Freq = 0.00
+            key = "MEMC-2-LiqFreq"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_or_float_zero_to_1(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
 
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.MEMC_2LiqFreq = self.input_variables_dict[key]
+                else:
+                    self.MEMC_2LiqFreq = 0.00
             key = "IntraMEMC-3Freq"
             if input_var_keys_list[var_iter] == key:
                 self.ck_input_variable_int_or_float_zero_to_1(
@@ -4702,6 +4782,21 @@ class GOMCControl:
                     self.MEMC_3Freq = self.input_variables_dict[key]
                 else:
                     self.MEMC_3Freq = 0.00
+            key = "MEMC_3-LiqFreq"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_or_float_zero_to_1(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.MEMC_3LiqFreq = self.input_variables_dict[key]
+                else:
+                    self.MEMC_3LiqFreq = 0.00
 
             key = "ExchangeVolumeDim"
             if input_var_keys_list[var_iter] == key:
@@ -5932,7 +6027,9 @@ class GOMCControl:
                 self.SwapFreq != 0
                 or self.MEMC_1Freq != 0
                 or self.MEMC_2Freq != 0
+                or self.MEMC_2LiqFreq != 0
                 or self.MEMC_3Freq != 0
+                or self.MEMC_3LiqFreq != 0
             ):
                 self.input_error = True
                 print_error_message = (
@@ -5957,8 +6054,10 @@ class GOMCControl:
             self.MEMC_1Freq,
             self.IntraMEMC_2Freq,
             self.MEMC_2Freq,
+            self.MEMC_2LiqFreq,
             self.IntraMEMC_3Freq,
             self.MEMC_3Freq,
+            self.MEMC_3LiqFreq,
             self.TargetedSwapFreq,
             self.IntraTargetedSwapFreq,
         ]
@@ -5992,8 +6091,10 @@ class GOMCControl:
             print("\t MEMC-1Freq = " + str(self.MEMC_1Freq))
             print("\t IntraMEMC-2Freq = " + str(self.IntraMEMC_2Freq))
             print("\t MEMC-2Freq = " + str(self.MEMC_2Freq))
+            print("\t MEMC-2-LiqFreq = " + str(self.MEMC_2LiqFreq))
             print("\t IntraMEMC-3Freq = " + str(self.IntraMEMC_3Freq))
             print("\t MEMC-3Freq = " + str(self.MEMC_3Freq))
+            print("\t MEMC-3-LiqFreq = " + str(self.MEMC_3LiqFreq))
             print("\t TargetedSwapFreq = " + str(self.TargetedSwapFreq))
             print(
                 "\t IntraTargetedSwapFreq = " + str(self.IntraTargetedSwapFreq)
@@ -6231,11 +6332,13 @@ class GOMCControl:
                 else:
                     raise ValueError(print_error_message)
 
-        # check that MEMC moves rations are > 0 if MEMC_DataInput is used
+        # check that MEMC moves ratios are > 0 if MEMC_DataInput is used
         if self.MEMC_DataInput is not None and (
             self.MEMC_1Freq == 0
             and self.MEMC_2Freq == 0
+            and self.MEMC_2LiqFreq == 0
             and self.MEMC_3Freq == 0
+            and self.MEMC_3LiqFreq == 0
             and self.IntraMEMC_1Freq == 0
             and self.IntraMEMC_2Freq == 0
             and self.IntraMEMC_3Freq == 0
@@ -6252,7 +6355,9 @@ class GOMCControl:
         if self.MEMC_DataInput is None and (
             self.MEMC_1Freq != 0
             or self.MEMC_2Freq != 0
+            or self.MEMC_2LiqFreq != 0
             or self.MEMC_3Freq != 0
+            or self.MEMC_3LiqFreq != 0
             or self.IntraMEMC_1Freq != 0
             or self.IntraMEMC_2Freq != 0
             or self.IntraMEMC_3Freq != 0
@@ -6268,7 +6373,9 @@ class GOMCControl:
 
         # ensure the LargeKindBackBone and SmallKindBackBones are provided as appropriate for MEMC-1, MEMC-2, MEMC-3
         if self.MEMC_DataInput is not None and (
-            self.MEMC_2Freq > 0 or self.IntraMEMC_2Freq > 0
+            self.MEMC_2Freq > 0
+            or self.MEMC_2LiqFreq > 0
+            or self.IntraMEMC_2Freq > 0
         ):
             for MEMC_2_i in range(0, len(self.MEMC_DataInput)):
                 if (
@@ -6287,7 +6394,9 @@ class GOMCControl:
                     raise ValueError(print_error_message)
 
         if self.MEMC_DataInput is not None and (
-            self.MEMC_3Freq > 0 or self.IntraMEMC_3Freq > 0
+            self.MEMC_3Freq > 0
+            or self.MEMC_3LiqFreq > 0
+            or self.IntraMEMC_3Freq > 0
         ):
             for MEMC_3_i in range(0, len(self.MEMC_DataInput)):
                 if (
@@ -6843,6 +6952,10 @@ class GOMCControl:
             data_control_file.write(
                 "{:25s} {}\n".format("MEMC-2Freq", self.MEMC_2Freq)
             )
+        if self.MEMC_2LiqFreq > mc_move_zero_error_tolerance:
+            data_control_file.write(
+                "{:25s} {}\n".format("MEMC-2-LiqFreq", self.MEMC_2LiqFreq)
+            )
         if self.IntraMEMC_3Freq > mc_move_zero_error_tolerance:
             data_control_file.write(
                 "{:25s} {}\n".format("IntraMEMC-3Freq", self.IntraMEMC_3Freq)
@@ -6850,6 +6963,10 @@ class GOMCControl:
         if self.MEMC_3Freq > mc_move_zero_error_tolerance:
             data_control_file.write(
                 "{:25s} {}\n".format("MEMC-3Freq", self.MEMC_3Freq)
+            )
+        if self.MEMC_3LiqFreq > mc_move_zero_error_tolerance:
+            data_control_file.write(
+                "{:25s} {}\n".format("MEMC-3-LiqFreq", self.MEMC_3LiqFreq)
             )
         if self.TargetedSwapFreq > mc_move_zero_error_tolerance:
             data_control_file.write(
@@ -6867,7 +6984,9 @@ class GOMCControl:
         if self.MEMC_DataInput is not None and (
             self.MEMC_1Freq > 0
             or self.MEMC_2Freq > 0
+            or self.MEMC_2LiqFreq > 0
             or self.MEMC_3Freq > 0
+            or self.MEMC_3LiqFreq > 0
             or self.IntraMEMC_1Freq > 0
             or self.IntraMEMC_2Freq > 0
             or self.IntraMEMC_3Freq > 0
@@ -6929,8 +7048,10 @@ class GOMCControl:
             )
             if self.MEMC_DataInput is not None and (
                 self.MEMC_2Freq > 0
+                or self.MEMC_2LiqFreq > 0
                 or self.IntraMEMC_2Freq > 0
                 or self.MEMC_3Freq > 0
+                or self.MEMC_3LiqFreq > 0
                 or self.IntraMEMC_3Freq > 0
             ):
                 data_control_file.write(
@@ -6939,7 +7060,9 @@ class GOMCControl:
                     )
                 )
             if self.MEMC_DataInput is not None and (
-                self.MEMC_2Freq > 0 or self.IntraMEMC_2Freq > 0
+                self.MEMC_2Freq > 0
+                or self.MEMC_2LiqFreq > 0
+                or self.IntraMEMC_2Freq > 0
             ):
                 data_control_file.write(
                     "{:25s} {}\n".format(
@@ -9310,6 +9433,14 @@ def write_gomc_control_file(
         used to insert the large molecule more efficiently. This move need additional
         information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
         ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone.
+    MEMC-2-LiqFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+        Fractional percentage at which specified number of small molecule kind will be
+        exchanged with a specified large molecule kind in defined sub-volume,
+        between simulation boxes. Backbone of small and large molecule kind will be
+        used to insert the large molecule more efficiently. This move need additional
+        information such as ExchangeVolumeDim, ExchangeRatio, ExchangeSmallKind,
+        ExchangeLargeKind, SmallKindBackBone, and LargeKindBackBone. Designed for LLE.
     IntraMEMC-3Freq: int or float (0 <= value <= 1), default are specific for each ensemble
         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
         Fractional percentage at which specified number of small molecule kind will be
@@ -9326,6 +9457,14 @@ def write_gomc_control_file(
         used to insert the large molecule using coupled-decoupled configurational-bias.
         This move need additional information such as ExchangeVolumeDim,
         ExchangeRatio, ExchangeSmallKind, ExchangeLargeKind, and LargeKindBackBone.
+    MEMC-3-LiqFreq: int or float (0 <= value <= 1), default are specific for each ensemble
+        {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0.0}
+        Fractional percentage at which specified number of small molecule kind will be
+        exchanged with a specified large molecule kind in defined sub-volume,
+        between simulation boxes.  Specified atom of the large molecule kind will be
+        used to insert the large molecule using coupled-decoupled configurational-bias.
+        This move need additional information such as ExchangeVolumeDim,
+        ExchangeRatio, ExchangeSmallKind, ExchangeLargeKind, and LargeKindBackBone. Designed for LLE
     TargetedSwapFreq: int or float (0 <= value <= 1), default are specific for each ensemble
         {'NVT': 0.0, 'NPT': 0.0, 'GEMC_NVT': 0.0, 'GEMC_NPT': 0.0, 'GCMC': 0}
         Fractional percentage at which targeted swap move will occur.
