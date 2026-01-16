@@ -3171,7 +3171,9 @@ class GOMCControl:
             "angstrom"
         )
         self.TableInterpType = default_input_variables_dict["TableInterpType"]
-        self.TabulatedEnergiesFile = default_input_variables_dict["TabulatedEnergiesFile"]
+        self.TabulatedEnergiesFile = default_input_variables_dict[
+            "TabulatedEnergiesFile"
+        ]
         self.ElectroStatic = default_input_variables_dict["ElectroStatic"]
         self.Ewald = default_input_variables_dict["Ewald"]
         self.CachedFourier = default_input_variables_dict["CachedFourier"]
@@ -6873,7 +6875,9 @@ class GOMCControl:
             )
             if self.TabulatedEnergiesFile is not None:
                 data_control_file.write(
-                    "{:25s} {}\n".format("TabulatedEnergiesFile", self.TabulatedEnergiesFile)
+                    "{:25s} {}\n".format(
+                        "TabulatedEnergiesFile", self.TabulatedEnergiesFile
+                    )
                 )
         data_control_file.write("{:25s} {}\n".format("Exclude", self.Exclude))
         data_control_file.write(

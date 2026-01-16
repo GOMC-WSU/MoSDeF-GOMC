@@ -1,4 +1,5 @@
 import os
+
 import mbuild as mb
 import numpy as np
 import pytest
@@ -11131,7 +11132,7 @@ class TestCharmmWriterData(BaseTest):
         # Load united-atom ethane to match the united-atom forcefield
         butane_ua = mb.load(get_mosdef_gomc_fn("C4A.mol2"))
         butane_ua.name = "C4A"
-        
+
         box_0 = mb.fill_box(
             compound=[butane_ua], n_compounds=[1], box=[4, 4, 4]
         )
@@ -11141,15 +11142,17 @@ class TestCharmmWriterData(BaseTest):
             "tabulated_test",
             ff_filename="tabulated_test",
             residues=[butane_ua.name],
-            forcefield_selection={"C4A": get_mosdef_gomc_fn("trappe_alkane_tabulated.xml")},
+            forcefield_selection={
+                "C4A": get_mosdef_gomc_fn("trappe_alkane_tabulated.xml")
+            },
             gmso_match_ff_by="molecule",
         )
-        
+
         # Verify that the writer detected it as tabulated
         assert charmm.is_tabulated
-        
+
         charmm.write_inp()
-        
+
         # Verify INP content
         with open("tabulated_test.inp", "r") as f:
             content = f.read()

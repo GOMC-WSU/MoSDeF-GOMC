@@ -2575,17 +2575,17 @@ class Charmm:
         atom_class_only_mass_dict = {}
         atom_class_only_mie_n_dict = {}
         atom_class_only_exp6_alpha_dict = {}
-        
+
         # Skip atom class consistency checks for TABULATED potentials
         # since parameters are read from the data file, not the force field
         if self.utilized_NB_expression != "TABULATED":
             for atom_type_key_iter in list(self.atom_type_info_dict.keys()):
-                atom_class_j_iter = self.atom_type_info_dict[atom_type_key_iter][
-                    "atomclass_"
-                ]
-                atom_residue_j_iter = self.atom_type_info_dict[atom_type_key_iter][
-                    "residue_name_"
-                ]
+                atom_class_j_iter = self.atom_type_info_dict[
+                    atom_type_key_iter
+                ]["atomclass_"]
+                atom_residue_j_iter = self.atom_type_info_dict[
+                    atom_type_key_iter
+                ]["residue_name_"]
                 atom_class_residue_j_iter = (
                     f"{atom_residue_j_iter}_{atom_class_j_iter}"
                 )
@@ -2597,7 +2597,9 @@ class Charmm:
                     ]
                 )
                 atom_class_sigmas_angstrom_j_iter = (
-                    self.sigma_angstrom_atom_class_dict[atom_class_residue_j_iter]
+                    self.sigma_angstrom_atom_class_dict[
+                        atom_class_residue_j_iter
+                    ]
                 )
                 atom_class_mass_amu_j_iter = self.mass_atom_class_dict[
                     atom_class_residue_j_iter
@@ -2617,7 +2619,9 @@ class Charmm:
                             )
                 except:
                     atom_class_only_epsilon_dict.update(
-                        {atom_class_j_iter: atom_class_epsilon_kcal_per_mol_j_iter}
+                        {
+                            atom_class_j_iter: atom_class_epsilon_kcal_per_mol_j_iter
+                        }
                     )
 
                 try:
@@ -2680,13 +2684,17 @@ class Charmm:
                         )
 
                 if self.utilized_NB_expression == "Exp6":
-                    atom_class_exp6_alpha_iter = self.exp6_alpha_atom_class_dict[
-                        atom_class_residue_j_iter
-                    ]
+                    atom_class_exp6_alpha_iter = (
+                        self.exp6_alpha_atom_class_dict[
+                            atom_class_residue_j_iter
+                        ]
+                    )
                     try:
                         if (
                             atom_class_exp6_alpha_iter
-                            != atom_class_only_exp6_alpha_dict[atom_class_j_iter]
+                            != atom_class_only_exp6_alpha_dict[
+                                atom_class_j_iter
+                            ]
                         ):
                             if atom_class_conficts_str == "":
                                 atom_class_conficts_str = f"{'alpha'}"
@@ -4499,7 +4507,11 @@ class Charmm:
                         # write charmm dihedral K0 (zero order dihedral --- a constant) if Mie or Exp6,
                         # but not written for periodic as the K0 constant is defined as a
                         # harmonic potential function in periodic.
-                        if self.utilized_NB_expression in ["Mie", "Exp6", "TABULATED"]:
+                        if self.utilized_NB_expression in [
+                            "Mie",
+                            "Exp6",
+                            "TABULATED",
+                        ]:
                             # write charmm dihedral K0 (harmonic dihedral)
                             if K0_output_energy_iter != 0:
                                 data.write(
@@ -5268,7 +5280,7 @@ class Charmm:
                             scalar_used_binary = 0
                         else:
                             scalar_used_binary = 1
-                        
+
                         # For TABULATED with ParaTypeMie, use Mie format with zeros except n=12
                         if self.ParaTypeMie:
                             nb_val_list.append(
@@ -5313,196 +5325,197 @@ class Charmm:
                         class_x,
                         epsilon_kcal_per_mol,
                     ) in self.epsilon_kcal_per_mol_atom_type_dict.items():
-                            # if the 1-4 non-bonded scalar is used.
-                            # If 1-4 non-bonded scalar = 0, all 1-4 non-bonded values are set to zero (0).
-                            # If 1-4 non-bonded scalar = 1, the epsilon 1-4 non-bonded interaction is scaled
-                            # via another scalar.
-                            if float(self.nonbonded_1_4_dict[class_x]) == 0:
-                                scalar_used_binary = 0
-                            else:
-                                scalar_used_binary = 1
+                        # if the 1-4 non-bonded scalar is used.
+                        # If 1-4 non-bonded scalar = 0, all 1-4 non-bonded values are set to zero (0).
+                        # If 1-4 non-bonded scalar = 1, the epsilon 1-4 non-bonded interaction is scaled
+                        # via another scalar.
+                        if float(self.nonbonded_1_4_dict[class_x]) == 0:
+                            scalar_used_binary = 0
+                        else:
+                            scalar_used_binary = 1
 
-                            # if in "LJ" form put in kcal/mol
-                            if self.utilized_NB_expression == "LJ":
-                                nb_val_list.append(
-                                    [
-                                        str(
-                                            self.mosdef_atom_name_to_atom_type_dict[
-                                                class_x
-                                            ]
-                                        ),
-                                        str(0.0),
-                                        str(
-                                            np.round(
-                                                -epsilon_kcal_per_mol,
-                                                decimals=epsilon_kcal_per_mol_round_decimals,
-                                            )
-                                        ),
-                                        str(
-                                            np.round(
-                                                _LJ_sigma_to_r_min_div_2(
-                                                    self.sigma_angstrom_atom_type_dict[
-                                                        class_x
-                                                    ]
-                                                ),
-                                                decimals=sigma_round_decimals,
-                                            )
-                                        ),
-                                        str(0.0),
-                                        str(
-                                            -np.round(
-                                                scalar_used_binary
-                                                * float(
-                                                    self.nonbonded_1_4_dict[class_x]
-                                                )
-                                                * epsilon_kcal_per_mol,
-                                                decimals=epsilon_kcal_per_mol_round_decimals,
-                                            )
-                                        ),
-                                        str(
-                                            np.round(
-                                                _LJ_sigma_to_r_min_div_2(
-                                                    self.sigma_angstrom_atom_type_dict[
-                                                        class_x
-                                                    ]
-                                                ),
-                                                decimals=sigma_round_decimals,
-                                            )
-                                        ),
-                                        str(class_x),
-                                        str(class_x),
-                                    ]
-                                )
-
-                            # if in "Mie" or "Exp6" form put in K -- energy units
-                            elif self.utilized_NB_expression in ["Mie", "Exp6"]:
-                                # check that nb-vdw = 0 or 1 only for "Mie or Exp6"
-                                for (
-                                    res_nb_14,
-                                    scaler_nb_14,
-                                ) in self.nonbonded_1_4_dict.items():
-                                    if scaler_nb_14 is None:
-                                        print_error = (
-                                            f"ERROR: The {res_nb_14} residue is provided a value of "
-                                            f"{scaler_nb_14}, and a value from 0 to 1 needs to be provided. "
-                                            f"Please check the force file xml file."
+                        # if in "LJ" form put in kcal/mol
+                        if self.utilized_NB_expression == "LJ":
+                            nb_val_list.append(
+                                [
+                                    str(
+                                        self.mosdef_atom_name_to_atom_type_dict[
+                                            class_x
+                                        ]
+                                    ),
+                                    str(0.0),
+                                    str(
+                                        np.round(
+                                            -epsilon_kcal_per_mol,
+                                            decimals=epsilon_kcal_per_mol_round_decimals,
                                         )
-                                        raise ValueError(print_error)
-
-                                # select Mie n values or Exp6 alpha values
-                                if self.utilized_NB_expression == "Mie":
-                                    mie_n_or_exp6_alpha_atom_type_value = (
-                                        self.mie_n_atom_type_dict[class_x]
-                                    )
-                                elif self.utilized_NB_expression == "Exp6":
-                                    mie_n_or_exp6_alpha_atom_type_value = (
-                                        self.exp6_alpha_atom_type_dict[class_x]
-                                    )
-
-                                epsilon_Kelvin = u.unyt_quantity(
-                                    epsilon_kcal_per_mol, "kcal/mol"
-                                ).to_value("K", equivalence="thermal")
-
-                                nb_val_list.append(
-                                    [
-                                        str(
-                                            self.mosdef_atom_name_to_atom_type_dict[
-                                                class_x
-                                            ]
-                                        ),
-                                        str(
-                                            np.round(
-                                                epsilon_Kelvin,
-                                                decimals=epsilon_Kelvin_round_decimals,
-                                            )
-                                        ),
-                                        str(
-                                            np.round(
+                                    ),
+                                    str(
+                                        np.round(
+                                            _LJ_sigma_to_r_min_div_2(
                                                 self.sigma_angstrom_atom_type_dict[
                                                     class_x
-                                                ],
-                                                decimals=sigma_round_decimals,
+                                                ]
+                                            ),
+                                            decimals=sigma_round_decimals,
+                                        )
+                                    ),
+                                    str(0.0),
+                                    str(
+                                        -np.round(
+                                            scalar_used_binary
+                                            * float(
+                                                self.nonbonded_1_4_dict[class_x]
                                             )
-                                        ),
-                                        str(
-                                            np.round(
-                                                mie_n_or_exp6_alpha_atom_type_value,
-                                                decimals=mie_n_or_exp6_alpha_round_decimals,
-                                            )
-                                        ),
-                                        str(
-                                            np.round(
-                                                scalar_used_binary
-                                                * float(
-                                                    self.nonbonded_1_4_dict[class_x]
-                                                )
-                                                * (epsilon_Kelvin),
-                                                decimals=epsilon_Kelvin_round_decimals,
-                                            )
-                                        ),
-                                        str(
-                                            np.round(
+                                            * epsilon_kcal_per_mol,
+                                            decimals=epsilon_kcal_per_mol_round_decimals,
+                                        )
+                                    ),
+                                    str(
+                                        np.round(
+                                            _LJ_sigma_to_r_min_div_2(
                                                 self.sigma_angstrom_atom_type_dict[
                                                     class_x
-                                                ],
-                                                decimals=sigma_round_decimals,
-                                            )
-                                        ),
-                                        str(
-                                            np.round(
-                                                mie_n_or_exp6_alpha_atom_type_value,
-                                                decimals=mie_n_or_exp6_alpha_round_decimals,
-                                            )
-                                        ),
-                                        str(class_x),
-                                        str(class_x),
-                                    ]
-                                )
-
-                            # check for duplicates, for duplicate class or atom type
-                            nb_same_count = 0  # Start at 0 (1 always found) count numbr of values that are the same
-                            for nb_check_i in range(0, len(nb_val_list)):
-
-                                # check if atomclass or atomtype is the same
-                                if nb_val_list[-1][0] == nb_val_list[nb_check_i][0]:
-                                    nb_same_count += 1
-
-                                    # check if values are the same since atomclass or atomtype is the same
-                                    if (
-                                        nb_val_list[-1][1] != nb_val_list[nb_check_i][1]
-                                        or nb_val_list[-1][2]
-                                        != nb_val_list[nb_check_i][2]
-                                        or nb_val_list[-1][3]
-                                        != nb_val_list[nb_check_i][3]
-                                        or nb_val_list[-1][4]
-                                        != nb_val_list[nb_check_i][4]
-                                        or nb_val_list[-1][5]
-                                        != nb_val_list[nb_check_i][5]
-                                        or nb_val_list[-1][6]
-                                        != nb_val_list[nb_check_i][6]
-                                    ):
-                                        raise ValueError(
-                                            f"ERROR: The same atomclass or atomtype in the "
-                                            f"force field are have different {'non-bonded'} values.\n"
-                                            f"{nb_val_list[-1]} != {nb_val_list[nb_check_i]} "
+                                                ]
+                                            ),
+                                            decimals=sigma_round_decimals,
                                         )
+                                    ),
+                                    str(class_x),
+                                    str(class_x),
+                                ]
+                            )
 
-                            # Only print for 1 time so nb_same_count=1 (starts at 0)
-                            if nb_same_count == 1:
-                                nb_format = "{:10s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
-                                data.write(
-                                    nb_format.format(
-                                        nb_val_list[-1][0],
-                                        nb_val_list[-1][1],
-                                        nb_val_list[-1][2],
-                                        nb_val_list[-1][3],
-                                        nb_val_list[-1][4],
-                                        nb_val_list[-1][5],
-                                        nb_val_list[-1][6],
-                                        nb_val_list[-1][7],
-                                        nb_val_list[-1][8],
+                        # if in "Mie" or "Exp6" form put in K -- energy units
+                        elif self.utilized_NB_expression in ["Mie", "Exp6"]:
+                            # check that nb-vdw = 0 or 1 only for "Mie or Exp6"
+                            for (
+                                res_nb_14,
+                                scaler_nb_14,
+                            ) in self.nonbonded_1_4_dict.items():
+                                if scaler_nb_14 is None:
+                                    print_error = (
+                                        f"ERROR: The {res_nb_14} residue is provided a value of "
+                                        f"{scaler_nb_14}, and a value from 0 to 1 needs to be provided. "
+                                        f"Please check the force file xml file."
                                     )
+                                    raise ValueError(print_error)
+
+                            # select Mie n values or Exp6 alpha values
+                            if self.utilized_NB_expression == "Mie":
+                                mie_n_or_exp6_alpha_atom_type_value = (
+                                    self.mie_n_atom_type_dict[class_x]
                                 )
+                            elif self.utilized_NB_expression == "Exp6":
+                                mie_n_or_exp6_alpha_atom_type_value = (
+                                    self.exp6_alpha_atom_type_dict[class_x]
+                                )
+
+                            epsilon_Kelvin = u.unyt_quantity(
+                                epsilon_kcal_per_mol, "kcal/mol"
+                            ).to_value("K", equivalence="thermal")
+
+                            nb_val_list.append(
+                                [
+                                    str(
+                                        self.mosdef_atom_name_to_atom_type_dict[
+                                            class_x
+                                        ]
+                                    ),
+                                    str(
+                                        np.round(
+                                            epsilon_Kelvin,
+                                            decimals=epsilon_Kelvin_round_decimals,
+                                        )
+                                    ),
+                                    str(
+                                        np.round(
+                                            self.sigma_angstrom_atom_type_dict[
+                                                class_x
+                                            ],
+                                            decimals=sigma_round_decimals,
+                                        )
+                                    ),
+                                    str(
+                                        np.round(
+                                            mie_n_or_exp6_alpha_atom_type_value,
+                                            decimals=mie_n_or_exp6_alpha_round_decimals,
+                                        )
+                                    ),
+                                    str(
+                                        np.round(
+                                            scalar_used_binary
+                                            * float(
+                                                self.nonbonded_1_4_dict[class_x]
+                                            )
+                                            * (epsilon_Kelvin),
+                                            decimals=epsilon_Kelvin_round_decimals,
+                                        )
+                                    ),
+                                    str(
+                                        np.round(
+                                            self.sigma_angstrom_atom_type_dict[
+                                                class_x
+                                            ],
+                                            decimals=sigma_round_decimals,
+                                        )
+                                    ),
+                                    str(
+                                        np.round(
+                                            mie_n_or_exp6_alpha_atom_type_value,
+                                            decimals=mie_n_or_exp6_alpha_round_decimals,
+                                        )
+                                    ),
+                                    str(class_x),
+                                    str(class_x),
+                                ]
+                            )
+
+                        # check for duplicates, for duplicate class or atom type
+                        nb_same_count = 0  # Start at 0 (1 always found) count numbr of values that are the same
+                        for nb_check_i in range(0, len(nb_val_list)):
+
+                            # check if atomclass or atomtype is the same
+                            if nb_val_list[-1][0] == nb_val_list[nb_check_i][0]:
+                                nb_same_count += 1
+
+                                # check if values are the same since atomclass or atomtype is the same
+                                if (
+                                    nb_val_list[-1][1]
+                                    != nb_val_list[nb_check_i][1]
+                                    or nb_val_list[-1][2]
+                                    != nb_val_list[nb_check_i][2]
+                                    or nb_val_list[-1][3]
+                                    != nb_val_list[nb_check_i][3]
+                                    or nb_val_list[-1][4]
+                                    != nb_val_list[nb_check_i][4]
+                                    or nb_val_list[-1][5]
+                                    != nb_val_list[nb_check_i][5]
+                                    or nb_val_list[-1][6]
+                                    != nb_val_list[nb_check_i][6]
+                                ):
+                                    raise ValueError(
+                                        f"ERROR: The same atomclass or atomtype in the "
+                                        f"force field are have different {'non-bonded'} values.\n"
+                                        f"{nb_val_list[-1]} != {nb_val_list[nb_check_i]} "
+                                    )
+
+                        # Only print for 1 time so nb_same_count=1 (starts at 0)
+                        if nb_same_count == 1:
+                            nb_format = "{:10s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s} ! {:20s} {:20s}\n"
+                            data.write(
+                                nb_format.format(
+                                    nb_val_list[-1][0],
+                                    nb_val_list[-1][1],
+                                    nb_val_list[-1][2],
+                                    nb_val_list[-1][3],
+                                    nb_val_list[-1][4],
+                                    nb_val_list[-1][5],
+                                    nb_val_list[-1][6],
+                                    nb_val_list[-1][7],
+                                    nb_val_list[-1][8],
+                                )
+                            )
 
                 # Write TABULATED atom types (outside the conditional block)
                 if self.utilized_NB_expression == "TABULATED":
@@ -5527,18 +5540,26 @@ class Charmm:
                     data.write("\n")
                     data.write("NBTABLE * table\n")
                     data.write("! \n")
-                    data.write("! Tabulated pair interactions for TABULATED potentials\n")
+                    data.write(
+                        "! Tabulated pair interactions for TABULATED potentials\n"
+                    )
                     data.write("! Format: atom_type_1 atom_type_2 label\n")
-                    
+
                     # Get all unique atom types from the force field
-                    atom_types = sorted(set(self.mosdef_atom_name_to_atom_type_dict.values()))
-                    
+                    atom_types = sorted(
+                        set(self.mosdef_atom_name_to_atom_type_dict.values())
+                    )
+
                     # Write all pair combinations
                     for atom_type_1 in atom_types:
                         for atom_type_2 in atom_types:
-                            if atom_type_1 <= atom_type_2:  # Avoid duplicate pairs
+                            if (
+                                atom_type_1 <= atom_type_2
+                            ):  # Avoid duplicate pairs
                                 pair_label = f"{atom_type_1}{atom_type_2}"
-                                data.write(f"{atom_type_1:10s} {atom_type_2:10s} {pair_label}\n")
+                                data.write(
+                                    f"{atom_type_1:10s} {atom_type_2:10s} {pair_label}\n"
+                                )
 
                 data.write("\nEND\n")
 

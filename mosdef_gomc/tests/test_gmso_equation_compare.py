@@ -480,7 +480,8 @@ class TestEqnCompare(BaseTest):
 
         assert form_output == "PeriodicImproperPotential"
         assert form_scalar == 2
-# Unit test for tabulated potential
+
+    # Unit test for tabulated potential
     def test_tabulated_potential(self):
         class MockAtomType:
             def __init__(self, name):
