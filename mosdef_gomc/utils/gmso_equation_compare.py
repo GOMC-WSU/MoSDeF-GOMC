@@ -236,6 +236,30 @@ def get_atom_type_expressions_and_scalars(atom_types_dict):
                 }
             }
             expression_iter = atom_types_dict[res_i]["expression"]
+            
+            # Check for explicit TABULATED designation first
+            if (
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_form"
+                ]
+                is None
+                and atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_scalar"
+                ]
+                is None
+                and "TABULATED" in str(expression_iter).upper()
+            ):
+                # Explicit TABULATED designation in XML expression
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression"
+                ] = expression_iter
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_form"
+                ] = "TABULATED"
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_scalar"
+                ] = 1.0
+            
             if (
                 atomtypes_data_dict_iter[modified_atom_type_iter][
                     "expression_form"
@@ -326,15 +350,17 @@ def get_atom_type_expressions_and_scalars(atom_types_dict):
                 ]
                 is None
             ):
-                print_error_text = (
-                    "ERROR: the {} residue does not match the listed standard or scaled "
-                    "LJ, Mie, or Exp6 expressions in the {} function."
-                    "".format(
-                        modified_atom_type_iter,
-                        "get_atom_type_expressions_and_scalars",
-                    )
-                )
-                raise ValueError(print_error_text)
+                # If no standard form matches, treat as TABULATED potential
+                # This allows support for external tabulated potential data
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression"
+                ] = expression_iter
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_form"
+                ] = "TABULATED"
+                atomtypes_data_dict_iter[modified_atom_type_iter][
+                    "expression_scalar"
+                ] = 1.0
 
             atomtypes_data_expression_data_dict.update(atomtypes_data_dict_iter)
 
