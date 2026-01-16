@@ -3232,7 +3232,7 @@ class GOMCControl:
         self.MEMC_3Freq = default_input_variables_dict["MEMC-3Freq"][
             self.ensemble_type
         ]
-        self.MEMC_3_LiqFreq = default_input_variables_dict["MEMC-3-LiqFreq"][
+        self.MEMC_3LiqFreq = default_input_variables_dict["MEMC-3-LiqFreq"][
             self.ensemble_type
         ]
         self.TargetedSwapFreq = default_input_variables_dict[
