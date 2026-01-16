@@ -338,29 +338,12 @@ def get_atom_type_expressions_and_scalars(atom_types_dict):
                     "expression_scalar"
                 ] = form_scalar
 
-            if (
-                atomtypes_data_dict_iter[modified_atom_type_iter]["expression"]
-                is None
-                or atomtypes_data_dict_iter[modified_atom_type_iter][
-                    "expression_form"
-                ]
-                is None
-                or atomtypes_data_dict_iter[modified_atom_type_iter][
-                    "expression_scalar"
-                ]
-                is None
-            ):
-                # If no standard form matches, treat as TABULATED potential
-                # This allows support for external tabulated potential data
-                atomtypes_data_dict_iter[modified_atom_type_iter][
-                    "expression"
-                ] = expression_iter
-                atomtypes_data_dict_iter[modified_atom_type_iter][
-                    "expression_form"
-                ] = "TABULATED"
-                atomtypes_data_dict_iter[modified_atom_type_iter][
-                    "expression_scalar"
-                ] = 1.0
+
+            if atomtypes_data_dict_iter[modified_atom_type_iter]["expression_form"] is None:
+                raise ValueError(
+                    f"ERROR: the {modified_atom_type_iter} residue does not match the listed standard or scaled "
+                    f"LJ, Mie, or Exp6 expressions in the get_atom_type_expressions_and_scalars function."
+                )
 
             atomtypes_data_expression_data_dict.update(atomtypes_data_dict_iter)
 

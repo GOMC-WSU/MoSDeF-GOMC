@@ -3307,6 +3307,20 @@ class Charmm:
                                 bond_energy_value_Mie_Exp6_units_iter,
                                 decimals=bond_k_Kelvin_round_decimals,
                             )
+                        elif self.utilized_NB_expression == "TABULATED":
+                            # For TABULATED potentials, use same units as Mie/Exp6 (Kelvin)
+                            bond_energy_value_Mie_Exp6_units_iter = (
+                                _check_convert_bond_k_constant_units(
+                                    str(bond_members_iter),
+                                    bond_eqn_scalar_iter
+                                    * bond_type_x.parameters["k"],
+                                    "K/angstrom**2",
+                                ).to_value("K/angstrom**2")
+                            )
+                            bond_energy_value_iter = np.round(
+                                bond_energy_value_Mie_Exp6_units_iter,
+                                decimals=bond_k_Kelvin_round_decimals,
+                            )
 
                         if (
                             (self.gomc_fix_bonds_angles is not None)
@@ -3483,6 +3497,21 @@ class Charmm:
                                 decimals=angle_k_kcal_per_mol_round_decimals,
                             )
                         elif self.utilized_NB_expression in ["Mie", "Exp6"]:
+                            angle_energy_value_Mie_Exp6_units_iter = (
+                                _check_convert_angle_k_constant_units(
+                                    str(angle_members_iter),
+                                    angle_eqn_scalar_iter
+                                    * angle_type_x.parameters["k"],
+                                    "K/rad**2",
+                                ).to_value("K/rad**2")
+                            )
+
+                            angle_energy_value_iter = np.round(
+                                angle_energy_value_Mie_Exp6_units_iter,
+                                decimals=angle_k_Kelvin_round_decimals,
+                            )
+                        elif self.utilized_NB_expression == "TABULATED":
+                            # For TABULATED potentials, use same units as Mie/Exp6 (Kelvin)
                             angle_energy_value_Mie_Exp6_units_iter = (
                                 _check_convert_angle_k_constant_units(
                                     str(angle_members_iter),

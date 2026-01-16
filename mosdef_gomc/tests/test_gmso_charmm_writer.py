@@ -1,3 +1,4 @@
+import os
 import mbuild as mb
 import numpy as np
 import pytest
@@ -11125,3 +11126,41 @@ class TestCharmmWriterData(BaseTest):
         assert dihedrals_read
         assert impropers_read
         assert nonbondeds_read
+
+    def test_tabulated_potential_writer(self):
+        # Load united-atom ethane to match the united-atom forcefield
+        butane_ua = mb.load(get_mosdef_gomc_fn("C4A.mol2"))
+        butane_ua.name = "C4A"
+        
+        box_0 = mb.fill_box(
+            compound=[butane_ua], n_compounds=[1], box=[4, 4, 4]
+        )
+
+        charmm = Charmm(
+            box_0,
+            "tabulated_test",
+            ff_filename="tabulated_test",
+            residues=[butane_ua.name],
+            forcefield_selection={"C4A": get_mosdef_gomc_fn("trappe_alkane_tabulated.xml")},
+            gmso_match_ff_by="molecule",
+        )
+        
+        # Verify that the writer detected it as tabulated
+        assert charmm.is_tabulated
+        
+        charmm.write_inp()
+        
+        # Verify INP content
+        with open("tabulated_test.inp", "r") as f:
+            content = f.read()
+            # Check for TABULATED in the non-bonded section
+            # The format can be either "NONBONDED * TABULATED" or "NONBONDED_MIE * TABULATED"
+            assert "TABULATED" in content and "NONBONDED" in content
+
+        # Cleanup
+        if os.path.exists("tabulated_test.inp"):
+            os.remove("tabulated_test.inp")
+        if os.path.exists("tabulated_test.psf"):
+            os.remove("tabulated_test.psf")
+        if os.path.exists("tabulated_test.pdb"):
+            os.remove("tabulated_test.pdb")

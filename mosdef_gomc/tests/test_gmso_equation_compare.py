@@ -480,3 +480,20 @@ class TestEqnCompare(BaseTest):
 
         assert form_output == "PeriodicImproperPotential"
         assert form_scalar == 2
+# Unit test for tabulated potential
+    def test_tabulated_potential(self):
+        class MockAtomType:
+            def __init__(self, name):
+                self.name = name
+
+        atom_types_dict = {
+            "RES1": {
+                "expression": "TABULATED_EXPRESSION",  # String containing "TABULATED"
+                "atom_types": [MockAtomType("AT1")],
+            }
+        }
+
+        result = get_atom_type_expressions_and_scalars(atom_types_dict)
+
+        assert result["RES1_AT1"]["expression_form"] == "TABULATED"
+        assert result["RES1_AT1"]["expression_scalar"] == 1.0
