@@ -1,0 +1,169 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ForceField name="Mie two-propanol- This is for testing only and not for use for simulations " version="0.0.1">
+  <FFMetaData electrostatics14Scale="0.0" nonBonded14Scale="0.0" combiningRule="lorentz">
+    <Units energy="kcal/mol" mass="amu" charge="elementary_charge" distance="angstrom"/>
+  </FFMetaData>
+  <AtomTypes expression="TABULATED">
+    <ParametersUnitDef parameter="epsilon" unit="K"/>
+    <ParametersUnitDef parameter="sigma" unit="angstrom"/>
+    <ParametersUnitDef parameter="n" unit="dimensionless"/>
+    <ParametersUnitDef parameter="m" unit="dimensionless"/>
+    <AtomType name="CH3_sp3" atomclass="CH3" element="_CH3" charge="0.0" mass="15.0344" definition="[_CH3;X1][_CH3,_CH2]" description="Alkane CH3, united-atom " doi="TraPPE1" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="98.0"/>
+        <Parameter name="sigma" value="3.75"/>
+        <Parameter name="n" value="12"/>
+        <Parameter name="m" value="6"/>
+      </Parameters>
+    </AtomType>
+    <AtomType name="CH2_sp3" atomclass="CH2" element="_CH2" charge="0.0" mass="14.0266" definition="[_CH2;X2]([_CH3,_CH2])([_CH3,_CH2])" description="CH2, united atom" doi="TraPPE1" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="46"/>
+        <Parameter name="sigma" value="3.95"/>
+        <Parameter name="n" value="12"/>
+        <Parameter name="m" value="6"/>
+      </Parameters>
+    </AtomType>
+    <AtomType name="CH4" atomclass="CH4" element="_CH4" charge="0.0" mass="16.0422" definition="_CH4"  description="CH4 united atom"  doi="TraPPE1" overrides="">
+      <Parameters>
+        <Parameter name="epsilon" value="148.0"/>
+        <Parameter name="sigma" value="3.73"/>
+        <Parameter name="n" value="12"/>
+        <Parameter name="m" value="6"/>
+      </Parameters>
+    </AtomType>
+  </AtomTypes>
+  <BondTypes expression="k * (r-r_eq)**2">
+    <ParametersUnitDef parameter="r_eq" unit="angstrom"/>
+    <ParametersUnitDef parameter="k" unit="K/angstrom**2"/>
+    <BondType name="BondType_Harmonic_CH3_CH2" class1="CH3" class2="CH2">
+      <Parameters>
+        <Parameter name="k" value="604267.555311465"/>
+        <Parameter name="r_eq" value="1.540"/>
+      </Parameters>
+    </BondType>
+    <BondType name="BondType_Harmonic_CH2_CH2" class1="CH2" class2="CH2">
+      <Parameters>
+        <Parameter name="k" value="604267.555311465"/>
+        <Parameter name="r_eq" value="1.540"/>
+      </Parameters>
+    </BondType>
+   <BondType name="BondType_Harmonic_CH3_CH3" class1="CH3" class2="CH3">
+      <Parameters>
+        <Parameter name="k" value="604267.555311465"/>
+        <Parameter name="r_eq" value="1.540"/>
+      </Parameters>
+    </BondType>
+  </BondTypes>
+  <AngleTypes expression="k/2 * (theta - theta_eq)**2">
+    <ParametersUnitDef parameter="theta_eq" unit="degree"/>
+    <ParametersUnitDef parameter="k" unit="K/radian**2"/>
+    <AngleType name="AngleType_Harmonic_CH3_CH2_CH3" class1="CH3" class2="CH2" class3="CH3">
+      <Parameters>
+        <Parameter name="k" value="62500"/>
+        <Parameter name="theta_eq" value="114"/>
+      </Parameters>
+    </AngleType>
+   <AngleType name="AngleType_Harmonic_CH3_CH2_CH2" class1="CH3" class2="CH2" class3="CH2">
+      <Parameters>
+        <Parameter name="k" value="62500"/>
+        <Parameter name="theta_eq" value="114"/>
+      </Parameters>
+    </AngleType>
+    <AngleType name="AngleType_Harmonic_CH2_CH2_CH2" class1="CH2" class2="CH2" class3="CH2">
+      <Parameters>
+        <Parameter name="k" value="62500"/>
+        <Parameter name="theta_eq" value="114"/>
+      </Parameters>
+    </AngleType>
+  </AngleTypes>
+  <DihedralTypes expression="k * (1 + cos(n * phi - phi_eq))">
+    <ParametersUnitDef parameter="k" unit="K"/>
+    <ParametersUnitDef parameter="n" unit="dimensionless"/>
+    <ParametersUnitDef parameter="phi_eq" unit="degree"/>
+    <DihedralType name="DihedralType_Periodic_Proper_CH3_CH2_CH2_CH3" class1="CH3" class2="CH2" class3="CH2" class4="CH3">
+      <Parameters>
+          <Parameter name="n">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>0</Value>
+          <Value>355.03</Value>
+          <Value>-68.19</Value>
+          <Value>791.32</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>180</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+        </Parameter>
+      </Parameters>
+    </DihedralType>
+    <DihedralType name="DihedralType_Periodic_Proper_CH2_CH2_CH2_CH2" class1="CH2" class2="CH2" class3="CH2" class4="CH2">
+      <Parameters>
+          <Parameter name="n">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>0</Value>
+          <Value>355.03</Value>
+          <Value>-68.19</Value>
+          <Value>791.32</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>180</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+        </Parameter>
+      </Parameters>
+    </DihedralType>
+    <DihedralType name="DihedralType_Periodic_Proper_CH3_CH2_CH2_CH2" class1="CH3" class2="CH2" class3="CH2" class4="CH2">
+      <Parameters>
+          <Parameter name="n">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+        </Parameter>
+        <Parameter name="k">
+          <Value>0</Value>
+          <Value>355.03</Value>
+          <Value>-68.19</Value>
+          <Value>791.32</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+        </Parameter>
+        <Parameter name="phi_eq">
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>180</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+        </Parameter>
+      </Parameters>
+     </DihedralType>
+  </DihedralTypes>
+</ForceField>

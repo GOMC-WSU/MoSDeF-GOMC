@@ -288,7 +288,7 @@ def _get_all_possible_input_variables(description=False):
         "except the ones that separated with one, "
         "two or three bonds, will be considered using non-bonded parameters defined in parameter file."
         "".format(_get_default_variables_dict()["Exclude"]),
-        "Potential": 'Simulation info (all ensembles): str, ["VDW", "EXP6", "SHIFT" or "SWITCH"], default = {}. '
+        "Potential": 'Simulation info (all ensembles): str, ["VDW", "EXP6", "SHIFT", "SWITCH" or "TABULATED"], default = {}. '
         "Defines the potential function type to calculate non-bonded dispersion interaction "
         "energy and force between atoms. \n"
         '\t\t\t\t\t\t\t\t\t\t\t\t\t --- "VDW":    Non-bonded dispersion interaction energy and force '
@@ -301,7 +301,9 @@ def _get_all_possible_input_variables(description=False):
         "zero at Rcut distance.  \n"
         '\t\t\t\t\t\t\t\t\t\t\t\t\t --- "SWITCH": This option smoothly forces the potential '
         "energy to be zero at Rcut distance and starts modifying the potential at Rswitch "
-        "distance. Depending on force field type, specific potential function will be applied. "
+        "distance. Depending on force field type, specific potential function will be applied. \n"
+        '\t\t\t\t\t\t\t\t\t\t\t\t\t --- "TABULATED": Non-bonded dispersion interaction energy and force '
+        "calculated using tabulated potential data. "
         "".format(_get_default_variables_dict()["Potential"]),
         "Rswitch": "Simulation info (all ensembles): unyt.unyt_quantity in length units "
         "(>= 0 and RcutLow < Rswitch < Rcut), default = {}. "
@@ -312,6 +314,17 @@ def _get_all_possible_input_variables(description=False):
         "non-bonded interaction energy modification is started, which is eventually truncated "
         "smoothly at Rcut distance. "
         "".format(_get_default_variables_dict()["Rswitch"]),
+        "TableInterpType": "Simulation info (all ensembles): str, ['linear' or 'cubic'], default = {}. "
+        "Specifies the interpolation type for tabulated potentials. "
+        'Note: TableInterpType is only used when the TABULATED function is used (i.e., "Potential" = TABULATED). '
+        "'linear' uses linear interpolation between table values, "
+        "'cubic' uses cubic spline interpolation for smoother potential curves. "
+        "".format(_get_default_variables_dict()["TableInterpType"]),
+        "TabulatedEnergiesFile": "Simulation info (all ensembles): str, default = {}. "
+        "Specifies the file name for the tabulated potential energies. "
+        'Note: TabulatedEnergiesFile is only used when the TABULATED function is used (i.e., "Potential" = TABULATED). '
+        "This file should contain the tabulated potential energy and force data for the non-bonded interactions. "
+        "".format(_get_default_variables_dict()["TabulatedEnergiesFile"]),
         "ElectroStatic": "Simulation info (all ensembles): boolean, default = {}. "
         "Considers the coulomb interactions or not. "
         "If True, coulomb interactions are considered and false if not. "
@@ -1055,6 +1068,8 @@ def _get_default_variables_dict():
         "electrostatic_1_4": None,
         "Potential": "VDW",
         "Rswitch": 9 * u.angstrom,
+        "TableInterpType": "linear",
+        "TabulatedEnergiesFile": None,
         "ElectroStatic": True,
         "Ewald": True,
         "CachedFourier": False,
@@ -1482,6 +1497,8 @@ def _get_possible_ensemble_input_variables(ensemble_type):
         "Exclude",
         "Potential",
         "Rswitch",
+        "TableInterpType",
+        "TabulatedEnergiesFile",
         "ElectroStatic",
         "Ewald",
         "CachedFourier",
@@ -1748,7 +1765,7 @@ class GOMCControl:
          separated with one, two or three bonds, will be considered using
          non-bonded parameters defined in parameter file.
 
-     Potential: str, ["VDW", "EXP6", "SHIFT" or "SWITCH"], default = "VDW"
+     Potential: str, ["VDW", "EXP6", "SHIFT", "SWITCH" or "TABULATED"], default = "VDW"
          Defines the potential function type to calculate non-bonded dispersion
          interaction energy and force between atoms.
 
@@ -1766,6 +1783,9 @@ class GOMCControl:
          Rcut distance and starts modifying the potential at Rswitch
          distance. Depending on force field type, specific potential
          function will be applied.
+
+         --- "TABULATED": Non-bonded dispersion interaction energy and force calculated
+         using tabulated potential data.
 
      Rswitch: unyt.unyt_quantity in length units (>= 0 and RcutLow < Rswitch < Rcut),
          default = 9 angstroms
@@ -3112,10 +3132,16 @@ class GOMCControl:
             self.ParaTypeMARTINI = False
             self.Potential = "EXP6"
 
+        elif self.utilized_NB_expression == "TABULATED":
+            self.ParaTypeCHARMM = False
+            self.ParaTypeMie = True
+            self.ParaTypeMARTINI = False
+            self.Potential = "TABULATED"
+
         else:
             print_error = (
                 f"ERROR: The non-bonded expression is {self.utilized_NB_expression}, "
-                f"and it is only allowed to be LJ, Mie, or Exp6."
+                f"and it is only allowed to be LJ, Mie, Exp6, or TABULATED."
             )
             raise ValueError(print_error)
 
@@ -3144,6 +3170,10 @@ class GOMCControl:
         self.Rswitch = default_input_variables_dict["Rswitch"].to_value(
             "angstrom"
         )
+        self.TableInterpType = default_input_variables_dict["TableInterpType"]
+        self.TabulatedEnergiesFile = default_input_variables_dict[
+            "TabulatedEnergiesFile"
+        ]
         self.ElectroStatic = default_input_variables_dict["ElectroStatic"]
         self.Ewald = default_input_variables_dict["Ewald"]
         self.CachedFourier = default_input_variables_dict["CachedFourier"]
@@ -3849,6 +3879,7 @@ class GOMCControl:
                     and self.input_variables_dict[key] != "EXP6"
                     and self.input_variables_dict[key] != "SHIFT"
                     and self.input_variables_dict[key] != "SWITCH"
+                    and self.input_variables_dict[key] != "TABULATED"
                 ):
                     bad_input_variables_values_list.append(key)
 
@@ -3897,6 +3928,32 @@ class GOMCControl:
                     and key in possible_ensemble_variables_list
                 ):
                     self.Rswitch = self.input_variables_dict[key]
+
+            key = "TableInterpType"
+            if input_var_keys_list[var_iter] == key:
+                if (
+                    self.input_variables_dict[key] != "linear"
+                    and self.input_variables_dict[key] != "cubic"
+                ):
+                    bad_input_variables_values_list.append(key)
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.TableInterpType = self.input_variables_dict[key]
+
+            key = "TabulatedEnergiesFile"
+            if input_var_keys_list[var_iter] == key:
+                if self.input_variables_dict[key] is not None:
+                    if not isinstance(self.input_variables_dict[key], str):
+                        bad_input_variables_values_list.append(key)
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.TabulatedEnergiesFile = self.input_variables_dict[key]
 
             key = "ElectroStatic"
             if input_var_keys_list[var_iter] == key:
@@ -6812,6 +6869,16 @@ class GOMCControl:
             data_control_file.write(
                 "{:25s} {}\n".format("Rswitch", self.Rswitch)
             )
+        if self.Potential == "TABULATED":
+            data_control_file.write(
+                "{:25s} {}\n".format("TableInterpType", self.TableInterpType)
+            )
+            if self.TabulatedEnergiesFile is not None:
+                data_control_file.write(
+                    "{:25s} {}\n".format(
+                        "TabulatedEnergiesFile", self.TabulatedEnergiesFile
+                    )
+                )
         data_control_file.write("{:25s} {}\n".format("Exclude", self.Exclude))
         data_control_file.write(
             "{:25s} {}\n".format("VDWGeometricSigma", self.VDWGeometricSigma)
@@ -9055,7 +9122,7 @@ def write_gomc_control_file(
         separated with one, two or three bonds, will be considered using
         non-bonded parameters defined in parameter file.
 
-    Potential: str, ["VDW", "EXP6", "SHIFT" or "SWITCH"], default = "VDW"
+    Potential: str, ["VDW", "EXP6", "SHIFT", "SWITCH" or "TABULATED"], default = "VDW"
         Defines the potential function type to calculate non-bonded dispersion
         interaction energy and force between atoms.
 
@@ -9073,6 +9140,9 @@ def write_gomc_control_file(
         Rcut distance and starts modifying the potential at Rswitch
         distance. Depending on force field type, specific potential
         function will be applied.
+
+        --- "TABULATED": Non-bonded dispersion interaction energy and force calculated
+        using tabulated potential data.
 
     Rswitch: unyt.unyt_quantity in length units (>= 0 and RcutLow < Rswitch < Rcut),
         default = 9 angstroms
