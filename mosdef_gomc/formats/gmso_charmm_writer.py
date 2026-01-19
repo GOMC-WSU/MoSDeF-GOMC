@@ -595,9 +595,9 @@ def _lengths_angles_to_vectors(lengths, angles, precision=6):
 
     """
 
-    (a, b, c) = lengths
+    a, b, c = lengths
 
-    (alpha, beta, gamma) = np.deg2rad(angles)
+    alpha, beta, gamma = np.deg2rad(angles)
     cos_a = np.clip(np.cos(alpha), -1.0, 1.0)
     cos_b = np.clip(np.cos(beta), -1.0, 1.0)
     cos_g = np.clip(np.cos(gamma), -1.0, 1.0)
