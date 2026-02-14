@@ -30,7 +30,7 @@ jobs:
             environment-file: environment.yml
     steps:
       - uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ${{ matrix.environment-file }}
           miniforge-variant: ${{ matrix.miniforge-variant }}
