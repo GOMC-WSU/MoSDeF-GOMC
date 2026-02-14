@@ -7,7 +7,7 @@ dependencies:
   - gsd=3.3.2
   - ipython
   - mock
-  - numpy>=2.0,<2.3
+  - numpy
   - pycifrw
   - pytest
   - pytest-cov
@@ -15,7 +15,7 @@ dependencies:
   - sympy
   - symengine
   - python-symengine
-  - python>=3.11.*,<3.14.*
+  - python>=3.10.*,<3.14.*
   - forcefield-utilities>=0.4.0
   - foyer>=1.0.1
   - gmso>=0.12.4
