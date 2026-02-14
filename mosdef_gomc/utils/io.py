@@ -1,8 +1,7 @@
 """General module for IO operations in MOSDEF-GOMC."""
 
 import os
-
-import importlib_resources
+from importlib.resources import files
 
 
 def get_mosdef_gomc_fn(filename):
@@ -19,11 +18,9 @@ def get_mosdef_gomc_fn(filename):
     fn : str
         Full path to filename
     """
-    ref = (
-        importlib_resources.files("mosdef_gomc")
-        / f'{"utils"}/{"files"}/{filename}'
-    )
-    with importlib_resources.as_file(ref) as path:
-        if not os.path.exists(path):
-            raise IOError("Sorry! {} does not exists.".format(path))
-        return path
+
+    fn = files(f'{"mosdef_gomc"}') / f'{"utils"}/{"files"}/{filename}'
+    
+    if not os.path.exists(fn):
+        raise IOError(f"Sorry! {fn} does not exists.")
+    return str(fn)
