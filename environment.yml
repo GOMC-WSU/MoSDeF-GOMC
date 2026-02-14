@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - garnett
+  - setuptools
   - gsd=3.3.2
   - ipython
   - numpydoc
