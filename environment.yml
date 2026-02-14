@@ -7,7 +7,7 @@ dependencies:
   - gsd=3.3.2
   - ipython
   - mock
-  - numpy>=2.0,<2.3
+  - numpy
   - pycifrw
   - pytest
   - pytest-cov
