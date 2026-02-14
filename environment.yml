@@ -24,10 +24,11 @@ dependencies:
   - numpydoc
   - sphinx
   - nbsphinx
+  - sphinx_rtd_theme
+  - sphinxcontrib
   - pip
   - pip:
       - bump2version
-      - sphinxcontrib-packages
       - sphinxcontrib-svg2pdfconverter
       - sphinxcontrib-video
       - sphinxcontrib-serializinghtml

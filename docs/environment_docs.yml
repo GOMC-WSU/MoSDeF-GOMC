@@ -7,6 +7,7 @@ dependencies:
   - gsd=3.3.2
   - ipython
   - mock
+  - numpy>=2.0,<2.3
   - pycifrw
   - pytest
   - pytest-cov
@@ -23,10 +24,11 @@ dependencies:
   - numpydoc
   - sphinx
   - nbsphinx
+  - sphinx_rtd_theme
+  - sphinxcontrib
   - pip
   - pip:
       - bump2version
-      - sphinxcontrib-packages
       - sphinxcontrib-svg2pdfconverter
       - sphinxcontrib-video
       - sphinxcontrib-serializinghtml
