@@ -8,13 +8,7 @@ Install with `mamba <https://github.com/mamba-org/mamba>`_ (Recommended)
 ------------------------------------------------------------------------
 ::
 
-    $ conda create --name mosdef_gomc python=3.13
-
-    $ conda activate mosdef_gomc
-
-    $ conda install -c conda-forge mamba
-
-    $ mamba install -c conda-forge mosdef-gomc python=3.13
+    $ mamba install -c conda-forge mosdef-gomc
 
 
 Install with `conda <https://repo.anaconda.com/miniconda/>`_
@@ -38,6 +32,10 @@ which ensures all of the dependencies are installed::
     $ conda env create -f environment.yml
     $ conda activate mosdef_gomc
     $ pip install -e .
+
+.. note::
+    If `pip install -e .` is not run, then then finding some of the packages files will not work.  Hence, the unit-tests will not pass.
+
 
 .. note::
     The above installation instructions are for OSX and Unix.  If you are using Windows, please use a virtual machine or the Linux subsystem, as some components of this software and its dependencies may not be fully compatible with Windows.
