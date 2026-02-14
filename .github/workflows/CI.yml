@@ -36,7 +36,7 @@ jobs:
           miniforge-variant: ${{ matrix.miniforge-variant }}
           miniforge-version: ${{ matrix.miniforge-version }}
           python-version: ${{ matrix.python-version }}
-          use-mamba: true
+          use-mamba: true 
 
       - shell: bash -l {0}
         run: |

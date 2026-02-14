@@ -1,6 +1,6 @@
 name: mosdef_gomc_docs
 channels:
-  - conda-forge
+  - conda-forge 
   - defaults
 dependencies:
   - garnett
