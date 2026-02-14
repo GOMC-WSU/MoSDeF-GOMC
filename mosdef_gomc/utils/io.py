@@ -20,7 +20,7 @@ def get_mosdef_gomc_fn(filename):
     """
 
     fn = files(f'{"mosdef_gomc"}') / f'{"utils"}/{"files"}/{filename}'
-    
+
     if not os.path.exists(fn):
         raise IOError(f"Sorry! {fn} does not exists.")
     return str(fn)
