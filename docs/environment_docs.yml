@@ -6,9 +6,7 @@ dependencies:
   - garnett
   - gsd=3.3.2
   - ipython
-  - numpydoc
   - mock
-  - sphinxcontrib
   - pycifrw
   - pytest
   - pytest-cov
@@ -22,6 +20,7 @@ dependencies:
   - gmso>=0.12.4
   - mbuild>=1.2.1
   - pre-commit
+  - numpydoc
   - sphinx
   - nbsphinx
   - pip
@@ -31,4 +30,3 @@ dependencies:
       - sphinxcontrib-svg2pdfconverter
       - sphinxcontrib-video
       - sphinxcontrib-serializinghtml
-      - .
