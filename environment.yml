@@ -6,12 +6,8 @@ dependencies:
   - garnett
   - gsd=3.3.2
   - ipython
-  - numpydoc
   - mock
-  - sphinx_rtd_theme
-  - nbsphinx
   - numpy>=2.0,<2.3
-  - sphinxcontrib
   - pycifrw
   - pytest
   - pytest-cov
@@ -19,16 +15,20 @@ dependencies:
   - sympy
   - symengine
   - python-symengine
-  - python>=3.12,<3.14
+  - python>=3.12.*,<3.14.*
   - forcefield-utilities>=0.4.0
   - foyer>=1.0.1
   - gmso>=0.12.4
   - mbuild>=1.2.1
   - pre-commit
-  - sphinx=6.1.1
+  - numpydoc
+  - sphinx
+  - nbsphinx
+  - nbconvert
   - pip
   - pip:
       - bump2version
+      - sphinxcontrib-packages
       - sphinxcontrib-svg2pdfconverter
       - sphinxcontrib-video
       - sphinxcontrib-serializinghtml

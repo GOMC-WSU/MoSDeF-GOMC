@@ -120,13 +120,11 @@ numpydoc_class_members_toctree = False
 numpydoc_show_class_members = False
 numpydoc_show_inherited_class_members = False
 
-_python_doc_base = "http://docs.python.org/3.9"
-
 intersphinx_mapping = {
-    _python_doc_base: None,
-    "http://docs.scipy.org/doc/numpy": None,
-    "http://docs.scipy.org/doc/scipy/reference": None,
-    "http://scikit-learn.org/stable": None,
+    "python": ("https://docs.python.org/3.13", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
+    "scikit-learn": ("https://scikit-learn.org/stable", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -203,10 +201,6 @@ pygments_style = "sphinx"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # html_theme = 'default'
-import sphinx_rtd_theme
-
-html_theme = "sphinx_rtd_theme"
-hhtml_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -235,7 +229,7 @@ hhtml_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []
+# html_static_path = []
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
