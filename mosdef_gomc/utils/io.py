@@ -2,8 +2,8 @@
 
 import os
 
-from pkg_resources import resource_filename
 import importlib_resources
+from pkg_resources import resource_filename
 
 
 def get_mosdef_gomc_fn(filename):
@@ -20,7 +20,10 @@ def get_mosdef_gomc_fn(filename):
     fn : str
         Full path to filename
     """
-    ref = importlib_resources.files("mosdef_gomc") / f'{"utils"}/{"files"}/{filename}'
+    ref = (
+        importlib_resources.files("mosdef_gomc")
+        / f'{"utils"}/{"files"}/{filename}'
+    )
     with importlib_resources.as_file(ref) as path:
         if not os.path.exists(path):
             raise IOError("Sorry! {} does not exists.".format(path))
