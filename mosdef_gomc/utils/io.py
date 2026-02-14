@@ -2,7 +2,7 @@
 
 import os
 
-from pkg_resources import resource_filename
+import importlib_resources
 
 
 def get_mosdef_gomc_fn(filename):
