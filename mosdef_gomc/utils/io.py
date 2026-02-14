@@ -2,7 +2,6 @@
 
 import os
 
-import importlib_resources
 from pkg_resources import resource_filename
 
 
