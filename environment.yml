@@ -4,7 +4,6 @@ channels:
   - defaults
 dependencies:
   - garnett
-  - setuptools
   - gsd=3.3.2
   - ipython
   - numpydoc
@@ -33,3 +32,4 @@ dependencies:
       - sphinxcontrib-svg2pdfconverter
       - sphinxcontrib-video
       - sphinxcontrib-serializinghtml
+      - setuptools
