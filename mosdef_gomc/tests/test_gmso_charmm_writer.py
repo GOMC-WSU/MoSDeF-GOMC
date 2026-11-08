@@ -11168,7 +11168,9 @@ class TestCharmmWriterData(BaseTest):
         if os.path.exists("tabulated_test.pdb"):
             os.remove("tabulated_test.pdb")
 
-    def test_save_charmm_use_template_ff_multiple_molecules(self, ethane_gomc, water):
+    def test_save_charmm_use_template_ff_multiple_molecules(
+        self, ethane_gomc, water
+    ):
         box_0 = mb.fill_box(
             compound=[ethane_gomc, water], n_compounds=[2, 2], box=[4, 4, 4]
         )
@@ -11210,13 +11212,13 @@ class TestCharmmWriterData(BaseTest):
         if os.path.exists("charmm_template_ff_multiple.pdb"):
             os.remove("charmm_template_ff_multiple.pdb")
 
-    def test_save_charmm_use_template_ff_multiple_boxes(self, ethane_gomc, water):
+    def test_save_charmm_use_template_ff_multiple_boxes(
+        self, ethane_gomc, water
+    ):
         box_0 = mb.fill_box(
             compound=[ethane_gomc], n_compounds=[2], box=[4, 4, 4]
         )
-        box_1 = mb.fill_box(
-            compound=[water], n_compounds=[2], box=[4, 4, 4]
-        )
+        box_1 = mb.fill_box(compound=[water], n_compounds=[2], box=[4, 4, 4])
 
         charmm = Charmm(
             box_0,

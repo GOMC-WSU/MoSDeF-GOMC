@@ -89,9 +89,8 @@ mosdef_gomc/tests/test_gmso_charmm_writer.py::TestCharmmWriterData::test_save_ch
 mosdef_gomc/tests/test_gmso_charmm_writer.py::TestCharmmWriterData::test_save_charmm_use_template_ff_multiple_boxes
   /home/ai8111/mosdef/MoSDeF-GOMC/mosdef_gomc/formats/gmso_charmm_writer.py:2865: UserWarning: WARNING: atom_type_naming_style = 'general'
   WARNING: The 'general' convention is UNSAFE, and the EXPERT user SHOULD USE AT THEIR OWN RISK, making SURE ALL THE BONDED PARAMETERS HAVE THE SAME VALUES IN THE UTILIZED FORCE FIELD XMLs.  Also, this DOES NOT ENSURE that THERE ARE NO specific Foyer XML ATOM TYPE BONDED CONNECTIONS in the Foyer FORCE FIELD XMLs, instead of the Foyer atom class type bonded connections, which could RESULT IN AN INCORRECT FORCE FIELD PARAMETERIZATION.  This is UNSAFE to use even with the same force field XML file, so the EXPERT user SHOULD USE AT THEIR OWN RISK.
-  The 'general' convention only tests if the sigma, epsilons, mass, and Mie-n values are identical between the different molecules (residues in this context) and their applied force fields and DOES NOT check that any or all of the bonded parameters have the same or conflicting values. 
+  The 'general' convention only tests if the sigma, epsilons, mass, and Mie-n values are identical between the different molecules (residues in this context) and their applied force fields and DOES NOT check that any or all of the bonded parameters have the same or conflicting values.
     warn(
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 ======================= 1 passed, 20 warnings in 19.62s ========================
-
