@@ -38,7 +38,8 @@ from mosdef_gomc.utils.gmso_template_topology import (
 
 
 def _expand_template_topology(template_topology, structure):
-    """Expand a ``use_template_ff`` template topology to the full structure.
+    """
+    Expand a ``use_template_ff`` template topology to the full structure.
 
     Parameters
     ----------
@@ -51,6 +52,7 @@ def _expand_template_topology(template_topology, structure):
     Returns
     -------
     TemplateTopologyProxy
+
     """
     return TemplateTopologyProxy(
         template_topology,

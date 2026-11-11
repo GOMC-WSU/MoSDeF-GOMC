@@ -1,4 +1,5 @@
-"""Lightweight topology proxies used when writing files with ``use_template_ff``.
+"""
+Lightweight topology proxies used when writing files with ``use_template_ff``.
 
 When ``use_template_ff=True``, only one copy (template) of each residue is
 parameterized by GMSO.  The classes here expand those templates back out to the
@@ -23,6 +24,7 @@ class MockSite:
     __slots__ = ["name", "atom_type", "__dict__", "index", "occupancy"]
 
     def __init__(self, name, atom_type, resname, resnum, index, position=None):
+        """Store the site name, atom type, residue info, and position."""
         self.name = name
         self.atom_type = atom_type
         self.index = index
@@ -42,6 +44,7 @@ class MockConnection:
     __slots__ = ["connection_members", "connection_type"]
 
     def __init__(self, members, connection_type=None):
+        """Store the member sites and the potential type of the connection."""
         self.connection_members = members
         self.connection_type = connection_type
 
@@ -54,7 +57,8 @@ def _connection_type(connection, type_attr):
 
 
 class TemplateTopologyProxy:
-    """Expand a GMSO template topology to the full system.
+    """
+    Expand a GMSO template topology to the full system.
 
     Parameters
     ----------
@@ -64,9 +68,11 @@ class TemplateTopologyProxy:
         The residue name of every molecule in the full system, in order.
     positions : unyt array (N, 3), optional
         Positions of every site in the full system.
+
     """
 
     def __init__(self, template_top, sequence, positions=None):
+        """Store the template topology, residue sequence, and positions."""
         self.template_top = template_top
         self.sequence = sequence
         if hasattr(template_top, "box"):
@@ -215,7 +221,8 @@ class TemplateTopologyProxy:
 
 
 def combine_proxies(proxy1, proxy2):
-    """Combine the box 0 and box 1 proxies into one proxy.
+    """
+    Combine the box 0 and box 1 proxies into one proxy.
 
     The sites of ``proxy2`` are re-indexed and re-numbered in place, so
     ``proxy2`` should not be used on its own afterwards.

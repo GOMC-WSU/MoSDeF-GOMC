@@ -8132,6 +8132,7 @@ class GOMCControl:
         bad_input_variables_values_list: list
             A list to append with the bad variable user inputs
             so the user can see which variable input values are bad.
+
         """
         val = input_variables_dict[key]
         if val is None:
