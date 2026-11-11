@@ -6,7 +6,6 @@ import gmso
 import numpy as np
 import scipy
 import unyt as u
-from gmso.utils.io import import_
 from mbuild.box import Box
 from mbuild.compound import Compound
 from unyt.dimensions import angle, energy, length, temperature
@@ -36,6 +35,28 @@ from mosdef_gomc.utils.gmso_template_topology import (
     TemplateTopologyProxy,
     combine_proxies,
 )
+
+
+def _expand_template_topology(template_topology, structure):
+    """Expand a ``use_template_ff`` template topology to the full structure.
+
+    Parameters
+    ----------
+    template_topology : gmso.Topology
+        Topology from ``specific_ff_to_residue(..., use_template_ff=True)``,
+        which stores the residue order of the full system as ``sequence_``.
+    structure : mbuild.Compound
+        The full structure; its ``xyz`` (nm) gives the site positions.
+
+    Returns
+    -------
+    TemplateTopologyProxy
+    """
+    return TemplateTopologyProxy(
+        template_topology,
+        template_topology.__dict__["sequence_"],
+        positions=structure.xyz * u.nm,
+    )
 
 
 def _check_convert_bond_k_constant_units(
@@ -1659,13 +1680,8 @@ class Charmm:
             )
 
             if self.use_template_ff:
-                # mbuild standard positions are in nm. We need to convert them to unyt nm?
-                # actually, structure_box_0 is mb.Compound. It has .xyz (N,3) in nm.
-                positions_0 = self.structure_box_0.xyz * u.nm
-                self.topology_box_0_ff = TemplateTopologyProxy(
-                    self.topology_box_0_ff,
-                    self.topology_box_0_ff.__dict__["sequence_"],
-                    positions=positions_0,
+                self.topology_box_0_ff = _expand_template_topology(
+                    self.topology_box_0_ff, self.structure_box_0
                 )
 
             print(
@@ -1692,11 +1708,8 @@ class Charmm:
             )
 
             if self.use_template_ff:
-                positions_1 = self.structure_box_1.xyz * u.nm
-                self.topology_box_1_ff = TemplateTopologyProxy(
-                    self.topology_box_1_ff,
-                    self.topology_box_1_ff.__dict__["sequence_"],
-                    positions=positions_1,
+                self.topology_box_1_ff = _expand_template_topology(
+                    self.topology_box_1_ff, self.structure_box_1
                 )
 
             # combine the topologies of box 0 and 1
@@ -1890,11 +1903,8 @@ class Charmm:
             )
 
             if self.use_template_ff:
-                positions_0 = self.structure_box_0.xyz * u.nm
-                self.topology_box_0_ff = TemplateTopologyProxy(
-                    self.topology_box_0_ff,
-                    self.topology_box_0_ff.__dict__["sequence_"],
-                    positions=positions_0,
+                self.topology_box_0_ff = _expand_template_topology(
+                    self.topology_box_0_ff, self.structure_box_0
                 )
 
             self.atom_types_dict_per_residue.update(self.atom_types_dict_box_0)

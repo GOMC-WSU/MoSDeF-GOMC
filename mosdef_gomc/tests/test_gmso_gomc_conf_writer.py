@@ -17230,3 +17230,202 @@ class TestGOMCControlFileWriter(BaseTest):
             "Structure_box_0": True,
             "Potential": True,
         }
+
+    def _ethane_charmm(self, ethane_gomc, two_boxes=False):
+        box = mb.fill_box(
+            compound=[ethane_gomc], n_compounds=[1], box=[2, 2, 2]
+        )
+        box_1_kwargs = {}
+        if two_boxes:
+            box_1_kwargs = {
+                "structure_box_1": box,
+                "filename_box_1": "ethane_box_1",
+            }
+        charmm = Charmm(
+            box,
+            "ethane_box_0",
+            ff_filename="ethane_FF",
+            residues=[ethane_gomc.name],
+            forcefield_selection="oplsaa",
+            **box_1_kwargs,
+        )
+        charmm.write_inp()
+        charmm.write_psf()
+        charmm.write_pdb()
+        return charmm
+
+    @staticmethod
+    def _read_conf_lines(conf_name, prefixes):
+        with open(conf_name, "r") as fp:
+            return [
+                line.split()
+                for line in fp.readlines()
+                if line.split() and line.split()[0] in prefixes
+            ]
+
+    def test_save_NVT_PME(self, ethane_gomc):
+        charmm = self._ethane_charmm(ethane_gomc)
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "test_save_NVT_PME.conf",
+            "NVT",
+            1000,
+            300 * u.K,
+            check_input_files_exist=False,
+            input_variables_dict={
+                "ElectrostaticMethod": "PME",
+                "PMESplineOrder": 6,
+                "PMEGridSpacing": 0.8,
+                "PMERefreshFreq": 500,
+            },
+        )
+        lines = self._read_conf_lines(
+            "test_save_NVT_PME.conf",
+            [
+                "Ewald",
+                "ElectrostaticMethod",
+                "PMESplineOrder",
+                "PMEGridSpacing",
+                "PMERefreshFreq",
+            ],
+        )
+        assert lines == [
+            ["ElectrostaticMethod", "PME"],
+            ["PMESplineOrder", "6"],
+            ["PMEGridSpacing", "0.8"],
+            ["PMERefreshFreq", "500"],
+        ]
+
+    def test_save_GEMC_NVT_PME_grid_spacing_per_box(self, ethane_gomc):
+        charmm = self._ethane_charmm(ethane_gomc, two_boxes=True)
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "test_save_GEMC_NVT_PME.conf",
+            "GEMC_NVT",
+            1000,
+            300 * u.K,
+            check_input_files_exist=False,
+            input_variables_dict={
+                "ElectrostaticMethod": "pme",
+                "PMEGridSpacing": [0.8, 1.2],
+            },
+        )
+        lines = self._read_conf_lines(
+            "test_save_GEMC_NVT_PME.conf",
+            [
+                "Ewald",
+                "ElectrostaticMethod",
+                "PMESplineOrder",
+                "PMEGridSpacing",
+                "PMERefreshFreq",
+            ],
+        )
+        assert lines == [
+            ["ElectrostaticMethod", "pme"],
+            ["PMESplineOrder", "8"],
+            ["PMEGridSpacing", "0", "0.8"],
+            ["PMEGridSpacing", "1", "1.2"],
+            ["PMERefreshFreq", "100000"],
+        ]
+
+    @pytest.mark.parametrize(
+        "method, expected",
+        [
+            ("Ewald", [["ElectrostaticMethod", "Ewald"]]),
+            ("none", [["Ewald", "True"]]),
+            (None, [["Ewald", "True"]]),
+        ],
+    )
+    def test_save_NVT_ElectrostaticMethod_not_PME(
+        self, ethane_gomc, method, expected
+    ):
+        charmm = self._ethane_charmm(ethane_gomc)
+        gomc_control.write_gomc_control_file(
+            charmm,
+            "test_save_NVT_not_PME.conf",
+            "NVT",
+            1000,
+            300 * u.K,
+            check_input_files_exist=False,
+            input_variables_dict={
+                "ElectrostaticMethod": method,
+                "PMEGridSpacing": 0.8,
+            },
+        )
+        lines = self._read_conf_lines(
+            "test_save_NVT_not_PME.conf",
+            ["Ewald", "ElectrostaticMethod", "PMEGridSpacing"],
+        )
+        assert lines == expected
+
+    @pytest.mark.parametrize(
+        "ensemble, input_variables_dict, bad_key",
+        [
+            ("NVT", {"ElectrostaticMethod": 1}, "ElectrostaticMethod"),
+            (
+                "NVT",
+                {"ElectrostaticMethod": "PME", "PMESplineOrder": -1},
+                "PMESplineOrder",
+            ),
+            (
+                "NVT",
+                {"ElectrostaticMethod": "PME", "PMEGridSpacing": 0},
+                "PMEGridSpacing",
+            ),
+            (
+                "NVT",
+                {"ElectrostaticMethod": "PME", "PMEGridSpacing": [1, 1]},
+                "PMEGridSpacing",
+            ),
+            (
+                "NVT",
+                {"ElectrostaticMethod": "PME", "PMERefreshFreq": 0},
+                "PMERefreshFreq",
+            ),
+            (
+                "GEMC_NVT",
+                {"ElectrostaticMethod": "PME", "PMEGridSpacing": [1.0]},
+                "PMEGridSpacing",
+            ),
+            (
+                "GEMC_NVT",
+                {"ElectrostaticMethod": "PME", "PMEGridSpacing": [1.0, -1]},
+                "PMEGridSpacing",
+            ),
+            (
+                "GEMC_NVT",
+                {"ElectrostaticMethod": "PME", "PMEGridSpacing": [1.0, True]},
+                "PMEGridSpacing",
+            ),
+            (
+                "GEMC_NVT",
+                {"ElectrostaticMethod": "PME", "PMEGridSpacing": "s"},
+                "PMEGridSpacing",
+            ),
+            (
+                "GEMC_NVT",
+                {"ElectrostaticMethod": "PME", "PMEGridSpacing": 0},
+                "PMEGridSpacing",
+            ),
+        ],
+    )
+    def test_save_PME_bad_variables(
+        self, ethane_gomc, ensemble, input_variables_dict, bad_key
+    ):
+        charmm = self._ethane_charmm(
+            ethane_gomc, two_boxes=ensemble.startswith("GEMC")
+        )
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have bad values.*"
+            rf": \['{bad_key}'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_PME_bad_variables.conf",
+                ensemble,
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict=input_variables_dict,
+            )

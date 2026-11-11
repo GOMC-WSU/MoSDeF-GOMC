@@ -8134,24 +8134,25 @@ class GOMCControl:
             so the user can see which variable input values are bad.
         """
         val = input_variables_dict[key]
-        if val is not None:
-            if isinstance(val, (int, float)) and not isinstance(val, bool):
-                if val <= 0:
-                    bad_input_variables_values_list.append(key)
-            elif isinstance(val, list):
-                if len(val) != 2:
-                    bad_input_variables_values_list.append(key)
-                else:
-                    for v in val:
-                        if (
-                            not isinstance(v, (int, float))
-                            or isinstance(v, bool)
-                            or v <= 0
-                        ):
-                            bad_input_variables_values_list.append(key)
-                            break
-            else:
-                bad_input_variables_values_list.append(key)
+        if val is None:
+            return
+
+        def _is_positive_number(v):
+            return (
+                isinstance(v, (int, float))
+                and not isinstance(v, bool)
+                and v > 0
+            )
+
+        if isinstance(val, list):
+            is_valid = len(val) == 2 and all(
+                _is_positive_number(v) for v in val
+            )
+        else:
+            is_valid = _is_positive_number(val)
+
+        if not is_valid:
+            bad_input_variables_values_list.append(key)
 
     def ck_input_variable_int_greater_zero(
         self, input_variables_dict, key, bad_input_variables_values_list

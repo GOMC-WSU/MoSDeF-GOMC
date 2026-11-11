@@ -1,4 +1,5 @@
 # GMSO and foyer use specific residues to apply force fields and mapping molecule number to atom numbers
+import collections
 import os
 from warnings import warn
 from xml.dom import minidom
@@ -452,8 +453,6 @@ def specific_ff_to_residue(
                     sequence.append(child.name)
                     if child.name not in seen_residues:
                         seen_residues.add(child.name)
-                        import copy
-
                         template_child = mb.clone(child)
                         template_structure.add(template_child)
 
@@ -605,8 +604,6 @@ def specific_ff_to_residue(
                 )
 
     # get all the bonded atoms, which is used for the bonded map to identify molecules
-    import collections
-
     adj = collections.defaultdict(list)
     for bond in new_gmso_topology.bonds:
         bonded_atom_0_iter = new_gmso_topology.get_index(
@@ -825,21 +822,20 @@ def specific_ff_to_residue(
     # calculate the final number of atoms
     final_no_atoms = topology.n_sites
 
-    if final_no_atoms != initial_no_atoms:
-        if use_template_ff:
-            pass  # The number of atoms in templates is expected to be smaller
-        else:
-            print_error_message = (
-                "ERROR: The initial number of atoms sent to the force field analysis is "
-                "not the same as the final number of atoms analyzed. "
-                "The initial number of atoms was {} and the final number of atoms was {}. "
-                "Please ensure that all the residues names that are in the initial "
-                "Compound are listed in the residues list "
-                "(i.e., the residues variable).".format(
-                    initial_no_atoms, final_no_atoms
-                )
+    # With use_template_ff, the topology only holds one template per residue,
+    # so fewer atoms than the full system is expected.
+    if final_no_atoms != initial_no_atoms and not use_template_ff:
+        print_error_message = (
+            "ERROR: The initial number of atoms sent to the force field analysis is "
+            "not the same as the final number of atoms analyzed. "
+            "The initial number of atoms was {} and the final number of atoms was {}. "
+            "Please ensure that all the residues names that are in the initial "
+            "Compound are listed in the residues list "
+            "(i.e., the residues variable).".format(
+                initial_no_atoms, final_no_atoms
             )
-            raise ValueError(print_error_message)
+        )
+        raise ValueError(print_error_message)
 
     return [
         topology,
