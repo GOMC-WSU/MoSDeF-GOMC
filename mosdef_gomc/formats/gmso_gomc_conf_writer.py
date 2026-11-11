@@ -7789,9 +7789,7 @@ class GOMCControl:
         data_control_file.write(
             "{:25s} {}\n".format("CBMC_LookAheadDih", self.CBMC_LookAheadDih)
         )
-        data_control_file.write(
-            "{:25s} {}\n".format("CBMC_SMC", self.CBMC_SMC)
-        )
+        data_control_file.write("{:25s} {}\n".format("CBMC_SMC", self.CBMC_SMC))
         data_control_file.write(
             "{:25s} {}\n".format("CBMC_SMCTrials", self.CBMC_SMCTrials)
         )
