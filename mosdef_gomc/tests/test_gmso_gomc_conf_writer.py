@@ -120,7 +120,11 @@ class TestGOMCControlFileWriter(BaseTest):
                 "CBMC_Ang",
                 "CBMC_Dih",
                 "CBMC_LookAhead",
+                "CBMC_LookAheadAng",
                 "CBMC_LookAheadDih",
+                "CBMC_SMC",
+                "CBMC_SMCTrials",
+                "CBMC_SMCParticles",
                 "OutputName",
                 "CoordinatesFreq",
                 "DCDFreq",
@@ -209,7 +213,11 @@ class TestGOMCControlFileWriter(BaseTest):
                 "CBMC_Ang",
                 "CBMC_Dih",
                 "CBMC_LookAhead",
+                "CBMC_LookAheadAng",
                 "CBMC_LookAheadDih",
+                "CBMC_SMC",
+                "CBMC_SMCTrials",
+                "CBMC_SMCParticles",
                 "OutputName",
                 "CoordinatesFreq",
                 "DCDFreq",
@@ -300,7 +308,11 @@ class TestGOMCControlFileWriter(BaseTest):
                 "CBMC_Ang",
                 "CBMC_Dih",
                 "CBMC_LookAhead",
+                "CBMC_LookAheadAng",
                 "CBMC_LookAheadDih",
+                "CBMC_SMC",
+                "CBMC_SMCTrials",
+                "CBMC_SMCParticles",
                 "OutputName",
                 "CoordinatesFreq",
                 "DCDFreq",
@@ -615,7 +627,11 @@ class TestGOMCControlFileWriter(BaseTest):
                 "CBMC_Ang": False,
                 "CBMC_Dih": False,
                 "CBMC_LookAhead": False,
+                "CBMC_LookAheadAng": False,
                 "CBMC_LookAheadDih": False,
+                "CBMC_SMC": False,
+                "CBMC_SMCTrials": False,
+                "CBMC_SMCParticles": False,
                 "OutputName": False,
                 "RestartFreq": False,
                 "CheckpointFreq": False,
@@ -843,10 +859,30 @@ class TestGOMCControlFileWriter(BaseTest):
                     split_line = line.split()
                     assert split_line[1] == "0"
 
+                elif line.startswith("CBMC_LookAheadAng "):
+                    variables_read_dict["CBMC_LookAheadAng"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "1"
+
                 elif line.startswith("CBMC_LookAheadDih "):
                     variables_read_dict["CBMC_LookAheadDih"] = True
                     split_line = line.split()
                     assert split_line[1] == "0"
+
+                elif line.startswith("CBMC_SMC "):
+                    variables_read_dict["CBMC_SMC"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "False"
+
+                elif line.startswith("CBMC_SMCTrials "):
+                    variables_read_dict["CBMC_SMCTrials"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "1"
+
+                elif line.startswith("CBMC_SMCParticles "):
+                    variables_read_dict["CBMC_SMCParticles"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "50"
 
                 elif line.startswith("OutputName "):
                     variables_read_dict["OutputName"] = True
@@ -1001,7 +1037,11 @@ class TestGOMCControlFileWriter(BaseTest):
             "CBMC_Ang": True,
             "CBMC_Dih": True,
             "CBMC_LookAhead": True,
+            "CBMC_LookAheadAng": True,
             "CBMC_LookAheadDih": True,
+            "CBMC_SMC": True,
+            "CBMC_SMCTrials": True,
+            "CBMC_SMCParticles": True,
             "OutputName": True,
             "RestartFreq": True,
             "CheckpointFreq": True,
@@ -1831,7 +1871,11 @@ class TestGOMCControlFileWriter(BaseTest):
                 "CBMC_Ang": 33,
                 "CBMC_Dih": 22,
                 "CBMC_LookAhead": 4,
+                "CBMC_LookAheadAng": 7,
                 "CBMC_LookAheadDih": 12,
+                "CBMC_SMC": True,
+                "CBMC_SMCTrials": 3,
+                "CBMC_SMCParticles": 25,
                 "OutputName": "test_out",
                 "RestartFreq": [False, 50],
                 "CheckpointFreq": [False, 50],
@@ -1922,7 +1966,11 @@ class TestGOMCControlFileWriter(BaseTest):
                 "CBMC_Ang": False,
                 "CBMC_Dih": False,
                 "CBMC_LookAhead": False,
+                "CBMC_LookAheadAng": False,
                 "CBMC_LookAheadDih": False,
+                "CBMC_SMC": False,
+                "CBMC_SMCTrials": False,
+                "CBMC_SMCParticles": False,
                 "OutputName": False,
                 "RestartFreq": False,
                 "CheckpointFreq": False,
@@ -2239,10 +2287,30 @@ class TestGOMCControlFileWriter(BaseTest):
                     split_line = line.split()
                     assert split_line[1] == "4"
 
+                elif line.startswith("CBMC_LookAheadAng "):
+                    variables_read_dict["CBMC_LookAheadAng"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "7"
+
                 elif line.startswith("CBMC_LookAheadDih "):
                     variables_read_dict["CBMC_LookAheadDih"] = True
                     split_line = line.split()
                     assert split_line[1] == "12"
+
+                elif line.startswith("CBMC_SMC "):
+                    variables_read_dict["CBMC_SMC"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "True"
+
+                elif line.startswith("CBMC_SMCTrials "):
+                    variables_read_dict["CBMC_SMCTrials"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "3"
+
+                elif line.startswith("CBMC_SMCParticles "):
+                    variables_read_dict["CBMC_SMCParticles"] = True
+                    split_line = line.split()
+                    assert split_line[1] == "25"
 
                 elif line.startswith("OutputName "):
                     variables_read_dict["OutputName"] = True
@@ -2412,7 +2480,11 @@ class TestGOMCControlFileWriter(BaseTest):
             "CBMC_Ang": True,
             "CBMC_Dih": True,
             "CBMC_LookAhead": True,
+            "CBMC_LookAheadAng": True,
             "CBMC_LookAheadDih": True,
+            "CBMC_SMC": True,
+            "CBMC_SMCTrials": True,
+            "CBMC_SMCParticles": True,
             "OutputName": True,
             "RestartFreq": True,
             "CheckpointFreq": True,
@@ -3727,6 +3799,23 @@ class TestGOMCControlFileWriter(BaseTest):
             match=r"ERROR: The following input variables have "
             r"bad values \(check spelling and for empty spaces in the keys or that "
             r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_LookAheadAng'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_LookAheadAng": "s"},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
             r": \['CBMC_LookAheadDih'\]",
         ):
             gomc_control.write_gomc_control_file(
@@ -3744,6 +3833,23 @@ class TestGOMCControlFileWriter(BaseTest):
             match=r"ERROR: The following input variables have "
             r"bad values \(check spelling and for empty spaces in the keys or that "
             r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_LookAheadAng'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_LookAheadAng": -1},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
             r": \['CBMC_LookAheadDih'\]",
         ):
             gomc_control.write_gomc_control_file(
@@ -3754,6 +3860,193 @@ class TestGOMCControlFileWriter(BaseTest):
                 300 * u.K,
                 check_input_files_exist=False,
                 input_variables_dict={"CBMC_LookAheadDih": 1.5},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_LookAheadAng'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_LookAheadAng": 1.5},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMC'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMC": "s"},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMC'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMC": 1},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMCTrials'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMCTrials": "s"},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMCTrials'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMCTrials": 0},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMCTrials'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMCTrials": -1},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMCTrials'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMCTrials": 1.5},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMCParticles'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMCParticles": "s"},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMCParticles'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMCParticles": 0},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMCParticles'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMCParticles": -1},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMCParticles'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_1.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMCParticles": 1.5},
             )
 
         with pytest.raises(
@@ -5006,6 +5299,74 @@ class TestGOMCControlFileWriter(BaseTest):
                 300 * u.K,
                 check_input_files_exist=False,
                 input_variables_dict={"CBMC_LookAheadDih": []},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_LookAheadAng'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_2.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_LookAheadAng": []},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMC'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_2.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMC": []},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMCTrials'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_2.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMCTrials": []},
+            )
+
+        with pytest.raises(
+            ValueError,
+            match=r"ERROR: The following input variables have "
+            r"bad values \(check spelling and for empty spaces in the keys or that "
+            r"the values are in the correct form with the acceptable values\)"
+            r": \['CBMC_SMCParticles'\]",
+        ):
+            gomc_control.write_gomc_control_file(
+                charmm,
+                "test_save_NVT_bad_variables_part_2.conf",
+                "NVT",
+                10,
+                300 * u.K,
+                check_input_files_exist=False,
+                input_variables_dict={"CBMC_SMCParticles": []},
             )
 
         with pytest.raises(

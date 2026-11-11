@@ -459,10 +459,25 @@ def _get_all_possible_input_variables(description=False):
         "The number of look-ahead samples per Lennard-Jones trial during "
         "molecule growth. 0 turns look-ahead off."
         "".format(_get_default_variables_dict()["CBMC_LookAhead"]),
+        "CBMC_LookAheadAng": "CBMC inputs (all ensembles): int (>= 0), default = {}, "
+        "The number of bond-angle samples per look-ahead step."
+        "".format(_get_default_variables_dict()["CBMC_LookAheadAng"]),
         "CBMC_LookAheadDih": "CBMC inputs (all ensembles): int (>= 0), default = {}, "
         "The number of dihedral (torsion) samples per look-ahead step. "
         "0 means use the CBMC_Dih value."
         "".format(_get_default_variables_dict()["CBMC_LookAheadDih"]),
+        "CBMC_SMC": "CBMC inputs (all ensembles): boolean, default = {}, "
+        "True to use Sequential Monte Carlo (SMC) CBMC molecule growth; "
+        "False to use standard CBMC growth."
+        "".format(_get_default_variables_dict()["CBMC_SMC"]),
+        "CBMC_SMCTrials": "CBMC inputs (all ensembles): int (> 0), default = {}, "
+        "The number of SMC trials to perform during molecule growth. "
+        "Only used when CBMC_SMC is True."
+        "".format(_get_default_variables_dict()["CBMC_SMCTrials"]),
+        "CBMC_SMCParticles": "CBMC inputs (all ensembles): int (> 0), default = {}, "
+        "The number of SMC particles used during molecule growth. "
+        "Only used when CBMC_SMC is True."
+        "".format(_get_default_variables_dict()["CBMC_SMCParticles"]),
         # Control file (.conf file ) output controls/parameters
         "OutputName": "Output Frequency (all ensembles): str (NO SPACES), default = {}. "
         "The UNIQUE STRING NAME, WITH NO SPACES, which is used for the "
@@ -1115,7 +1130,11 @@ def _get_default_variables_dict():
         "CBMC_Ang": 50,
         "CBMC_Dih": 50,
         "CBMC_LookAhead": 0,
+        "CBMC_LookAheadAng": 1,
         "CBMC_LookAheadDih": 0,
+        "CBMC_SMC": False,
+        "CBMC_SMCTrials": 1,
+        "CBMC_SMCParticles": 50,
         # Control file (.conf file ) output controls/parameters
         "OutputName": "Output_data",
         "CoordinatesFreq": [False, 1000000],
@@ -1466,7 +1485,11 @@ def _get_possible_ensemble_input_variables(ensemble_type):
         "CBMC_Ang",
         "CBMC_Dih",
         "CBMC_LookAhead",
+        "CBMC_LookAheadAng",
         "CBMC_LookAheadDih",
+        "CBMC_SMC",
+        "CBMC_SMCTrials",
+        "CBMC_SMCParticles",
     ]
 
     output_freq_variables_list = [
@@ -1945,9 +1968,20 @@ class GOMCControl:
      CBMC_LookAhead: int (>= 0), default = 0
          The number of look-ahead samples per Lennard-Jones trial during
          molecule growth. 0 turns look-ahead off.
+     CBMC_LookAheadAng: int (>= 0), default = 1
+         The number of bond-angle samples per look-ahead step.
      CBMC_LookAheadDih: int (>= 0), default = 0
          The number of dihedral (torsion) samples per look-ahead step.
          0 means use the CBMC_Dih value.
+     CBMC_SMC: boolean, default = False
+         True to use Sequential Monte Carlo (SMC) CBMC molecule growth;
+         False to use standard CBMC growth.
+     CBMC_SMCTrials: int (> 0), default = 1
+         The number of SMC trials to perform during molecule growth.
+         Only used when CBMC_SMC is True.
+     CBMC_SMCParticles: int (> 0), default = 50
+         The number of SMC particles used during molecule growth.
+         Only used when CBMC_SMC is True.
      OutputName: str (NO SPACES), , default = "Output_data", default = [True, 1M] or
          [True , set via formula based on the number of RunSteps or 1M max]
          The UNIQUE STRING NAME, WITH NO SPACES, which is used for the
@@ -3247,8 +3281,16 @@ class GOMCControl:
         self.CBMC_Ang = default_input_variables_dict["CBMC_Ang"]
         self.CBMC_Dih = default_input_variables_dict["CBMC_Dih"]
         self.CBMC_LookAhead = default_input_variables_dict["CBMC_LookAhead"]
+        self.CBMC_LookAheadAng = default_input_variables_dict[
+            "CBMC_LookAheadAng"
+        ]
         self.CBMC_LookAheadDih = default_input_variables_dict[
             "CBMC_LookAheadDih"
+        ]
+        self.CBMC_SMC = default_input_variables_dict["CBMC_SMC"]
+        self.CBMC_SMCTrials = default_input_variables_dict["CBMC_SMCTrials"]
+        self.CBMC_SMCParticles = default_input_variables_dict[
+            "CBMC_SMCParticles"
         ]
         self.OutputName = default_input_variables_dict["OutputName"]
         self.DistName = default_input_variables_dict["DistName"]
@@ -4347,6 +4389,20 @@ class GOMCControl:
                 ):
                     self.CBMC_LookAhead = self.input_variables_dict[key]
 
+            key = "CBMC_LookAheadAng"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_zero_or_greater(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.CBMC_LookAheadAng = self.input_variables_dict[key]
+
             key = "CBMC_LookAheadDih"
             if input_var_keys_list[var_iter] == key:
                 self.ck_input_variable_int_zero_or_greater(
@@ -4360,6 +4416,48 @@ class GOMCControl:
                     and key in possible_ensemble_variables_list
                 ):
                     self.CBMC_LookAheadDih = self.input_variables_dict[key]
+
+            key = "CBMC_SMC"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_true_or_false(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.CBMC_SMC = self.input_variables_dict[key]
+
+            key = "CBMC_SMCTrials"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_greater_zero(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.CBMC_SMCTrials = self.input_variables_dict[key]
+
+            key = "CBMC_SMCParticles"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_greater_zero(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.CBMC_SMCParticles = self.input_variables_dict[key]
 
             key = "OutputName"
             if input_var_keys_list[var_iter] == key:
@@ -7686,7 +7784,19 @@ class GOMCControl:
             "{:25s} {}\n".format("CBMC_LookAhead", self.CBMC_LookAhead)
         )
         data_control_file.write(
+            "{:25s} {}\n".format("CBMC_LookAheadAng", self.CBMC_LookAheadAng)
+        )
+        data_control_file.write(
             "{:25s} {}\n".format("CBMC_LookAheadDih", self.CBMC_LookAheadDih)
+        )
+        data_control_file.write(
+            "{:25s} {}\n".format("CBMC_SMC", self.CBMC_SMC)
+        )
+        data_control_file.write(
+            "{:25s} {}\n".format("CBMC_SMCTrials", self.CBMC_SMCTrials)
+        )
+        data_control_file.write(
+            "{:25s} {}\n".format("CBMC_SMCParticles", self.CBMC_SMCParticles)
         )
         data_control_file.write(" \n")
 
@@ -9518,9 +9628,20 @@ def write_gomc_control_file(
     CBMC_LookAhead: int (>= 0), default = 0
         The number of look-ahead samples per Lennard-Jones trial during
         molecule growth. 0 turns look-ahead off.
+    CBMC_LookAheadAng: int (>= 0), default = 1
+        The number of bond-angle samples per look-ahead step.
     CBMC_LookAheadDih: int (>= 0), default = 0
         The number of dihedral (torsion) samples per look-ahead step.
         0 means use the CBMC_Dih value.
+    CBMC_SMC: boolean, default = False
+        True to use Sequential Monte Carlo (SMC) CBMC molecule growth;
+        False to use standard CBMC growth.
+    CBMC_SMCTrials: int (> 0), default = 1
+        The number of SMC trials to perform during molecule growth.
+        Only used when CBMC_SMC is True.
+    CBMC_SMCParticles: int (> 0), default = 50
+        The number of SMC particles used during molecule growth.
+        Only used when CBMC_SMC is True.
     OutputName: str (NO SPACES), , default = "Output_data", default = [True, 1M] or
         [True , set via formula based on the number of RunSteps or 1M max]
         The UNIQUE STRING NAME, WITH NO SPACES, which is used for the
