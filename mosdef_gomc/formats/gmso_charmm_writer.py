@@ -6,10 +6,9 @@ import gmso
 import numpy as np
 import scipy
 import unyt as u
+from gmso.utils.io import import_
 from mbuild.box import Box
 from mbuild.compound import Compound
-from gmso.utils.io import import_
-from mosdef_gomc.utils.gmso_template_topology import TemplateTopologyProxy, combine_proxies
 from unyt.dimensions import angle, energy, length, temperature
 
 from mosdef_gomc.utils.conversion import (
@@ -33,6 +32,10 @@ from mosdef_gomc.utils.gmso_equation_compare import (
     get_atom_type_expressions_and_scalars,
 )
 from mosdef_gomc.utils.gmso_specific_ff_to_residue import specific_ff_to_residue
+from mosdef_gomc.utils.gmso_template_topology import (
+    TemplateTopologyProxy,
+    combine_proxies,
+)
 
 
 def _check_convert_bond_k_constant_units(
@@ -493,9 +496,7 @@ def unique_atom_naming(
                 is True
             ):
                 if (
-                    len(
-                        bead_to_atom_name_dict[str(site_name_unique_naming)]
-                    )
+                    len(bead_to_atom_name_dict[str(site_name_unique_naming)])
                     > 2
                 ):
                     text_to_write = (
@@ -531,7 +532,9 @@ def unique_atom_naming(
             no_digits_atom_name = 2
             atom_name_value = element_name_unique_naming
 
-        prefix_key = f"{residue_id_list[i]}_{residue_names_list[i]}_{atom_name_value}"
+        prefix_key = (
+            f"{residue_id_list[i]}_{residue_names_list[i]}_{atom_name_value}"
+        )
         j = last_j_for_prefix.get(prefix_key, 0)
 
         interate_thru_names = True
@@ -1654,12 +1657,16 @@ class Charmm:
                 boxes_for_simulation=self.boxes_for_simulation,
                 use_template_ff=self.use_template_ff,
             )
-            
+
             if self.use_template_ff:
                 # mbuild standard positions are in nm. We need to convert them to unyt nm?
                 # actually, structure_box_0 is mb.Compound. It has .xyz (N,3) in nm.
                 positions_0 = self.structure_box_0.xyz * u.nm
-                self.topology_box_0_ff = TemplateTopologyProxy(self.topology_box_0_ff, self.topology_box_0_ff.__dict__["sequence_"], positions=positions_0)
+                self.topology_box_0_ff = TemplateTopologyProxy(
+                    self.topology_box_0_ff,
+                    self.topology_box_0_ff.__dict__["sequence_"],
+                    positions=positions_0,
+                )
 
             print(
                 "GOMC FF writing each residues FF as a group for  structure_box_1"
@@ -1683,14 +1690,20 @@ class Charmm:
                 boxes_for_simulation=self.boxes_for_simulation,
                 use_template_ff=self.use_template_ff,
             )
-            
+
             if self.use_template_ff:
                 positions_1 = self.structure_box_1.xyz * u.nm
-                self.topology_box_1_ff = TemplateTopologyProxy(self.topology_box_1_ff, self.topology_box_1_ff.__dict__["sequence_"], positions=positions_1)
+                self.topology_box_1_ff = TemplateTopologyProxy(
+                    self.topology_box_1_ff,
+                    self.topology_box_1_ff.__dict__["sequence_"],
+                    positions=positions_1,
+                )
 
             # combine the topologies of box 0 and 1
             if self.use_template_ff:
-                self.topology_box_0_and_1_ff = combine_proxies(self.topology_box_0_ff, self.topology_box_1_ff)
+                self.topology_box_0_and_1_ff = combine_proxies(
+                    self.topology_box_0_ff, self.topology_box_1_ff
+                )
             else:
                 self.topology_box_0_and_1_ff = gmso.Topology()
                 # iterate thru sites to combine the topologies of box 0 and 1
@@ -1875,10 +1888,14 @@ class Charmm:
                 boxes_for_simulation=self.boxes_for_simulation,
                 use_template_ff=self.use_template_ff,
             )
-            
+
             if self.use_template_ff:
                 positions_0 = self.structure_box_0.xyz * u.nm
-                self.topology_box_0_ff = TemplateTopologyProxy(self.topology_box_0_ff, self.topology_box_0_ff.__dict__["sequence_"], positions=positions_0)
+                self.topology_box_0_ff = TemplateTopologyProxy(
+                    self.topology_box_0_ff,
+                    self.topology_box_0_ff.__dict__["sequence_"],
+                    positions=positions_0,
+                )
 
             self.atom_types_dict_per_residue.update(self.atom_types_dict_box_0)
             self.bond_types_dict_per_residue.update(self.bond_types_dict_box_0)
@@ -5767,7 +5784,9 @@ class Charmm:
 
             output_write.write("\n")
 
-            site_to_index = {site: i for i, site in enumerate(stuct_iteration.sites)}
+            site_to_index = {
+                site: i for i, site in enumerate(stuct_iteration.sites)
+            }
 
             # BONDS: Calculate the bonding data
             output_write.write(first_indent % no_bonds + " !NBOND: bonds\n")
@@ -5775,10 +5794,8 @@ class Charmm:
                 output_write.write(
                     (first_indent * 2)
                     % (
-                        site_to_index[bond_iteration.connection_members[0]]
-                        + 1,
-                        site_to_index[bond_iteration.connection_members[1]]
-                        + 1,
+                        site_to_index[bond_iteration.connection_members[0]] + 1,
+                        site_to_index[bond_iteration.connection_members[1]] + 1,
                     )
                 )
 
@@ -5829,14 +5846,10 @@ class Charmm:
                 output_write.write(
                     (first_indent * 4)
                     % (
-                        site_to_index[dihedral_iter.connection_members[0]]
-                        + 1,
-                        site_to_index[dihedral_iter.connection_members[1]]
-                        + 1,
-                        site_to_index[dihedral_iter.connection_members[2]]
-                        + 1,
-                        site_to_index[dihedral_iter.connection_members[3]]
-                        + 1,
+                        site_to_index[dihedral_iter.connection_members[0]] + 1,
+                        site_to_index[dihedral_iter.connection_members[1]] + 1,
+                        site_to_index[dihedral_iter.connection_members[2]] + 1,
+                        site_to_index[dihedral_iter.connection_members[3]] + 1,
                     )
                 )
 
@@ -5861,14 +5874,10 @@ class Charmm:
                 output_write.write(
                     (first_indent * 4)
                     % (
-                        site_to_index[improper_iter.connection_members[0]]
-                        + 1,
-                        site_to_index[improper_iter.connection_members[1]]
-                        + 1,
-                        site_to_index[improper_iter.connection_members[2]]
-                        + 1,
-                        site_to_index[improper_iter.connection_members[3]]
-                        + 1,
+                        site_to_index[improper_iter.connection_members[0]] + 1,
+                        site_to_index[improper_iter.connection_members[1]] + 1,
+                        site_to_index[improper_iter.connection_members[2]] + 1,
+                        site_to_index[improper_iter.connection_members[3]] + 1,
                     )
                 )
 
@@ -6006,7 +6015,9 @@ class Charmm:
             residue_code_insertion_all_values = ""
             segment_id_all_values = ""
 
-            site_to_index = {site: i for i, site in enumerate(stuct_only_iteration.sites)}
+            site_to_index = {
+                site: i for i, site in enumerate(stuct_only_iteration.sites)
+            }
 
             for f, site in enumerate(stuct_only_iteration.sites):
                 if residue_names_list_pdb[f] not in self.residues:

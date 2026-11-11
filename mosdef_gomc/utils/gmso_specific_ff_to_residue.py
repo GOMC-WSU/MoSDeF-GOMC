@@ -447,21 +447,28 @@ def specific_ff_to_residue(
                 template_structure.box = structure.box
                 sequence = []
                 seen_residues = set()
-                
+
                 for child in structure.children:
                     sequence.append(child.name)
                     if child.name not in seen_residues:
                         seen_residues.add(child.name)
                         import copy
+
                         template_child = mb.clone(child)
                         template_structure.add(template_child)
-                        
-                new_gmso_topology = mb_convert(template_structure, custom_groups=residues)
+
+                new_gmso_topology = mb_convert(
+                    template_structure, custom_groups=residues
+                )
                 new_gmso_topology.__dict__["sequence_"] = sequence
                 new_gmso_topology.__dict__["use_template_ff_"] = True
-                new_gmso_topology.__dict__["initial_no_atoms_"] = initial_no_atoms
+                new_gmso_topology.__dict__["initial_no_atoms_"] = (
+                    initial_no_atoms
+                )
             else:
-                new_gmso_topology = mb_convert(structure, custom_groups=residues)
+                new_gmso_topology = mb_convert(
+                    structure, custom_groups=residues
+                )
 
     elif isinstance(structure, mb.Box):
         initial_no_atoms = 0
@@ -599,6 +606,7 @@ def specific_ff_to_residue(
 
     # get all the bonded atoms, which is used for the bonded map to identify molecules
     import collections
+
     adj = collections.defaultdict(list)
     for bond in new_gmso_topology.bonds:
         bonded_atom_0_iter = new_gmso_topology.get_index(
@@ -819,7 +827,7 @@ def specific_ff_to_residue(
 
     if final_no_atoms != initial_no_atoms:
         if use_template_ff:
-            pass # The number of atoms in templates is expected to be smaller
+            pass  # The number of atoms in templates is expected to be smaller
         else:
             print_error_message = (
                 "ERROR: The initial number of atoms sent to the force field analysis is "

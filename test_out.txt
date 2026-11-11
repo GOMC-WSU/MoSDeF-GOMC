@@ -20,7 +20,7 @@ water = <WAT 3 particles, 2 bonds, non-periodic, id: 140364261877184>
         box_1 = mb.fill_box(
             compound=[water], n_compounds=[2], box=[4, 4, 4]
         )
-    
+
 >       charmm = Charmm(
             box_0,
             "charmm_template_ff_multibox",
@@ -38,8 +38,8 @@ water = <WAT 3 particles, 2 bonds, non-periodic, id: 140364261877184>
             use_template_ff=True,
         )
 
-/home/ai8111/mosdef/MoSDeF-GOMC/mosdef_gomc/tests/test_gmso_charmm_writer.py:11221: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ai8111/mosdef/MoSDeF-GOMC/mosdef_gomc/tests/test_gmso_charmm_writer.py:11221:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <mosdef_gomc.formats.gmso_charmm_writer.Charmm object at 0x7fa919f7e9b0>
 structure_box_0 = <Compound 16 particles, 14 bonds, System box: Box: Lx=4.000000, Ly=4.000000, Lz=4.000000, xy=0.000000, xz=0.000000, yz=0.000000, , id: 140364260605280>
@@ -91,10 +91,10 @@ use_template_ff = True
         self.ff_filename = ff_filename
         self.use_template_ff = use_template_ff
         self.combining_rule = None
-    
+
         # value to check for errors, with  self.input_error = True or False. Set to False initally
         self.input_error = False
-    
+
         if not isinstance(self.structure_box_0, (Compound, Box)):
             self.input_error = True
             print_error_message = (
@@ -106,7 +106,7 @@ use_template_ff = True
                 )
             )
             raise TypeError(print_error_message)
-    
+
         if self.structure_box_1 is not None and not isinstance(
             self.structure_box_1, (Compound, Box)
         ):
@@ -120,7 +120,7 @@ use_template_ff = True
                 )
             )
             raise TypeError(print_error_message)
-    
+
         if isinstance(self.structure_box_0, Box) and isinstance(
             self.structure_box_1, Box
         ):
@@ -133,7 +133,7 @@ use_template_ff = True
                 )
             )
             raise TypeError(print_error_message)
-    
+
         if self.structure_box_1 is None and not isinstance(
             self.structure_box_0, Compound
         ):
@@ -146,19 +146,19 @@ use_template_ff = True
                 )
             )
             raise TypeError(print_error_message)
-    
+
         if not isinstance(self.residues, list):
             self.input_error = True
             print_error_message = "ERROR: Please enter the residues list (residues) in a list format."
             raise TypeError(print_error_message)
-    
+
         if isinstance(self.residues, list):
             for each_residue in self.residues:
                 if not isinstance(each_residue, str):
                     self.input_error = True
                     print_error_message = "ERROR: Please enter a residues list (residues) with only string values."
                     raise TypeError(print_error_message)
-    
+
         if self.residues is None:
             self.input_error = True
             print_error_message = (
@@ -171,7 +171,7 @@ use_template_ff = True
                 "ERROR: Please enter the filename_box_0 as a string."
             )
             raise TypeError(print_error_message)
-    
+
         unique_residue_test_name_list = []
         for res_m in range(0, len(self.residues)):
             if self.residues[res_m] not in unique_residue_test_name_list:
@@ -180,7 +180,7 @@ use_template_ff = True
             self.input_error = True
             print_error_message = "ERROR: Please enter the residues list (residues) that has only unique residue names."
             raise ValueError(print_error_message)
-    
+
         if self.filename_box_1 is not None and not isinstance(
             self.filename_box_1, str
         ):
@@ -189,7 +189,7 @@ use_template_ff = True
                 "ERROR: Please enter the filename_box_1 as a string."
             )
             raise TypeError(print_error_message)
-    
+
         if self.ff_filename is not None:
             if not isinstance(self.ff_filename, str):
                 self.input_error = True
@@ -208,7 +208,7 @@ use_template_ff = True
                         "extention or the .inp extension."
                     )
                     raise ValueError(print_error_message)
-    
+
         if self.forcefield_selection is not None:
             print(
                 "write_gomcdata: forcefield_selection = "
@@ -230,7 +230,7 @@ use_template_ff = True
                     "a standard foyer force field is not used."
                 )
                 raise TypeError(print_error_message)
-    
+
             if isinstance(self.forcefield_selection, str):
                 ff_name = self.forcefield_selection
                 self.forcefield_selection = {}
@@ -239,19 +239,19 @@ use_template_ff = True
                         {self.residues[i]: ff_name}
                     )
                 print(f"FF forcefield_selection = {self.forcefield_selection}")
-    
+
         elif self.forcefield_selection is None:
             self.input_error = True
             print_error_message = "ERROR: Please enter the forcefield_selection as it was not provided."
             raise TypeError(print_error_message)
-    
+
         if self.residues is not None and not isinstance(self.residues, list):
             self.input_error = True
             print_error_message = (
                 "ERROR:  Please enter the residues (residues) in a list format"
             )
             raise TypeError(print_error_message)
-    
+
         _check_fixed_bonds_angles_lists(
             self.gomc_fix_bonds_angles, "gomc_fix_bonds_angles", self.residues
         )
@@ -261,7 +261,7 @@ use_template_ff = True
         _check_fixed_bonds_angles_lists(
             self.gomc_fix_angles, "gomc_fix_angles", self.residues
         )
-    
+
         if self.fix_residue is not None and not isinstance(
             self.fix_residue, list
         ):
@@ -270,7 +270,7 @@ use_template_ff = True
                 "ERROR: Please enter the fix_residue in a list format"
             )
             raise TypeError(print_error_message)
-    
+
         if isinstance(self.fix_residue, list):
             for fix_residue_q in self.fix_residue:
                 if fix_residue_q not in self.residues:
@@ -280,7 +280,7 @@ use_template_ff = True
                         "list are also in the residues list."
                     )
                     raise ValueError(print_error_message)
-    
+
         if self.fix_residue_in_box is not None and not isinstance(
             self.fix_residue_in_box, list
         ):
@@ -289,7 +289,7 @@ use_template_ff = True
                 "ERROR: Please enter the fix_residue_in_box in a list format."
             )
             raise TypeError(print_error_message)
-    
+
         if isinstance(self.fix_residue_in_box, list):
             for fix_residue_in_box_q in self.fix_residue_in_box:
                 if fix_residue_in_box_q not in self.residues:
@@ -299,14 +299,14 @@ use_template_ff = True
                         "fix_residue_in_box list are also in the residues list."
                     )
                     raise ValueError(print_error_message)
-    
+
         if self.set_residue_pdb_occupancy_to_1 is not None and not isinstance(
             self.set_residue_pdb_occupancy_to_1, list
         ):
             self.input_error = True
             print_error_message = "ERROR: Please enter the set_residue_pdb_occupancy_to_1 in a list format."
             raise TypeError(print_error_message)
-    
+
         if isinstance(self.set_residue_pdb_occupancy_to_1, list):
             for (
                 set_residue_pdb_occupancy_to_1_q
@@ -318,7 +318,7 @@ use_template_ff = True
                         "set_residue_pdb_occupancy_to_1 list are also in the residues list."
                     )
                     raise ValueError(print_error_message)
-    
+
         if self.bead_to_atom_name_dict is not None and not isinstance(
             self.bead_to_atom_name_dict, dict
         ):
@@ -328,22 +328,22 @@ use_template_ff = True
                 "(bead_to_atom_name_dict) so GOMC can properly evaluate the unique atom names"
             )
             raise TypeError(print_error_message)
-    
+
         if isinstance(self.bead_to_atom_name_dict, dict):
             dict_list = []
             for key in self.bead_to_atom_name_dict.keys():
                 dict_list.append(key)
-    
+
             for dict_lis_i in dict_list:
                 if not isinstance(dict_lis_i, str) or not isinstance(
                     self.bead_to_atom_name_dict[dict_lis_i], str
                 ):
                     print_error_message = "ERROR: Please enter the bead_to_atom_name_dict with only string inputs."
                     raise TypeError(print_error_message)
-    
+
         print("******************************")
         print("")
-    
+
         if not isinstance(
             atom_type_naming_style, str
         ) or atom_type_naming_style not in ["general", "all_unique"]:
@@ -353,7 +353,7 @@ use_template_ff = True
                 "as a string, either 'general' or 'all_unique'."
             )
             raise TypeError(print_error_message)
-    
+
         if not isinstance(gmso_match_ff_by, str) or gmso_match_ff_by not in [
             "molecule",
             "group",
@@ -364,30 +364,30 @@ use_template_ff = True
                 "as a string, either 'molecule', 'group'."
             )
             raise TypeError(print_error_message)
-    
+
         if self.structure_box_1:
             self.boxes_for_simulation = 2
         else:
             self.boxes_for_simulation = 1
-    
+
         # Initialize is_tabulated flag for TABULATED potentials
         self.is_tabulated = False
-    
+
         # Initialize ParaType flags for different force field formats
         self.ParaTypeCHARMM = False
         self.ParaTypeMie = False
         self.ParaTypeMARTINI = False
-    
+
         # write the Force fields
         self.combined_1_4_nonbonded_dict_per_residue = {}
         self.combined_1_4_electrostatic_dict_per_residue = {}
-    
+
         self.atom_types_dict_per_residue = {}
         self.bond_types_dict_per_residue = {}
         self.angle_types_dict_per_residue = {}
         self.dihedral_types_dict_per_residue = {}
         self.improper_types_dict_per_residue = {}
-    
+
         if self.structure_box_1:
             print(
                 "GOMC FF writing each residues FF as a group for structure_box_0"
@@ -411,14 +411,14 @@ use_template_ff = True
                 boxes_for_simulation=self.boxes_for_simulation,
                 use_template_ff=self.use_template_ff,
             )
-    
+
             if self.use_template_ff:
                 # mbuild standard positions are in nm. We need to convert them to unyt nm?
                 # actually, structure_box_0 is mb.Compound. It has .xyz (N,3) in nm.
                 import unyt as u
                 positions_0 = self.structure_box_0.xyz * u.nm
                 self.topology_box_0_ff = TemplateTopologyProxy(self.topology_box_0_ff, self.topology_box_0_ff.__dict__["sequence_"], positions=positions_0)
-    
+
             print(
                 "GOMC FF writing each residues FF as a group for  structure_box_1"
             )
@@ -441,12 +441,12 @@ use_template_ff = True
                 boxes_for_simulation=self.boxes_for_simulation,
                 use_template_ff=self.use_template_ff,
             )
-    
+
             if self.use_template_ff:
                 import unyt as u
                 positions_1 = self.structure_box_1.xyz * u.nm
                 self.topology_box_1_ff = TemplateTopologyProxy(self.topology_box_1_ff, self.topology_box_1_ff.__dict__["sequence_"], positions=positions_1)
-    
+
             # combine the topologies of box 0 and 1
             if self.use_template_ff:
                 self.topology_box_0_and_1_ff = combine_proxies(self.topology_box_0_ff, self.topology_box_1_ff)
@@ -557,4 +557,3 @@ mosdef_gomc/tests/test_gmso_charmm_writer.py::TestCharmmWriterData::test_save_ch
 FAILED mosdef_gomc/tests/test_gmso_charmm_writer.py::TestCharmmWriterData::test_save_charmm_use_template_ff_multiple_boxes
 ======================= 1 failed, 19 warnings in 18.67s ========================
 ERROR conda.cli.main_run:execute(49): `conda run pytest mosdef_gomc/tests/test_gmso_charmm_writer.py::TestCharmmWriterData::test_save_charmm_use_template_ff_multiple_boxes -v` failed. (See above for error)
-
