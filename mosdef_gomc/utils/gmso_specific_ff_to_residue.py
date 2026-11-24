@@ -1,4 +1,5 @@
 # GMSO and foyer use specific residues to apply force fields and mapping molecule number to atom numbers
+import collections
 import os
 from warnings import warn
 from xml.dom import minidom
@@ -19,6 +20,7 @@ def specific_ff_to_residue(
     gmso_match_ff_by="molecule",
     residues=None,
     boxes_for_simulation=1,
+    use_template_ff=False,
 ):
     """
     Takes the mbuild Compound or mbuild Box and applies the selected
@@ -441,7 +443,31 @@ def specific_ff_to_residue(
 
         else:
             initial_no_atoms = structure.n_particles
-            new_gmso_topology = mb_convert(structure, custom_groups=residues)
+            if use_template_ff:
+                template_structure = mb.Compound()
+                template_structure.box = structure.box
+                sequence = []
+                seen_residues = set()
+
+                for child in structure.children:
+                    sequence.append(child.name)
+                    if child.name not in seen_residues:
+                        seen_residues.add(child.name)
+                        template_child = mb.clone(child)
+                        template_structure.add(template_child)
+
+                new_gmso_topology = mb_convert(
+                    template_structure, custom_groups=residues
+                )
+                new_gmso_topology.__dict__["sequence_"] = sequence
+                new_gmso_topology.__dict__["use_template_ff_"] = True
+                new_gmso_topology.__dict__["initial_no_atoms_"] = (
+                    initial_no_atoms
+                )
+            else:
+                new_gmso_topology = mb_convert(
+                    structure, custom_groups=residues
+                )
 
     elif isinstance(structure, mb.Box):
         initial_no_atoms = 0
@@ -578,8 +604,7 @@ def specific_ff_to_residue(
                 )
 
     # get all the bonded atoms, which is used for the bonded map to identify molecules
-    bonded_atom_number_set = set()
-    all_bonded_atoms_list = set()
+    adj = collections.defaultdict(list)
     for bond in new_gmso_topology.bonds:
         bonded_atom_0_iter = new_gmso_topology.get_index(
             bond.connection_members[0]
@@ -587,14 +612,8 @@ def specific_ff_to_residue(
         bonded_atom_1_iter = new_gmso_topology.get_index(
             bond.connection_members[1]
         )
-        if bonded_atom_0_iter < bonded_atom_1_iter:
-            bonded_atom_tuple_iter = (bonded_atom_0_iter, bonded_atom_1_iter)
-        else:
-            bonded_atom_tuple_iter = (bonded_atom_1_iter, bonded_atom_0_iter)
-
-        bonded_atom_number_set.add(bonded_atom_tuple_iter)
-        all_bonded_atoms_list.add(bonded_atom_0_iter)
-        all_bonded_atoms_list.add(bonded_atom_1_iter)
+        adj[bonded_atom_0_iter].append(bonded_atom_1_iter)
+        adj[bonded_atom_1_iter].append(bonded_atom_0_iter)
 
     """
     build_molecule_list_time_start = time.time()
@@ -602,49 +621,22 @@ def specific_ff_to_residue(
 
     # map all bonded atoms as molecules
     molecules_atom_number_list = []
+    visited = set()
     for site_j, site in enumerate(new_gmso_topology.sites):
         atom_iter_k = new_gmso_topology.get_index(site)
 
-        if atom_iter_k in all_bonded_atoms_list:
-            for bonded_atoms_n in bonded_atom_number_set:
-                if atom_iter_k in bonded_atoms_n:
-                    bonded_atoms_n_list_iter = list(bonded_atoms_n)
-                    atom_found_iter = False
-                    if len(molecules_atom_number_list) != 0:
-                        for molecule_j in range(
-                            0, len(molecules_atom_number_list)
-                        ):
-                            if (
-                                atom_iter_k
-                                in molecules_atom_number_list[molecule_j]
-                            ):
-                                molecules_atom_number_list[molecule_j].add(
-                                    bonded_atoms_n_list_iter[0]
-                                )
-                                molecules_atom_number_list[molecule_j].add(
-                                    bonded_atoms_n_list_iter[1]
-                                )
-                                atom_found_iter = True
-
-                            if (
-                                molecule_j
-                                == len(molecules_atom_number_list) - 1
-                            ) and atom_found_iter is False:
-                                molecules_atom_number_list.append(
-                                    {
-                                        bonded_atoms_n_list_iter[0],
-                                        bonded_atoms_n_list_iter[1],
-                                    }
-                                )
-                    else:
-                        molecules_atom_number_list.append(
-                            {
-                                bonded_atoms_n_list_iter[0],
-                                bonded_atoms_n_list_iter[1],
-                            }
-                        )
-        else:
-            molecules_atom_number_list.append({atom_iter_k})
+        if atom_iter_k not in visited:
+            component = set()
+            queue = collections.deque([atom_iter_k])
+            visited.add(atom_iter_k)
+            while queue:
+                curr = queue.popleft()
+                component.add(curr)
+                for neighbor in adj[curr]:
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        queue.append(neighbor)
+            molecules_atom_number_list.append(component)
 
     # create a molecule number to atom number dict
     # Example:  {molecule_number_x: {atom_number_1, ..., atom_number_y}, ...}
@@ -830,7 +822,9 @@ def specific_ff_to_residue(
     # calculate the final number of atoms
     final_no_atoms = topology.n_sites
 
-    if final_no_atoms != initial_no_atoms:
+    # With use_template_ff, the topology only holds one template per residue,
+    # so fewer atoms than the full system is expected.
+    if final_no_atoms != initial_no_atoms and not use_template_ff:
         print_error_message = (
             "ERROR: The initial number of atoms sent to the force field analysis is "
             "not the same as the final number of atoms analyzed. "

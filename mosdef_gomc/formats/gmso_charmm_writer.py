@@ -31,6 +31,34 @@ from mosdef_gomc.utils.gmso_equation_compare import (
     get_atom_type_expressions_and_scalars,
 )
 from mosdef_gomc.utils.gmso_specific_ff_to_residue import specific_ff_to_residue
+from mosdef_gomc.utils.gmso_template_topology import (
+    TemplateTopologyProxy,
+    combine_proxies,
+)
+
+
+def _expand_template_topology(template_topology, structure):
+    """
+    Expand a ``use_template_ff`` template topology to the full structure.
+
+    Parameters
+    ----------
+    template_topology : gmso.Topology
+        Topology from ``specific_ff_to_residue(..., use_template_ff=True)``,
+        which stores the residue order of the full system as ``sequence_``.
+    structure : mbuild.Compound
+        The full structure; its ``xyz`` (nm) gives the site positions.
+
+    Returns
+    -------
+    TemplateTopologyProxy
+
+    """
+    return TemplateTopologyProxy(
+        template_topology,
+        template_topology.__dict__["sequence_"],
+        positions=structure.xyz * u.nm,
+    )
 
 
 def _check_convert_bond_k_constant_units(
@@ -466,6 +494,7 @@ def unique_atom_naming(
     unique_individual_atom_names_dict = {}
     individual_atom_names_list = []
     missing_bead_to_atom_name = []
+    last_j_for_prefix = {}
     for i, site in enumerate(topology.sites):
         site_name_unique_naming = site.__dict__["name_"]
 
@@ -483,54 +512,57 @@ def unique_atom_naming(
                 "ERROR: The input file, likely mol2 file does not contain element names or char, only int."
             )
 
-        interate_thru_names = True
-        j = 0
-        while interate_thru_names is True:
-            j = j + 1
-            if str(site_name_unique_naming)[:1] == "_":
-                if (
-                    bead_to_atom_name_dict is not None
-                    and (str(site_name_unique_naming) in bead_to_atom_name_dict)
-                    is True
-                ):
-                    if (
-                        len(
-                            bead_to_atom_name_dict[str(site_name_unique_naming)]
-                        )
-                        > 2
-                    ):
-                        text_to_write = (
-                            "ERROR: only enter atom names that have 2 or less digits"
-                            + " in the Bead to atom naming dictionary (bead_to_atom_name_dict)."
-                        )
-                        warn(text_to_write)
-                        return None, None, None
-                    else:
-                        atom_name_value = bead_to_atom_name_dict[
-                            str(site_name_unique_naming)
-                        ]
-                        no_digits_atom_name = 2
-                else:
-                    missing_bead_to_atom_name.append(1)
-                    atom_name_value = "BD"
-                    no_digits_atom_name = 2
-            elif (
-                len(str(element_name_unique_naming)) > 2
-                and not str(site_name_unique_naming)[:1] == "_"
+        if str(site_name_unique_naming)[:1] == "_":
+            if (
+                bead_to_atom_name_dict is not None
+                and (str(site_name_unique_naming) in bead_to_atom_name_dict)
+                is True
             ):
-                if len(str(element_name_unique_naming)) == 3:
-                    no_digits_atom_name = 1
-                    atom_name_value = element_name_unique_naming
-                else:
+                if (
+                    len(bead_to_atom_name_dict[str(site_name_unique_naming)])
+                    > 2
+                ):
                     text_to_write = (
-                        "ERROR: atom numbering will not work propery at"
-                        + " the element has more than 4 charaters"
+                        "ERROR: only enter atom names that have 2 or less digits"
+                        + " in the Bead to atom naming dictionary (bead_to_atom_name_dict)."
                     )
                     warn(text_to_write)
                     return None, None, None
+                else:
+                    atom_name_value = bead_to_atom_name_dict[
+                        str(site_name_unique_naming)
+                    ]
+                    no_digits_atom_name = 2
             else:
+                missing_bead_to_atom_name.append(1)
+                atom_name_value = "BD"
                 no_digits_atom_name = 2
+        elif (
+            len(str(element_name_unique_naming)) > 2
+            and not str(site_name_unique_naming)[:1] == "_"
+        ):
+            if len(str(element_name_unique_naming)) == 3:
+                no_digits_atom_name = 1
                 atom_name_value = element_name_unique_naming
+            else:
+                text_to_write = (
+                    "ERROR: atom numbering will not work propery at"
+                    + " the element has more than 4 charaters"
+                )
+                warn(text_to_write)
+                return None, None, None
+        else:
+            no_digits_atom_name = 2
+            atom_name_value = element_name_unique_naming
+
+        prefix_key = (
+            f"{residue_id_list[i]}_{residue_names_list[i]}_{atom_name_value}"
+        )
+        j = last_j_for_prefix.get(prefix_key, 0)
+
+        interate_thru_names = True
+        while interate_thru_names is True:
+            j = j + 1
 
             atom_name_iteration = str(atom_name_value) + str(
                 base10_to_base62_alph_num(j)
@@ -552,6 +584,7 @@ def unique_atom_naming(
                 unique_individual_atom_names_dict.update(
                     {atom_res_no_resname_atomname_iteration: i + 1}
                 )
+                last_j_for_prefix[prefix_key] = j
                 interate_thru_names = False
                 individual_atom_names_list.append(
                     str(atom_name_value)
@@ -830,7 +863,7 @@ class Charmm:
             >>> chloride_atom_name = "Cl"
             >>> chloride_child_bead = mbuild.Compound(name=chloride_atom_name)
             >>> chloride = mb.Compound(name="CHL")
-            >>> chloride.add(chloride_child_atom, inherit_periodicity=False)
+            >>> chloride.add(chloride_child_bead, inherit_periodicity=False)
 
             >>> sodium_chloride_box = mbuild.fill_box(
             >>>     compound=[sodium, chloride],
@@ -1197,7 +1230,7 @@ class Charmm:
 
         NOTE: NAMD and GOMC can not have mulitple electrostatic 1-4 scalers, since it is
         provided as a single input in their control files.
-    combining_rule: str ('geometric' or 'lorentz'"'),
+    combining_rule: str ('geometric' or 'lorentz'""),
         The possible mixing/combining  rules are 'geometric' or 'lorentz',
         which provide the  geometric and arithmetic mixing rule, respectively.
         NOTE: Arithmetic means the 'lorentz' combining or mixing rule.
@@ -1308,6 +1341,7 @@ class Charmm:
         set_residue_pdb_occupancy_to_1=None,
         ff_filename=None,
         gmso_match_ff_by="molecule",
+        use_template_ff=False,
     ):
         # set all input variables to the class
         self.structure_box_0 = structure_box_0
@@ -1324,6 +1358,7 @@ class Charmm:
         self.fix_residue_in_box = fix_residue_in_box
         self.set_residue_pdb_occupancy_to_1 = set_residue_pdb_occupancy_to_1
         self.ff_filename = ff_filename
+        self.use_template_ff = use_template_ff
         self.combining_rule = None
 
         # value to check for errors, with  self.input_error = True or False. Set to False initally
@@ -1643,7 +1678,13 @@ class Charmm:
                 gmso_match_ff_by=gmso_match_ff_by,
                 residues=self.residues,
                 boxes_for_simulation=self.boxes_for_simulation,
+                use_template_ff=self.use_template_ff,
             )
+
+            if self.use_template_ff:
+                self.topology_box_0_ff = _expand_template_topology(
+                    self.topology_box_0_ff, self.structure_box_0
+                )
 
             print(
                 "GOMC FF writing each residues FF as a group for  structure_box_1"
@@ -1665,21 +1706,32 @@ class Charmm:
                 gmso_match_ff_by=gmso_match_ff_by,
                 residues=self.residues,
                 boxes_for_simulation=self.boxes_for_simulation,
+                use_template_ff=self.use_template_ff,
             )
 
+            if self.use_template_ff:
+                self.topology_box_1_ff = _expand_template_topology(
+                    self.topology_box_1_ff, self.structure_box_1
+                )
+
             # combine the topologies of box 0 and 1
-            self.topology_box_0_and_1_ff = gmso.Topology()
-            # iterate thru sites to combine the topologies of box 0 and 1
-            for site_i in self.topology_box_0_ff.sites:
-                self.topology_box_0_and_1_ff.add_site(site_i)
-            for site_i in self.topology_box_1_ff.sites:
-                self.topology_box_0_and_1_ff.add_site(site_i)
-            # iterate thru connections (bonds, angles, dihedrals, and impropers) and add to empty topology
-            # to combine the topologyies of box 0 and 1
-            for connection_i in self.topology_box_0_ff.connections:
-                self.topology_box_0_and_1_ff.add_connection(connection_i)
-            for connection_i in self.topology_box_1_ff.connections:
-                self.topology_box_0_and_1_ff.add_connection(connection_i)
+            if self.use_template_ff:
+                self.topology_box_0_and_1_ff = combine_proxies(
+                    self.topology_box_0_ff, self.topology_box_1_ff
+                )
+            else:
+                self.topology_box_0_and_1_ff = gmso.Topology()
+                # iterate thru sites to combine the topologies of box 0 and 1
+                for site_i in self.topology_box_0_ff.sites:
+                    self.topology_box_0_and_1_ff.add_site(site_i)
+                for site_i in self.topology_box_1_ff.sites:
+                    self.topology_box_0_and_1_ff.add_site(site_i)
+                # iterate thru connections (bonds, angles, dihedrals, and impropers) and add to empty topology
+                # to combine the topologyies of box 0 and 1
+                for connection_i in self.topology_box_0_ff.connections:
+                    self.topology_box_0_and_1_ff.add_connection(connection_i)
+                for connection_i in self.topology_box_1_ff.connections:
+                    self.topology_box_0_and_1_ff.add_connection(connection_i)
 
             # create/add to alot of the dictionaries
             self.atom_types_dict_per_residue.update(self.atom_types_dict_box_0)
@@ -1849,7 +1901,13 @@ class Charmm:
                 gmso_match_ff_by=gmso_match_ff_by,
                 residues=self.residues,
                 boxes_for_simulation=self.boxes_for_simulation,
+                use_template_ff=self.use_template_ff,
             )
+
+            if self.use_template_ff:
+                self.topology_box_0_ff = _expand_template_topology(
+                    self.topology_box_0_ff, self.structure_box_0
+                )
 
             self.atom_types_dict_per_residue.update(self.atom_types_dict_box_0)
             self.bond_types_dict_per_residue.update(self.bond_types_dict_box_0)
@@ -5738,20 +5796,18 @@ class Charmm:
 
             output_write.write("\n")
 
+            site_to_index = {
+                site: i for i, site in enumerate(stuct_iteration.sites)
+            }
+
             # BONDS: Calculate the bonding data
             output_write.write(first_indent % no_bonds + " !NBOND: bonds\n")
             for i_bond, bond_iteration in enumerate(stuct_iteration.bonds):
                 output_write.write(
                     (first_indent * 2)
                     % (
-                        stuct_iteration.get_index(
-                            bond_iteration.connection_members[0]
-                        )
-                        + 1,
-                        stuct_iteration.get_index(
-                            bond_iteration.connection_members[1]
-                        )
-                        + 1,
+                        site_to_index[bond_iteration.connection_members[0]] + 1,
+                        site_to_index[bond_iteration.connection_members[1]] + 1,
                     )
                 )
 
@@ -5772,17 +5828,11 @@ class Charmm:
                 output_write.write(
                     (first_indent * 3)
                     % (
-                        stuct_iteration.get_index(
-                            angle_iteration.connection_members[0]
-                        )
+                        site_to_index[angle_iteration.connection_members[0]]
                         + 1,
-                        stuct_iteration.get_index(
-                            angle_iteration.connection_members[1]
-                        )
+                        site_to_index[angle_iteration.connection_members[1]]
                         + 1,
-                        stuct_iteration.get_index(
-                            angle_iteration.connection_members[2]
-                        )
+                        site_to_index[angle_iteration.connection_members[2]]
                         + 1,
                     )
                 )
@@ -5808,22 +5858,10 @@ class Charmm:
                 output_write.write(
                     (first_indent * 4)
                     % (
-                        stuct_iteration.get_index(
-                            dihedral_iter.connection_members[0]
-                        )
-                        + 1,
-                        stuct_iteration.get_index(
-                            dihedral_iter.connection_members[1]
-                        )
-                        + 1,
-                        stuct_iteration.get_index(
-                            dihedral_iter.connection_members[2]
-                        )
-                        + 1,
-                        stuct_iteration.get_index(
-                            dihedral_iter.connection_members[3]
-                        )
-                        + 1,
+                        site_to_index[dihedral_iter.connection_members[0]] + 1,
+                        site_to_index[dihedral_iter.connection_members[1]] + 1,
+                        site_to_index[dihedral_iter.connection_members[2]] + 1,
+                        site_to_index[dihedral_iter.connection_members[3]] + 1,
                     )
                 )
 
@@ -5848,22 +5886,10 @@ class Charmm:
                 output_write.write(
                     (first_indent * 4)
                     % (
-                        stuct_iteration.get_index(
-                            improper_iter.connection_members[0]
-                        )
-                        + 1,
-                        stuct_iteration.get_index(
-                            improper_iter.connection_members[1]
-                        )
-                        + 1,
-                        stuct_iteration.get_index(
-                            improper_iter.connection_members[2]
-                        )
-                        + 1,
-                        stuct_iteration.get_index(
-                            improper_iter.connection_members[3]
-                        )
-                        + 1,
+                        site_to_index[improper_iter.connection_members[0]] + 1,
+                        site_to_index[improper_iter.connection_members[1]] + 1,
+                        site_to_index[improper_iter.connection_members[2]] + 1,
+                        site_to_index[improper_iter.connection_members[3]] + 1,
                     )
                 )
 
@@ -6000,6 +6026,11 @@ class Charmm:
             atom_alternate_location_all_values = ""
             residue_code_insertion_all_values = ""
             segment_id_all_values = ""
+
+            site_to_index = {
+                site: i for i, site in enumerate(stuct_only_iteration.sites)
+            }
+
             for f, site in enumerate(stuct_only_iteration.sites):
                 if residue_names_list_pdb[f] not in self.residues:
                     self.input_error = True
@@ -6007,7 +6038,7 @@ class Charmm:
                     raise ValueError(print_error_message)
 
                 # get other values
-                atom_no_list.append(stuct_only_iteration.get_index(site))
+                atom_no_list.append(site_to_index[site])
 
                 # only 2 character element names are allowed
                 site_name = str(site.__dict__["name_"])

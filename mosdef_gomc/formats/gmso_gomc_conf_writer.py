@@ -338,6 +338,19 @@ def _get_all_possible_input_variables(description=False):
         "Note: By default, GOMC will set ElectroStatic to True if Ewald summation  "
         "method was used to calculate coulomb interaction."
         "".format(_get_default_variables_dict()["Ewald"]),
+        "ElectrostaticMethod": "Simulation info (all ensembles): string, default = {}. "
+        "Selects the method to calculate coulomb interaction (Ewald or PME). "
+        "If set to 'none', the boolean format 'Ewald' will be printed instead."
+        "".format(_get_default_variables_dict()["ElectrostaticMethod"]),
+        "PMESplineOrder": "Simulation info (all ensembles): int, default = {}. "
+        "Sets the order of the spline interpolation used in PME."
+        "".format(_get_default_variables_dict()["PMESplineOrder"]),
+        "PMEGridSpacing": "Simulation info (all ensembles): float, default = {}. "
+        "Sets the grid spacing used in PME."
+        "".format(_get_default_variables_dict()["PMEGridSpacing"]),
+        "PMERefreshFreq": "Simulation info (all ensembles): int, default = {}. "
+        "Sets the update frequency for the PME grid."
+        "".format(_get_default_variables_dict()["PMERefreshFreq"]),
         "CachedFourier": "Simulation info (all ensembles): boolean, default = {}. "
         "Considers storing the reciprocal terms for Ewald summation "
         "calculation in order to improve the code performance. This option would increase the code "
@@ -442,6 +455,29 @@ def _get_all_possible_input_variables(description=False):
         "The number of CD-CBMC dihedral angle trials to perform for geometry "
         "(per the coupled-decoupled CBMC scheme)."
         "".format(_get_default_variables_dict()["CBMC_Dih"]),
+        "CBMC_LookAhead": "CBMC inputs (all ensembles): int (>= 0), default = {}, "
+        "The number of look-ahead samples per Lennard-Jones trial during "
+        "molecule growth. 0 turns look-ahead off."
+        "".format(_get_default_variables_dict()["CBMC_LookAhead"]),
+        "CBMC_LookAheadAng": "CBMC inputs (all ensembles): int (>= 0), default = {}, "
+        "The number of bond-angle samples per look-ahead step."
+        "".format(_get_default_variables_dict()["CBMC_LookAheadAng"]),
+        "CBMC_LookAheadDih": "CBMC inputs (all ensembles): int (>= 0), default = {}, "
+        "The number of dihedral (torsion) samples per look-ahead step. "
+        "0 means use the CBMC_Dih value."
+        "".format(_get_default_variables_dict()["CBMC_LookAheadDih"]),
+        "CBMC_SMC": "CBMC inputs (all ensembles): boolean, default = {}, "
+        "True to use Sequential Monte Carlo (SMC) CBMC molecule growth; "
+        "False to use standard CBMC growth."
+        "".format(_get_default_variables_dict()["CBMC_SMC"]),
+        "CBMC_SMCTrials": "CBMC inputs (all ensembles): int (> 0), default = {}, "
+        "The number of SMC trials to perform during molecule growth. "
+        "Only used when CBMC_SMC is True."
+        "".format(_get_default_variables_dict()["CBMC_SMCTrials"]),
+        "CBMC_SMCParticles": "CBMC inputs (all ensembles): int (> 0), default = {}, "
+        "The number of SMC particles used during molecule growth. "
+        "Only used when CBMC_SMC is True."
+        "".format(_get_default_variables_dict()["CBMC_SMCParticles"]),
         # Control file (.conf file ) output controls/parameters
         "OutputName": "Output Frequency (all ensembles): str (NO SPACES), default = {}. "
         "The UNIQUE STRING NAME, WITH NO SPACES, which is used for the "
@@ -1072,6 +1108,10 @@ def _get_default_variables_dict():
         "TabulatedEnergiesFile": None,
         "ElectroStatic": True,
         "Ewald": True,
+        "ElectrostaticMethod": None,
+        "PMESplineOrder": 8,
+        "PMEGridSpacing": 1.0,
+        "PMERefreshFreq": 100000,
         "CachedFourier": False,
         "Tolerance": 0.00001,
         "Dielectric": 15,
@@ -1089,6 +1129,12 @@ def _get_default_variables_dict():
         "CBMC_Nth": 10,
         "CBMC_Ang": 50,
         "CBMC_Dih": 50,
+        "CBMC_LookAhead": 0,
+        "CBMC_LookAheadAng": 1,
+        "CBMC_LookAheadDih": 0,
+        "CBMC_SMC": False,
+        "CBMC_SMCTrials": 1,
+        "CBMC_SMCParticles": 50,
         # Control file (.conf file ) output controls/parameters
         "OutputName": "Output_data",
         "CoordinatesFreq": [False, 1000000],
@@ -1433,7 +1479,18 @@ def _get_possible_ensemble_input_variables(ensemble_type):
         "SampleFreq",
     ]
 
-    cbmc_variables_list = ["CBMC_First", "CBMC_Nth", "CBMC_Ang", "CBMC_Dih"]
+    cbmc_variables_list = [
+        "CBMC_First",
+        "CBMC_Nth",
+        "CBMC_Ang",
+        "CBMC_Dih",
+        "CBMC_LookAhead",
+        "CBMC_LookAheadAng",
+        "CBMC_LookAheadDih",
+        "CBMC_SMC",
+        "CBMC_SMCTrials",
+        "CBMC_SMCParticles",
+    ]
 
     output_freq_variables_list = [
         "OutputName",
@@ -1501,6 +1558,10 @@ def _get_possible_ensemble_input_variables(ensemble_type):
         "TabulatedEnergiesFile",
         "ElectroStatic",
         "Ewald",
+        "ElectrostaticMethod",
+        "PMESplineOrder",
+        "PMEGridSpacing",
+        "PMERefreshFreq",
         "CachedFourier",
         "Tolerance",
         "Dielectric",
@@ -1806,6 +1867,15 @@ class GOMCControl:
          If True, Ewald summation calculation needs to be considered and false if not.
          Note: By default, GOMC will set ElectroStatic to True if Ewald summation
          method was used to calculate coulomb interaction.
+     ElectrostaticMethod: string, default = None
+         Selects the method to calculate coulomb interaction (Ewald or PME).
+         If set to 'none', the boolean format 'Ewald' will be printed instead.
+     PMESplineOrder: int, default = 8
+         Sets the order of the spline interpolation used in PME.
+     PMEGridSpacing: float, default = 1.0
+         Sets the grid spacing used in PME.
+     PMERefreshFreq: int, default = 100000
+         Sets the update frequency for the PME grid.
      CachedFourier: boolean, default = False
          Considers storing the reciprocal terms for Ewald summation calculation in
          order to improve the code performance. This option would increase the code
@@ -1895,6 +1965,23 @@ class GOMCControl:
      CBMC_Dih: int (>= 0), default = 50
          The Number of CD-CBMC dihedral angle trials to perform for geometry
          (per the coupled-decoupled CBMC scheme).
+     CBMC_LookAhead: int (>= 0), default = 0
+         The number of look-ahead samples per Lennard-Jones trial during
+         molecule growth. 0 turns look-ahead off.
+     CBMC_LookAheadAng: int (>= 0), default = 1
+         The number of bond-angle samples per look-ahead step.
+     CBMC_LookAheadDih: int (>= 0), default = 0
+         The number of dihedral (torsion) samples per look-ahead step.
+         0 means use the CBMC_Dih value.
+     CBMC_SMC: boolean, default = False
+         True to use Sequential Monte Carlo (SMC) CBMC molecule growth;
+         False to use standard CBMC growth.
+     CBMC_SMCTrials: int (> 0), default = 1
+         The number of SMC trials to perform during molecule growth.
+         Only used when CBMC_SMC is True.
+     CBMC_SMCParticles: int (> 0), default = 50
+         The number of SMC particles used during molecule growth.
+         Only used when CBMC_SMC is True.
      OutputName: str (NO SPACES), , default = "Output_data", default = [True, 1M] or
          [True , set via formula based on the number of RunSteps or 1M max]
          The UNIQUE STRING NAME, WITH NO SPACES, which is used for the
@@ -3176,6 +3263,12 @@ class GOMCControl:
         ]
         self.ElectroStatic = default_input_variables_dict["ElectroStatic"]
         self.Ewald = default_input_variables_dict["Ewald"]
+        self.ElectrostaticMethod = default_input_variables_dict[
+            "ElectrostaticMethod"
+        ]
+        self.PMESplineOrder = default_input_variables_dict["PMESplineOrder"]
+        self.PMEGridSpacing = default_input_variables_dict["PMEGridSpacing"]
+        self.PMERefreshFreq = default_input_variables_dict["PMERefreshFreq"]
         self.CachedFourier = default_input_variables_dict["CachedFourier"]
         self.Tolerance = default_input_variables_dict["Tolerance"]
         self.Dielectric = default_input_variables_dict["Dielectric"]
@@ -3187,6 +3280,18 @@ class GOMCControl:
         self.CBMC_Nth = default_input_variables_dict["CBMC_Nth"]
         self.CBMC_Ang = default_input_variables_dict["CBMC_Ang"]
         self.CBMC_Dih = default_input_variables_dict["CBMC_Dih"]
+        self.CBMC_LookAhead = default_input_variables_dict["CBMC_LookAhead"]
+        self.CBMC_LookAheadAng = default_input_variables_dict[
+            "CBMC_LookAheadAng"
+        ]
+        self.CBMC_LookAheadDih = default_input_variables_dict[
+            "CBMC_LookAheadDih"
+        ]
+        self.CBMC_SMC = default_input_variables_dict["CBMC_SMC"]
+        self.CBMC_SMCTrials = default_input_variables_dict["CBMC_SMCTrials"]
+        self.CBMC_SMCParticles = default_input_variables_dict[
+            "CBMC_SMCParticles"
+        ]
         self.OutputName = default_input_variables_dict["OutputName"]
         self.DistName = default_input_variables_dict["DistName"]
         self.HistName = default_input_variables_dict["HistName"]
@@ -3983,6 +4088,82 @@ class GOMCControl:
                 ):
                     self.Ewald = self.input_variables_dict[key]
 
+            key = "ElectrostaticMethod"
+            if input_var_keys_list[var_iter] == key:
+                if self.input_variables_dict[key] is not None:
+                    if not isinstance(self.input_variables_dict[key], str):
+                        bad_input_variables_values_list.append(key)
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.ElectrostaticMethod = self.input_variables_dict[key]
+
+            key = "PMESplineOrder"
+            if input_var_keys_list[var_iter] == key:
+                if (
+                    str(
+                        self.input_variables_dict.get("ElectrostaticMethod")
+                    ).upper()
+                    == "PME"
+                ):
+                    self.ck_input_variable_int_or_float_greater_zero(
+                        self.input_variables_dict,
+                        key,
+                        bad_input_variables_values_list,
+                    )
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.PMESplineOrder = self.input_variables_dict[key]
+
+            key = "PMEGridSpacing"
+            if input_var_keys_list[var_iter] == key:
+                if (
+                    str(
+                        self.input_variables_dict.get("ElectrostaticMethod")
+                    ).upper()
+                    == "PME"
+                ):
+                    if self.ensemble_type in ["GEMC_NPT", "GEMC_NVT", "GCMC"]:
+                        self.ck_input_variable_int_float_or_list_of_2_int_float_greater_zero(
+                            self.input_variables_dict,
+                            key,
+                            bad_input_variables_values_list,
+                        )
+                    else:
+                        self.ck_input_variable_int_or_float_greater_zero(
+                            self.input_variables_dict,
+                            key,
+                            bad_input_variables_values_list,
+                        )
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.PMEGridSpacing = self.input_variables_dict[key]
+
+            key = "PMERefreshFreq"
+            if input_var_keys_list[var_iter] == key:
+                if (
+                    str(
+                        self.input_variables_dict.get("ElectrostaticMethod")
+                    ).upper()
+                    == "PME"
+                ):
+                    self.ck_input_variable_int_or_float_greater_zero(
+                        self.input_variables_dict,
+                        key,
+                        bad_input_variables_values_list,
+                    )
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.PMERefreshFreq = self.input_variables_dict[key]
+
             key = "CachedFourier"
             if input_var_keys_list[var_iter] == key:
                 self.ck_input_variable_true_or_false(
@@ -4193,6 +4374,90 @@ class GOMCControl:
                     and key in possible_ensemble_variables_list
                 ):
                     self.CBMC_Dih = self.input_variables_dict[key]
+
+            key = "CBMC_LookAhead"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_zero_or_greater(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.CBMC_LookAhead = self.input_variables_dict[key]
+
+            key = "CBMC_LookAheadAng"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_zero_or_greater(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.CBMC_LookAheadAng = self.input_variables_dict[key]
+
+            key = "CBMC_LookAheadDih"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_zero_or_greater(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.CBMC_LookAheadDih = self.input_variables_dict[key]
+
+            key = "CBMC_SMC"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_true_or_false(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.CBMC_SMC = self.input_variables_dict[key]
+
+            key = "CBMC_SMCTrials"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_greater_zero(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.CBMC_SMCTrials = self.input_variables_dict[key]
+
+            key = "CBMC_SMCParticles"
+            if input_var_keys_list[var_iter] == key:
+                self.ck_input_variable_int_greater_zero(
+                    self.input_variables_dict,
+                    key,
+                    bad_input_variables_values_list,
+                )
+
+                if (
+                    input_var_keys_list[var_iter] == key
+                    and key in possible_ensemble_variables_list
+                ):
+                    self.CBMC_SMCParticles = self.input_variables_dict[key]
 
             key = "OutputName"
             if input_var_keys_list[var_iter] == key:
@@ -6888,7 +7153,17 @@ class GOMCControl:
         data_control_file.write("####################################\n")
         data_control_file.write("# ELECTROSTATIC   \n")
         data_control_file.write("####################################\n")
-        data_control_file.write("{:25s} {}\n".format("Ewald", self.Ewald))
+        if (
+            self.ElectrostaticMethod is not None
+            and str(self.ElectrostaticMethod).lower() != "none"
+        ):
+            data_control_file.write(
+                "{:25s} {}\n".format(
+                    "ElectrostaticMethod", self.ElectrostaticMethod
+                )
+            )
+        else:
+            data_control_file.write("{:25s} {}\n".format("Ewald", self.Ewald))
         data_control_file.write(
             "{:25s} {}\n".format("ElectroStatic", self.ElectroStatic)
         )
@@ -6905,6 +7180,37 @@ class GOMCControl:
         data_control_file.write(
             "{:25s} {}\n".format("1-4scaling", self.electrostatic_1_4)
         )
+        if (
+            self.ElectrostaticMethod is not None
+            and str(self.ElectrostaticMethod).upper() == "PME"
+        ):
+            data_control_file.write(" \n")
+            if self.PMESplineOrder is not None:
+                data_control_file.write(
+                    "{:25s} {}\n".format("PMESplineOrder", self.PMESplineOrder)
+                )
+            if self.PMEGridSpacing is not None:
+                if isinstance(self.PMEGridSpacing, list):
+                    data_control_file.write(
+                        "{:25s} 0 {}\n".format(
+                            "PMEGridSpacing", self.PMEGridSpacing[0]
+                        )
+                    )
+                    data_control_file.write(
+                        "{:25s} 1 {}\n".format(
+                            "PMEGridSpacing", self.PMEGridSpacing[1]
+                        )
+                    )
+                else:
+                    data_control_file.write(
+                        "{:25s} {}\n".format(
+                            "PMEGridSpacing", self.PMEGridSpacing
+                        )
+                    )
+            if self.PMERefreshFreq is not None:
+                data_control_file.write(
+                    "{:25s} {}\n".format("PMERefreshFreq", self.PMERefreshFreq)
+                )
         data_control_file.write(" \n")
         if self.RcutCoulomb_box_0 is not None:
             data_control_file.write(
@@ -7474,6 +7780,22 @@ class GOMCControl:
         data_control_file.write("{:25s} {}\n".format("CBMC_Nth", self.CBMC_Nth))
         data_control_file.write("{:25s} {}\n".format("CBMC_Ang", self.CBMC_Ang))
         data_control_file.write("{:25s} {}\n".format("CBMC_Dih", self.CBMC_Dih))
+        data_control_file.write(
+            "{:25s} {}\n".format("CBMC_LookAhead", self.CBMC_LookAhead)
+        )
+        data_control_file.write(
+            "{:25s} {}\n".format("CBMC_LookAheadAng", self.CBMC_LookAheadAng)
+        )
+        data_control_file.write(
+            "{:25s} {}\n".format("CBMC_LookAheadDih", self.CBMC_LookAheadDih)
+        )
+        data_control_file.write("{:25s} {}\n".format("CBMC_SMC", self.CBMC_SMC))
+        data_control_file.write(
+            "{:25s} {}\n".format("CBMC_SMCTrials", self.CBMC_SMCTrials)
+        )
+        data_control_file.write(
+            "{:25s} {}\n".format("CBMC_SMCParticles", self.CBMC_SMCParticles)
+        )
         data_control_file.write(" \n")
 
         data_control_file.write(
@@ -7545,21 +7867,26 @@ class GOMCControl:
         )
         data_control_file.write(" \n")
 
-        data_control_file.write("####################################\n")
-        data_control_file.write("# OutHistSettings \n")
-        data_control_file.write("####################################\n")
-        data_control_file.write("{:25s} {}\n".format("DistName", self.DistName))
-        data_control_file.write("{:25s} {}\n".format("HistName", self.HistName))
-        data_control_file.write(
-            "{:25s} {}\n".format("RunNumber", self.RunNumber)
-        )
-        data_control_file.write(
-            "{:25s} {}\n".format("RunLetter", self.RunLetter)
-        )
-        data_control_file.write(
-            "{:25s} {}\n".format("SampleFreq", self.SampleFreq)
-        )
-        data_control_file.write(" \n")
+        if self.HistogramFreq[0] is True:
+            data_control_file.write("####################################\n")
+            data_control_file.write("# OutHistSettings \n")
+            data_control_file.write("####################################\n")
+            data_control_file.write(
+                "{:25s} {}\n".format("DistName", self.DistName)
+            )
+            data_control_file.write(
+                "{:25s} {}\n".format("HistName", self.HistName)
+            )
+            data_control_file.write(
+                "{:25s} {}\n".format("RunNumber", self.RunNumber)
+            )
+            data_control_file.write(
+                "{:25s} {}\n".format("RunLetter", self.RunLetter)
+            )
+            data_control_file.write(
+                "{:25s} {}\n".format("SampleFreq", self.SampleFreq)
+            )
+            data_control_file.write(" \n")
 
         data_control_file.write("####################################\n")
         data_control_file.write("# enable: blk avg., fluct. \n")
@@ -7780,6 +8107,52 @@ class GOMCControl:
             or str(input_variables_dict[key]) == str(True)
             or str(input_variables_dict[key]) == str(False)
         ):
+            bad_input_variables_values_list.append(key)
+
+    def ck_input_variable_int_float_or_list_of_2_int_float_greater_zero(
+        self, input_variables_dict, key, bad_input_variables_values_list
+    ):
+        """
+        Checks if the input variable is an integer or float greater than zero (value > 0),
+        or a list of exactly two such values.
+        If not, the provided list is appended with the bad dict_key.
+
+        Parameters
+        ----------
+        input_variables_dict: dict
+            The user input variable dictionary
+        key: str
+            Dictionary key for the user provided input variable list
+        bad_input_variables_values_list: list
+            A list to append with the bad variable user inputs
+            so the user can see which variable input values are bad.
+
+        Returns
+        ---------
+        bad_input_variables_values_list: list
+            A list to append with the bad variable user inputs
+            so the user can see which variable input values are bad.
+
+        """
+        val = input_variables_dict[key]
+        if val is None:
+            return
+
+        def _is_positive_number(v):
+            return (
+                isinstance(v, (int, float))
+                and not isinstance(v, bool)
+                and v > 0
+            )
+
+        if isinstance(val, list):
+            is_valid = len(val) == 2 and all(
+                _is_positive_number(v) for v in val
+            )
+        else:
+            is_valid = _is_positive_number(val)
+
+        if not is_valid:
             bad_input_variables_values_list.append(key)
 
     def ck_input_variable_int_greater_zero(
@@ -9252,6 +9625,23 @@ def write_gomc_control_file(
     CBMC_Dih: int (>= 0), default = 50
         The Number of CD-CBMC dihedral angle trials to perform for geometry
         (per the coupled-decoupled CBMC scheme).
+    CBMC_LookAhead: int (>= 0), default = 0
+        The number of look-ahead samples per Lennard-Jones trial during
+        molecule growth. 0 turns look-ahead off.
+    CBMC_LookAheadAng: int (>= 0), default = 1
+        The number of bond-angle samples per look-ahead step.
+    CBMC_LookAheadDih: int (>= 0), default = 0
+        The number of dihedral (torsion) samples per look-ahead step.
+        0 means use the CBMC_Dih value.
+    CBMC_SMC: boolean, default = False
+        True to use Sequential Monte Carlo (SMC) CBMC molecule growth;
+        False to use standard CBMC growth.
+    CBMC_SMCTrials: int (> 0), default = 1
+        The number of SMC trials to perform during molecule growth.
+        Only used when CBMC_SMC is True.
+    CBMC_SMCParticles: int (> 0), default = 50
+        The number of SMC particles used during molecule growth.
+        Only used when CBMC_SMC is True.
     OutputName: str (NO SPACES), , default = "Output_data", default = [True, 1M] or
         [True , set via formula based on the number of RunSteps or 1M max]
         The UNIQUE STRING NAME, WITH NO SPACES, which is used for the
